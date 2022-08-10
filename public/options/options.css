@@ -1,0 +1,43 @@
+body {
+  background-color: #f2f7f8;
+  overflow: hidden;
+}
+
+.w-400px {
+  width: 400px;
+}
+
+.settings-wrapper {
+  height: calc(100vh - 150px);
+  overflow-y: scroll;
+}
+
+.cards {
+  min-height: calc(100vh + 245px);
+}
+
+.alert {
+  position: absolute;
+  right: 25px;
+  bottom: 10px;
+  width: 33vw;
+}
+
+.featureActiveSwitch {
+  vertical-align: text-top;
+}
+
+/* style scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #666;
+  border-radius: 20px;
+}
+
+::-webkit-scrollbar-track {
+  background: #ddd;
+  border-radius: 20px;
+}

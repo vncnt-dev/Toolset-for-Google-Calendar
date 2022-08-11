@@ -1,8 +1,11 @@
 import React from 'react';
 import { render } from 'react-dom';
 import './options.css';
-import { OptionsForm } from './optionsForm';
 import { Sidebar } from './sidebar';
+import { OptionGroupSettings } from '../interfaces/optionGroupSettingsInterface';
+import { getAllOptionGroupSettings } from './lib/allOptionGroupSettings';
+import { OptionGroup } from './optionGroup';
+import { OptionsFormActions } from './optionsFormActions';
 
 const Options = () => {
   return (
@@ -14,7 +17,16 @@ const Options = () => {
           <Sidebar />
         </div>
         <div className="w-4/5 pr-5">
-          <OptionsForm />
+          <div>
+            <div id="optionForm" className="overflow-y-scroll" style={{ height: 'calc(100vh - 171px)' }}>
+              {getAllOptionGroupSettings().map((optionGroupSettings: OptionGroupSettings) => {
+                return <OptionGroup {...optionGroupSettings}></OptionGroup>;
+              })}
+            </div>
+            <div>
+              <OptionsFormActions></OptionsFormActions>
+            </div>
+          </div>
         </div>
       </div>
     </div>

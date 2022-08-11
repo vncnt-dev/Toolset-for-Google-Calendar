@@ -81,7 +81,7 @@ function getPosition(eventTimeElement: HTMLElement, oldDurationElement: HTMLElem
   }
 
   let position = 'block';
-  /* height that the  Calender Event element needs to have to  not be Inline*/
+  /* height that the  Calendar Event element needs to have to  not be Inline*/
   let maxHeightForInlineBlock = getHeight(eventTimeElement) + 15; //15px is the height of the duration element
 
   if (oldDurationElement) {
@@ -89,7 +89,7 @@ function getPosition(eventTimeElement: HTMLElement, oldDurationElement: HTMLElem
     if (oldDurationElement.getAttribute('position') == 'inline-block') maxHeightForInlineBlock += 10; // add 10 to reduce amount of position changes
   }
 
-  // if the heigt of the Calender Event element is smaller than the maxHeightForInlineBlock or type is small
+  // if the heigt of the Calendar Event element is smaller than the maxHeightForInlineBlock or type is small
   if (eventObject.parentElement.clientHeight < maxHeightForInlineBlock || eventObject.type == 'short') position = 'inline-block';
   return position;
 }

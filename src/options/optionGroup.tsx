@@ -1,8 +1,8 @@
 import React from 'react';
 import { OptionGroupSettings } from '../interfaces/optionGroupSettingsInterface';
-import { useShareableState } from './reactSettingsHandler';
+import { useShareableState } from './lib/reactSettingsHandler';
 import { useBetween } from 'use-between';
-import { getAllOptionGroupSettings } from './allOptionGroupSettings';
+import { getAllOptionGroupSettings } from './lib/allOptionGroupSettings';
 /* setter for settings  */
 export const OptionGroup = (optionGroupSettings: OptionGroupSettings) => {
   const { sharedSettings, updateSharedSettings } = useBetween(useShareableState);

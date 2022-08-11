@@ -1,6 +1,6 @@
 import React from 'react';
 import { useBetween } from 'use-between';
-import { OptionGroupSettings } from '../interfaces/optionGroupSettingsInterface';
+import { OptionGroupSettings } from '../../interfaces/optionGroupSettingsInterface';
 import { useShareableState } from './reactSettingsHandler';
 
 export const getAllOptionGroupSettings = (): OptionGroupSettings[] => {
@@ -10,7 +10,7 @@ export const getAllOptionGroupSettings = (): OptionGroupSettings[] => {
     {
       id: 'general',
       titel: 'General Information',
-      text: <div>This extension provides multiple small tools for the Google Calender™.</div>,
+      text: <div>This extension provides multiple small tools for the Google Calendar™.</div>,
     },
     {
       id: 'calcDuration',
@@ -61,6 +61,7 @@ export const getAllOptionGroupSettings = (): OptionGroupSettings[] => {
       titel: 'Information On Hover',
       text: <div>Show information on hover on the daily and weekly view Google Calendar™.</div>,
       toggleSettings: 'hoverInformation_isActive',
+      pictureURLs: ['./images/hoverOverInformation_1.jpg','./images/hoverOverInformation_2.jpg'],
     },
     {
       id: 'betterAddMeeting_isActive',

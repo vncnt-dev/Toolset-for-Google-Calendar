@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { settings, loadSettings, saveSettings, defaultSettings } from '../contentScripts/lib/SettingsHandler';
+import { settings, loadSettings, saveSettings, defaultSettings } from '../../contentScripts/lib/SettingsHandler';
 
 export const useShareableState = () => {
   const [sharedSettings, setSharedSettings] = useState(settings);

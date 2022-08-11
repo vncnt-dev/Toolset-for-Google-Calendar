@@ -6,5 +6,5 @@ export interface Event {
   duration: number;
   durationFormated: string | null;
   eventName: string;
-  eventCalender: string;
+  eventCalendar: string;
 }

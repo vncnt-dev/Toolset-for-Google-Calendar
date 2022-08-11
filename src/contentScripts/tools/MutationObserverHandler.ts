@@ -8,16 +8,16 @@ MutationObserver = window.MutationObserver;
 
 var timer: NodeJS.Timer,
   lastTime: number = 0;
-var observerCalenderView = new MutationObserver(function () {
+var observerCalendarView = new MutationObserver(function () {
   // if lasttime is at least 100 ms ago, run worker, else wait until lasttime is at least 100 ms ago
   if (lastTime + 100 < Date.now()) {
     lastTime = Date.now();
-    startWorkerCalenderView();
+    startWorkerCalendarView();
   } else {
     clearTimeout(timer);
     timer = setTimeout(function () {
       lastTime = Date.now();
-      startWorkerCalenderView();
+      startWorkerCalendarView();
     }, Date.now() - lastTime);
   }
 });
@@ -25,8 +25,8 @@ var observerCompleteHTMLBody = new MutationObserver(function () {
   startWorkerCompleteHTMLBody();
 });
 
-function createObserverCalenderView() {
-  observerCalenderView.observe(document.querySelector('#YPCqFe')!, {
+function createObserverCalendarView() {
+  observerCalendarView.observe(document.querySelector('#YPCqFe')!, {
     subtree: true,
     childList: true,
   });
@@ -40,8 +40,8 @@ function createObserverCompleteHTMLBody() {
 }
 
 var eventStorage: Event[] = [];
-function startWorkerCalenderView() {
-  observerCalenderView.disconnect();
+function startWorkerCalendarView() {
+  observerCalendarView.disconnect();
   eventStorage = [];
   try {
     let eventList: NodeListOf<HTMLElement> = document
@@ -118,7 +118,7 @@ function startWorkerCalenderView() {
   } catch (error) {
     console.log('GC Tools - error: ', error);
   } finally {
-    createObserverCalenderView();
+    createObserverCalendarView();
   }
 }
 
@@ -129,4 +129,4 @@ function startWorkerCompleteHTMLBody() {
   createObserverCompleteHTMLBody();
 }
 
-export { startWorkerCalenderView, startWorkerCompleteHTMLBody };
+export { startWorkerCalendarView, startWorkerCompleteHTMLBody };

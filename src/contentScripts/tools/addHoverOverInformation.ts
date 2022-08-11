@@ -37,19 +37,23 @@ function formatTime(eventTime: Date[]): string {
   if (isSameDate(eventTime[0], eventTime[1])) {
     formattedTime = eventTime[0].getHours() + ':' + eventTime[0].getMinutes() + ' - ' + eventTime[1].getHours() + ':' + eventTime[1].getMinutes();
   } else {
+    // only add time if event doesn't start 00:00
     if (!(eventTime[0].getHours() === 0 && eventTime[0].getMinutes() === 0))
-      formattedTime = eventTime[0].getHours() + ':' + eventTime[0].getMinutes();
-    formattedTime += eventTime[0].getDate().toString();
+      formattedTime = zeroPad(eventTime[0].getHours(), 2) + ':' + zeroPad(eventTime[0].getMinutes(), 2) + ' ';
+    // add day, only add month / year if start and end are not in same month/year
+    formattedTime += zeroPad(eventTime[0].getDate(), 2) + '.';
     if (eventTime[0].getMonth() !== eventTime[1].getMonth() || eventTime[0].getFullYear() !== eventTime[1].getFullYear())
-      formattedTime += '.' + eventTime[0].getMonth().toString();
-    if (eventTime[0].getFullYear() !== eventTime[1].getFullYear()) formattedTime += '.' + eventTime[0].getFullYear().toString();
-
+      formattedTime += zeroPad(eventTime[0].getMonth(), 2) + '.';
+    if (eventTime[0].getFullYear() !== eventTime[1].getFullYear()) formattedTime += zeroPad(eventTime[0].getFullYear(), 2);
+    // only add time if event doesn't end 23:59, add full date
     formattedTime += ' - ';
     if (!(eventTime[1].getHours() === 23 && eventTime[1].getMinutes() === 59))
-      formattedTime += eventTime[1].getHours() + ':' + eventTime[1].getMinutes();
-    formattedTime += eventTime[1].getDate() + '.' + eventTime[1].getMonth() + '.' + eventTime[1].getFullYear();
+      formattedTime += zeroPad(eventTime[1].getHours(), 2) + ':' + zeroPad(eventTime[1].getMinutes(), 2) + ' ';
+    formattedTime += zeroPad(eventTime[1].getDate(), 2) + '.' + zeroPad(eventTime[1].getMonth(), 2) + '.' + eventTime[1].getFullYear();
   }
   return formattedTime;
 }
+
+const zeroPad = (num: number, places: number) => String(num).padStart(places, '0');
 
 export { addHoverOverInformation };

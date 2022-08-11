@@ -3,7 +3,7 @@ function calculateDuration(startEndDateTime: Date[]): number {
   try {
     return (startEndDateTime[1].getTime() - startEndDateTime[0].getTime()) / 1000 / 60;
   } catch (e) {
-    console.log('calculateDuration: error', e, startEndDateTime);
+    console.error('calculateDuration: error', e, startEndDateTime);
     return 0;
   }
 }

@@ -19,15 +19,14 @@ function loadSettings() {
   });
 }
 
-function saveSettings(settings: Settings): void {
-  console.log('GC Tools - saving settings: ', settings);
+function saveSettings(settings: Settings, suppressNotification:boolean = false): void {
   storage.sync
     .set({ settings: settings })
     .then((e) => {
       console.log('GC Tools - settings saved', e);
     })
     .catch((error) => {
-      console.log('GC Tools - settings save error: ', error);
+      console.error('GC Tools - settings save error: ', error);
     });
 }
 

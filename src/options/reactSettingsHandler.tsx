@@ -9,7 +9,6 @@ export const useShareableState = () => {
   };
 
   const saveSharedSettings = () => {
-    console.log('saveSharedSettings', sharedSettings);
     saveSettings(sharedSettings);
   };
 

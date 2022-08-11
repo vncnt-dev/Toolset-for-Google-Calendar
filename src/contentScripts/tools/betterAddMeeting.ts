@@ -3,8 +3,6 @@ import { betterAddMeetingTaskInterface } from '../../interfaces/betterAddMeeting
 var betterAddMeetingTasks: betterAddMeetingTaskInterface[] = [];
 
 function betterAddMeeting() {
-  console.log('betterAddMeeting');
-
   let view: 'quickadd' | 'detailsPage';
   let meetingButtonCollectorElement: HTMLElement | null = null;
 

@@ -1,7 +1,6 @@
 import { Event } from '../../interfaces/eventInterface';
 
 function injectDuration(eventObject: Event) {
-  console.log('GC Tools - injectDuration: ', eventObject);
   if (eventObject.durationFormated) {
     try {
       let eventTimeElement = eventObject.eventTimeElement;
@@ -19,7 +18,6 @@ function injectDuration(eventObject: Event) {
 
       // if new position does not match old position, remove old duration element
       if (oldDurationElement && oldDurationElement.getAttribute('position') != position) {
-        console.log('removed old duration element', oldDurationElement.getAttribute('position'), position);
         oldDurationElement.remove();
         oldDurationElement = null;
       }
@@ -61,7 +59,7 @@ function injectDuration(eventObject: Event) {
       // adjust styling
       if (eventObject.parentElement.style.whiteSpace != 'nowrap') eventObject.parentElement.style.whiteSpace = 'nowrap';
     } catch (error) {
-      console.log('GC Tools - injectDurration: ', error);
+      console.error('GC Tools - injectDurration: ', error);
       return;
     }
   }

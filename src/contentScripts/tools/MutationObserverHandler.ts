@@ -65,7 +65,7 @@ function startWorkerCalenderView() {
           eventMetadata = (eventTimeElement.parentElement!.parentElement!.previousSibling! as HTMLElement).innerText;
         }
       } catch (error) {
-        console.log('GC Tools - error: ', error, 'on', eventTimeElement);
+        console.error('GC Tools - error: ', error, 'on', eventTimeElement);
         return;
       }
 
@@ -100,7 +100,6 @@ function startWorkerCalenderView() {
       newEvent.eventName = getEventName(newEvent.parentElement);
       eventStorage.push(newEvent);
     });
-
     console.log('GC Tools - eventStorage: ', eventStorage);
     // worker for all event types
     eventStorage.forEach((eventObject, eventIndex) => {

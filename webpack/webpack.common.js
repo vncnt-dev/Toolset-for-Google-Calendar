@@ -56,7 +56,6 @@ module.exports = {
         }),
         new MiniCssExtractPlugin({
             filename: '../styles/[name].css',
-            chunkFilename: '[id].[contenthash].css',
         }),
     ],
 };

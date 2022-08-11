@@ -10,15 +10,20 @@ export const getAllOptionGroupSettings = (): OptionGroupSettings[] => {
     {
       id: 'general',
       titel: 'General Information',
-      text: <div>This extension provides multiple small tools for the Google Calendar™.</div>,
+      text: (
+        <div>
+          <b>Welcome</b> <br />
+          This extension provides multiple small tools for the Google Calendar™. <br />
+          You can click on the preview images to see a larger version.
+        </div>
+      ),
     },
     {
       id: 'calcDuration',
       titel: 'Display Event-Duration',
       text: (
         <div>
-          Calculates and displays the event durations on the "by day", "by week" and "by month" Google Calendar™-view.
-
+          Calculates and displays the event durations on the "by day", "by week" and "by month" view.
           <div className="form-control">
             <label className="input-group mt-4">
               <span className="w-1/5">Minimum duration</span>
@@ -57,14 +62,14 @@ export const getAllOptionGroupSettings = (): OptionGroupSettings[] => {
       pictureURLs: ['./images/insertDuration.jpg'],
     },
     {
-      id: 'hoverInformation_isActive',
+      id: 'hoverInformation',
       titel: 'Information On Hover',
-      text: <div>Show information on hover on the daily and weekly view Google Calendar™.</div>,
+      text: <div>Show information on hover "by day", "by week" and "by month" view.</div>,
       toggleSettings: 'hoverInformation_isActive',
-      pictureURLs: ['./images/hoverOverInformation_1.jpg','./images/hoverOverInformation_2.jpg'],
+      pictureURLs: ['./images/hoverOverInformation_1.jpg', './images/hoverOverInformation_2.jpg'],
     },
     {
-      id: 'betterAddMeeting_isActive',
+      id: 'betterAddMeeting',
       titel: 'Better Add Meeting Buttons',
       text: (
         <div>
@@ -73,7 +78,7 @@ export const getAllOptionGroupSettings = (): OptionGroupSettings[] => {
             You will still need to install the extension of the respective vendor to add the buttons in the first place. <br></br>
             currently supported:
           </p>
-          <ul className='list-disc ml-5'>
+          <ul className="list-disc ml-5">
             <li>Google Meet</li>
             <li>Jitsi</li>
           </ul>
@@ -81,6 +86,13 @@ export const getAllOptionGroupSettings = (): OptionGroupSettings[] => {
       ),
       toggleSettings: 'betterAddMeeting_isActive',
       pictureURLs: ['./images/betterAddMeeting_1.jpg'],
+    },
+    {
+      id: 'indicateFullDayEvents',
+      titel: 'Indicate Full Day Events',
+      text: <div>Displays full-day and multi-day events in the day and week views by adding the event to the background of the main calendar.</div>,
+      toggleSettings: 'indicateFullDayEvents_isActive',
+      pictureURLs: ['./images/indicateFullDayEvents_1.jpg'],
     },
   ];
 

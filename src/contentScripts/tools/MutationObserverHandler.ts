@@ -114,7 +114,7 @@ function startWorkerCalendarView() {
                  multiDayevents.forEach((eventObject, eventIndex) => {
                     
                 }); */
-    Tools.indicateFullDayEvents(eventStorage.filter((event) => event.type === 'multiDay'));
+    if (settings.indicateFullDayEvents_isActive) Tools.indicateFullDayEvents(eventStorage.filter((event) => event.type === 'multiDay'));
   } catch (error) {
     console.log('GC Tools - error: ', error);
   } finally {

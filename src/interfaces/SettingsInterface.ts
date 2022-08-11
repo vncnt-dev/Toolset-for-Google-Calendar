@@ -4,4 +4,5 @@ export interface Settings {
   calcDuration_durationFormat: 'hourMinutes' | 'decimalHours';
   hoverInformation_isActive: boolean;
   betterAddMeeting_isActive: boolean;
+  indicateFullDayEvents_isActive: boolean;
 }

@@ -56,12 +56,7 @@ function getEventName(parentElement: HTMLElement): string {
 
 /* escape html */
 function escapeHtml(unsafe: string) {
-  return unsafe
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
+  return unsafe.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
 }
 
 // trim all elements of an array
@@ -95,21 +90,28 @@ function isBetweenDates(startDate: Date, endDate: Date, date: Date) {
   let day = date.getDate();
 
   return (
-    (year > startYear ||
-      (year === startYear && month > startMonth) ||
-      (year === startYear && month === startMonth && day >= startDay)) &&
-    (year < endYear ||
-      (year === endYear && month < endMonth) ||
-      (year === endYear && month === endMonth && day <= endDay))
+    (year > startYear || (year === startYear && month > startMonth) || (year === startYear && month === startMonth && day >= startDay)) &&
+    (year < endYear || (year === endYear && month < endMonth) || (year === endYear && month === endMonth && day <= endDay))
   );
 }
 
 function isSameDate(date1: Date, date2: Date) {
-  return (
-    date1.getFullYear() === date2.getFullYear() &&
-    date1.getMonth() === date2.getMonth() &&
-    date1.getDate() === date2.getDate()
-  );
+  return date1.getFullYear() === date2.getFullYear() && date1.getMonth() === date2.getMonth() && date1.getDate() === date2.getDate();
 }
 
-export { calculateDuration, formatDuration, getEventName, escapeHtml, trimArray, getDate, isBetweenDates, isSameDate };
+function sendToast(message: string, type: '' | 'info' | 'success' | 'warning' | 'error' = '', timeOut: number) {
+  let toast = document.createElement('div');
+  toast.classList.add('toast');
+  toast.innerHTML = `<div class="alert ${type !== '' ? 'alert-' + type : ''} text-3xl">
+      <div>
+        <span>${message}</span>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(toast);
+  setTimeout(() => {
+    toast.remove();
+  }, timeOut);
+}
+
+export { calculateDuration, formatDuration, getEventName, escapeHtml, trimArray, getDate, isBetweenDates, isSameDate, sendToast };

@@ -65,7 +65,7 @@ function startWorkerCalendarView() {
           eventMetadata = (eventTimeElement.parentElement!.parentElement!.previousSibling! as HTMLElement).innerText;
         }
       } catch (error) {
-        console.error('GC Tools - error: ', error, 'on', eventTimeElement);
+        console.warn('GC Tools - error: ', error, 'on', eventTimeElement);
         return;
       }
 

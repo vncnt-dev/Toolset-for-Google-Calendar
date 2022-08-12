@@ -6,6 +6,7 @@ import { OptionGroupSettings } from '../interfaces/optionGroupSettingsInterface'
 import { getAllOptionGroupSettings } from './lib/allOptionGroupSettings';
 import { OptionGroup } from './optionGroup';
 import { OptionsFormActions } from './optionsFormActions';
+import { ToastContainer } from 'react-toastify';
 
 const Options = () => {
   return (
@@ -29,6 +30,7 @@ const Options = () => {
           </div>
         </div>
       </div>
+      <ToastContainer />
     </div>
   );
 };

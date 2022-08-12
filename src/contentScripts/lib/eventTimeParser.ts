@@ -1,7 +1,6 @@
 // #region general variables
 
 // Separates the day and time for multi-day events
-var portuguesToken = ' às ';
 var dayTimeSeparators = new RegExp(
   Object.values({
     english: ' at ',
@@ -14,7 +13,7 @@ var dayTimeSeparators = new RegExp(
     filipino: ' nang ',
     italiano: ' alle ',
     nederlands: ' om ',
-    portugues: portuguesToken,
+    portugues: ' às ',
     turkish: ' saat ',
     chineseAndJapanese: '日',
     korean: '일 ',
@@ -24,11 +23,8 @@ var dayTimeSeparators = new RegExp(
 
 var unnecessaryPreAndSuffix = new RegExp(/de |du |Van | arası|時|С /g);
 
-var russianTokenRegex = /^С .*/;
+//var russianTokenRegex = /^С .*/;
 var commasRegex = /[,，、]/;
-
-var eastAsianAms = new RegExp(['午前', '上午', '오전'].join('|'));
-var eastAsianPms = new RegExp(['午後', '下午', '오후'].join('|'));
 
 // In certain language settings, it is ambiguous whether a separator is
 // separating a day/time in a datetime, or separating the two datetimes in an
@@ -321,6 +317,7 @@ function getEventTime(eventMetadata: string): Date[] {
 
   if (language == 'fr') {
     eventMetadata = eventMetadata.replace(unnecessaryPreAndSuffix, '');
+    // "," is uded to sepret the date and time but also as a seperator in general (between the date, eventname,..)
     // 30 juin 2020, 03:45 au 1 juillet 2020, 03:15,
     if (eventMetadata.match(/^[0-9]+ [A-Za-z]+ [0-9]+, [0-9]+:[0-9]+/)) {
       let eventMetadataArray = eventMetadata.split(',');
@@ -331,6 +328,9 @@ function getEventTime(eventMetadata: string): Date[] {
   }
 
   if (language == 'en') {
+    // en = only en-US not en-UK,...
+    // "," is uded to sepret the date and time but also as a seperator in general (between the date, eventname,..)
+    //  additonaly the order of the date and time is reversed/ different
     let eventMetadataArray = eventMetadata.split(',');
     if (eventMetadata.match(/^[A-Za-z]+ [0-9]+, [0-9]+/)) {
       eventMetadataArray[0] = eventMetadataArray[0] + eventMetadataArray[1] + eventMetadataArray[2];
@@ -357,10 +357,22 @@ function getEventTime(eventMetadata: string): Date[] {
     }
   }
 
+  if (language == 'pt-PT') {
+    // às has differnet meanings depending on the context
+    // "30 de junho de 2020 - 03:45 a 1 de julho de 2020 às 03:15" but also "20:15 às 21:45"
+    let eventMetadataArray = eventMetadata.split(',');
+    if (eventMetadataArray[0].includes(' a ') && eventMetadataArray[0].includes('às')) {
+      eventMetadata = eventMetadata.replace(' - ', ' ');
+    } else if (eventMetadataArray[0].includes(' às ')) {
+      eventMetadata = eventMetadata.replace(' às ', ' - ');
+    }
+  }
+
   return parseMetadata(eventMetadata);
 }
 
 function parseMetadata(eventMetadata: string): Date[] {
+  console.log('eventMetadata: ' + eventMetadata);
   let eventTime: string = eventMetadata.split(commasRegex)[0].toLowerCase();
   // allday events without Time are stored differently
   let multiDayWithoutTime = false;
@@ -376,39 +388,16 @@ function parseMetadata(eventMetadata: string): Date[] {
   /** split Start and End times from eventTime, includes dates if presents   */
   let startEndDateTime: string[] | Date[];
 
-  if (eventTime.includes(portuguesToken)) {
-    // Portugues is particularly ambiguous.
-    //
-    // Portugues (Portugal) Single-Day and Portugues (Brasil and Portugal)
-    // Multi-Day events will all have the token, which makes it harder to
-    // determine which case we're in.
-    //
-    // Portugues (Brasil) Single-Day will just have a - and doesn't need to be
-    // handled here.
-    let portuguesSplit = eventTime.split(portuguesToken);
-    if (portuguesSplit.length === 2) {
-      // Portugues (Portugal) Single-Day
-      startEndDateTime = portuguesSplit;
-    } else if (eventTime.includes(' - ')) {
-      // Portugues (Brasil) Multi-Day
-      startEndDateTime = eventTime.split(' - ');
-    } else {
-      // Portugues (Portugal) Multi-Day
-      startEndDateTime = eventTime.split(' a ');
-    }
-  } else {
-    let startEndRegex = getStartEndRegex(ismultiDay);
-    startEndDateTime = eventTime.split(startEndRegex);
-  }
+  let startEndRegex = getStartEndRegex(ismultiDay);
+  startEndDateTime = eventTime.split(startEndRegex);
+
   if (multiDayWithoutTime) {
     if (startEndDateTime.length > 1) {
       // Multi-day event
       // if the start date doesn't contain a month, assume it's the same as the end date
       if (startEndDateTime[0].match(/^\s+[0-9]{1,2}\.?\s+$/)) {
         startEndDateTime[0] =
-          startEndDateTime[0].trim() +
-          ' ' +
-          startEndDateTime[1].slice(startEndDateTime[1].match(/^\s+[0-9]{1,2}\.?\s+/)![0].length);
+          startEndDateTime[0].trim() + ' ' + startEndDateTime[1].slice(startEndDateTime[1].match(/^\s+[0-9]{1,2}\.?\s+/)![0].length);
       }
       // if the start date doesn't contain a year, assume it's the same year as the end date
       else if (!startEndDateTime[0].match(/\d{4}/)) {
@@ -433,28 +422,30 @@ function parseMetadata(eventMetadata: string): Date[] {
     item = reorderDateAndTime(item);
     item = removeInternationalization(item);
     item = item.trim();
+    console.log('finalItem: ', index, item);
     startEndDateTime[index] = new Date(item);
+    console.log('Date: ', index, startEndDateTime[index]);
     if (isNaN(startEndDateTime[index] as any)) {
-      console.error('invalid date: ', item);
+      console.warn('invalid date: ', index, item);
     }
   });
+  console.log('');
   return startEndDateTime as unknown as Date[];
 }
 
 function normalizeEastAsiaDateTime(dateString: string): string {
   //|年|月|日 Chinese
   //|年|月|日 Korean
-  let isEastAsia =
-    dateString.match(eastAsianAms) || dateString.match(eastAsianPms) || dateString.match(/|年|月|日|년|월|일/);
+  let eastAsianAm = new RegExp(['午前', '上午', '오전'].join('|'));
+  let eastAsianPm = new RegExp(['午後', '下午', '오후'].join('|'));
+  let isEastAsia = dateString.match(eastAsianAm) || dateString.match(eastAsianPm) || dateString.match(/|年|月|日|년|월|일/);
 
   if (isEastAsia) {
-    if (dateString.match(eastAsianAms)) {
-      dateString = dateString.replace(eastAsianAms, '');
-      dateString += 'am';
+    if (dateString.match(eastAsianAm)) {
+      dateString = dateString.replace(eastAsianAm, '') + 'am';
     }
-    if (dateString.match(eastAsianPms)) {
-      dateString = dateString.replace(eastAsianPms, '');
-      dateString += 'pm';
+    if (dateString.match(eastAsianPm)) {
+      dateString = dateString.replace(eastAsianPm, '') + 'pm';
     }
     // reoder 2022年6月16日 to 2022/6/16
     dateString = dateString.replace(/(.*) (\d+)[年|년]\s?(\d+)[月|월]\s?(\d+)[日||일]/, '$1 $2/$3/$4');
@@ -467,18 +458,6 @@ function reorderDateAndTime(dateString: string): string {
   if (dateString.match(/(\d+)\/(\d+)\/(\d{4})/)) {
     dateString = dateString.replace(/(.*) (\d+)\/(\d+)\/(\d+)/, '$1 $3/$2/$4');
   }
-
-  // 01.01.2020 01:00 -> 01:00 01.01.2020
-  /*   let split = dateString.split(" ");
-  if (split.length === 2) {
-    if (split[1].includes(":")) {
-      if (split.length > 1) {
-        var dateString = split[0];
-        var time = split[1];
-        dateString = time + " " + dateString;
-      }
-    }
-  } */
   return dateString;
 }
 

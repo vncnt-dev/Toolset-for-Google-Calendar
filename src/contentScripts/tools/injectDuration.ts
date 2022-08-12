@@ -59,7 +59,7 @@ function injectDuration(eventObject: Event) {
       // adjust styling
       if (eventObject.parentElement.style.whiteSpace != 'nowrap') eventObject.parentElement.style.whiteSpace = 'nowrap';
     } catch (error) {
-      console.error('GC Tools - injectDurration: ', error);
+      console.warn('GC Tools - injectDurration: ', error);
       return;
     }
   }

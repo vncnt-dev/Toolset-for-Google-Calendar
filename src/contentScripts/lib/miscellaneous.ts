@@ -3,7 +3,7 @@ function calculateDuration(startEndDateTime: Date[]): number {
   try {
     return (startEndDateTime[1].getTime() - startEndDateTime[0].getTime()) / 1000 / 60;
   } catch (e) {
-    console.error('calculateDuration: error', e, startEndDateTime);
+    console.warn('calculateDuration: error', e, startEndDateTime);
     return 0;
   }
 }
@@ -96,22 +96,12 @@ function isBetweenDates(startDate: Date, endDate: Date, date: Date) {
 }
 
 function isSameDate(date1: Date, date2: Date) {
-  return date1.getFullYear() === date2.getFullYear() && date1.getMonth() === date2.getMonth() && date1.getDate() === date2.getDate();
+  try {
+    return date1.getFullYear() === date2.getFullYear() && date1.getMonth() === date2.getMonth() && date1.getDate() === date2.getDate();
+  } catch (e) {
+    console.warn('isSameDate: error', e, date1, date2);
+    return false;
+  }
 }
 
-function sendToast(message: string, type: '' | 'info' | 'success' | 'warning' | 'error' = '', timeOut: number) {
-  let toast = document.createElement('div');
-  toast.classList.add('toast');
-  toast.innerHTML = `<div class="alert ${type !== '' ? 'alert-' + type : ''} text-3xl">
-      <div>
-        <span>${message}</span>
-      </div>
-    </div>
-  `;
-  document.body.appendChild(toast);
-  setTimeout(() => {
-    toast.remove();
-  }, timeOut);
-}
-
-export { calculateDuration, formatDuration, getEventName, escapeHtml, trimArray, getDate, isBetweenDates, isSameDate, sendToast };
+export { calculateDuration, formatDuration, getEventName, escapeHtml, trimArray, getDate, isBetweenDates, isSameDate };

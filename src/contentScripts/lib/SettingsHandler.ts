@@ -1,6 +1,5 @@
 import { Settings } from '../../interfaces/SettingsInterface';
 import { storage } from '@extend-chrome/storage';
-import { sendToast } from './miscellaneous';
 
 var defaultSettings: Settings = {
   calcDuration_isActive: true,
@@ -21,18 +20,16 @@ function loadSettings() {
   });
 }
 
-function saveSettings(settings: Settings, suppressNotification: boolean = false): void {
-  storage.sync
+function saveSettings(settings: Settings): Promise<boolean> {
+  return storage.sync
     .set({ settings: settings })
     .then((e) => {
-      if (!suppressNotification) {
-       sendToast('Settings saved', 'success',3_000);
-      }
-      console.log('GC Tools - settings saved', e);
+      console.log('GC Tools - saveSettings: ', e); 
+      return true;
     })
     .catch((error) => {
-      sendToast('Error while saveing Settings', 'error',10_000);
-      console.error('GC Tools - settings save error: ', error);
+      console.warn('GC Tools - settings save error: ', error);
+      return false;
     });
 }
 export { settings, loadSettings, saveSettings, defaultSettings };

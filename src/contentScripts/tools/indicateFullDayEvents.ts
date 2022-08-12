@@ -27,7 +27,7 @@ var indicateFullDayEvents = function (eventStorageMultiDay: Event[]) {
       });
     });
   } catch (error) {
-    console.error('indicateFullDayEvents: ', error);
+    console.warn('indicateFullDayEvents: ', error);
   }
 };
 

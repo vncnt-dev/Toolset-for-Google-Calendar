@@ -57,7 +57,7 @@ function preparePage() {
     settings.hoverInformation_isActive = !settings.hoverInformation_isActive;
     document.getElementById('menuPointHICheckbox')!.setAttribute('aria-checked', settings.hoverInformation_isActive.toString())
     document.getElementById('menuPointHICheckbox')!.classList.add(settings.hoverInformation_isActive ? 'N2RpBe' : '');
-    saveSettings(settings, true);
+    saveSettings(settings);
   });
   document.getElementById('GCToolsMenueBody')!.appendChild(menuPointHI);
   // open the settings menu  (Google Calendar™ style)

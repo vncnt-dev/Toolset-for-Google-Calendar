@@ -1,5 +1,5 @@
 {
-  "name": "gcalender-tools",
+  "name": "gcalendar-tools",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -35,6 +35,7 @@
     "daisyui": "^2.22.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "react-toastify": "^9.0.8",
     "use-between": "^1.3.4"
   }
 }

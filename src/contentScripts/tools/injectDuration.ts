@@ -1,7 +1,6 @@
 import { Event } from '../../interfaces/eventInterface';
 
 function injectDuration(eventObject: Event) {
-  console.log('GC Tools - injectDuration: ', eventObject);
   if (eventObject.durationFormated) {
     try {
       let eventTimeElement = eventObject.eventTimeElement;
@@ -19,7 +18,6 @@ function injectDuration(eventObject: Event) {
 
       // if new position does not match old position, remove old duration element
       if (oldDurationElement && oldDurationElement.getAttribute('position') != position) {
-        console.log('removed old duration element', oldDurationElement.getAttribute('position'), position);
         oldDurationElement.remove();
         oldDurationElement = null;
       }
@@ -61,7 +59,7 @@ function injectDuration(eventObject: Event) {
       // adjust styling
       if (eventObject.parentElement.style.whiteSpace != 'nowrap') eventObject.parentElement.style.whiteSpace = 'nowrap';
     } catch (error) {
-      console.log('GC Tools - injectDurration: ', error);
+      console.warn('GC Tools - injectDurration: ', error);
       return;
     }
   }
@@ -83,7 +81,7 @@ function getPosition(eventTimeElement: HTMLElement, oldDurationElement: HTMLElem
   }
 
   let position = 'block';
-  /* height that the  Calender Event element needs to have to  not be Inline*/
+  /* height that the  Calendar Event element needs to have to  not be Inline*/
   let maxHeightForInlineBlock = getHeight(eventTimeElement) + 15; //15px is the height of the duration element
 
   if (oldDurationElement) {
@@ -91,7 +89,7 @@ function getPosition(eventTimeElement: HTMLElement, oldDurationElement: HTMLElem
     if (oldDurationElement.getAttribute('position') == 'inline-block') maxHeightForInlineBlock += 10; // add 10 to reduce amount of position changes
   }
 
-  // if the heigt of the Calender Event element is smaller than the maxHeightForInlineBlock or type is small
+  // if the heigt of the Calendar Event element is smaller than the maxHeightForInlineBlock or type is small
   if (eventObject.parentElement.clientHeight < maxHeightForInlineBlock || eventObject.type == 'short') position = 'inline-block';
   return position;
 }

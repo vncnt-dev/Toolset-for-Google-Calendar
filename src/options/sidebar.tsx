@@ -1,6 +1,6 @@
 import React from 'react';
 import { OptionGroupSettings } from '../interfaces/optionGroupSettingsInterface';
-import { getAllOptionGroupSettings } from './allOptionGroupSettings';
+import { getAllOptionGroupSettings } from './lib/allOptionGroupSettings';
 
 export const Sidebar = () => {
   let allOptionGroupSettings = getAllOptionGroupSettings();

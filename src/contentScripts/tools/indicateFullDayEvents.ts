@@ -27,7 +27,7 @@ var indicateFullDayEvents = function (eventStorageMultiDay: Event[]) {
       });
     });
   } catch (error) {
-    console.log('indicateFullDayEvents: ', error);
+    console.warn('indicateFullDayEvents: ', error);
   }
 };
 
@@ -80,7 +80,6 @@ var calculateHeight = function (event: Event, calDate: Date) {
   // if calDate is end date of event, height is end time
   else if (isSameDate(calDate, event.eventTime[1])) return baseHeight * (event.eventTime[1].getHours() + event.eventTime[1].getMinutes() / 60);
   else {
-    console.log('calculateHeight: error', event);
     return 0;
   }
 };

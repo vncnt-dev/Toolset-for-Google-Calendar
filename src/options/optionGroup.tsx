@@ -1,8 +1,8 @@
 import React from 'react';
 import { OptionGroupSettings } from '../interfaces/optionGroupSettingsInterface';
-import { useShareableState } from './reactSettingsHandler';
+import { useShareableState } from './lib/reactSettingsHandler';
 import { useBetween } from 'use-between';
-import { getAllOptionGroupSettings } from './allOptionGroupSettings';
+import { getAllOptionGroupSettings } from './lib/allOptionGroupSettings';
 /* setter for settings  */
 export const OptionGroup = (optionGroupSettings: OptionGroupSettings) => {
   const { sharedSettings, updateSharedSettings } = useBetween(useShareableState);
@@ -46,7 +46,24 @@ export const OptionGroup = (optionGroupSettings: OptionGroupSettings) => {
             optionGroupSettings.pictureURLs.map((pictureURL: string) => {
               return (
                 <div>
-                  <img className="rounded-xl min-w-[250px]" src={pictureURL} />
+                  <img
+                    className="rounded-xl min-w-[250px] max-h-[200px] object-contain"
+                    src={pictureURL}
+                    onClick={() => {
+                      document.getElementById(pictureURL.slice(pictureURL.lastIndexOf("/")))!.click();
+                    }}
+                  />
+                  <input type="checkbox" id={pictureURL.slice(pictureURL.lastIndexOf("/"))} className="modal-toggle" />
+                  <div className="modal">
+                    <div className="modal-box max-h-fit max-w-fit">
+                      <img className="rounded-xl object-contain max-h-[80vh] max-w-[80vw]" src={pictureURL} />
+                      <div className="modal-action">
+                        <label htmlFor={pictureURL.slice(pictureURL.lastIndexOf("/"))} className="btn">
+                          Close
+                        </label>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               );
             })}

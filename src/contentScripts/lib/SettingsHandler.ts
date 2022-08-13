@@ -7,6 +7,7 @@ var defaultSettings: Settings = {
   calcDuration_durationFormat: 'hourMinutes',
   hoverInformation_isActive: true,
   betterAddMeeting_isActive: true,
+  indicateFullDayEvents_isActive: true,
 };
 
 var settings: Settings = defaultSettings;
@@ -19,16 +20,16 @@ function loadSettings() {
   });
 }
 
-function saveSettings(settings: Settings): void {
-  console.log('GC Tools - saving settings: ', settings);
-  storage.sync
+function saveSettings(settings: Settings): Promise<boolean> {
+  return storage.sync
     .set({ settings: settings })
     .then((e) => {
-      console.log('GC Tools - settings saved', e);
+      console.log('GC Tools - saveSettings: ', e); 
+      return true;
     })
     .catch((error) => {
-      console.log('GC Tools - settings save error: ', error);
+      console.warn('GC Tools - settings save error: ', error);
+      return false;
     });
 }
-
 export { settings, loadSettings, saveSettings, defaultSettings };

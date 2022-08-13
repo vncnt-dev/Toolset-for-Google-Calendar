@@ -3,7 +3,7 @@ function calculateDuration(startEndDateTime: Date[]): number {
   try {
     return (startEndDateTime[1].getTime() - startEndDateTime[0].getTime()) / 1000 / 60;
   } catch (e) {
-    console.log('calculateDuration: error', e, startEndDateTime);
+    console.warn('calculateDuration: error', e, startEndDateTime);
     return 0;
   }
 }
@@ -56,12 +56,7 @@ function getEventName(parentElement: HTMLElement): string {
 
 /* escape html */
 function escapeHtml(unsafe: string) {
-  return unsafe
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
+  return unsafe.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
 }
 
 // trim all elements of an array
@@ -95,21 +90,18 @@ function isBetweenDates(startDate: Date, endDate: Date, date: Date) {
   let day = date.getDate();
 
   return (
-    (year > startYear ||
-      (year === startYear && month > startMonth) ||
-      (year === startYear && month === startMonth && day >= startDay)) &&
-    (year < endYear ||
-      (year === endYear && month < endMonth) ||
-      (year === endYear && month === endMonth && day <= endDay))
+    (year > startYear || (year === startYear && month > startMonth) || (year === startYear && month === startMonth && day >= startDay)) &&
+    (year < endYear || (year === endYear && month < endMonth) || (year === endYear && month === endMonth && day <= endDay))
   );
 }
 
 function isSameDate(date1: Date, date2: Date) {
-  return (
-    date1.getFullYear() === date2.getFullYear() &&
-    date1.getMonth() === date2.getMonth() &&
-    date1.getDate() === date2.getDate()
-  );
+  try {
+    return date1.getFullYear() === date2.getFullYear() && date1.getMonth() === date2.getMonth() && date1.getDate() === date2.getDate();
+  } catch (e) {
+    console.warn('isSameDate: error', e, date1, date2);
+    return false;
+  }
 }
 
 export { calculateDuration, formatDuration, getEventName, escapeHtml, trimArray, getDate, isBetweenDates, isSameDate };

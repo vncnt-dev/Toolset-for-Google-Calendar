@@ -2,9 +2,9 @@ import { startWorkerCalendarView, startWorkerCompleteHTMLBody } from './tools/Mu
 import { preparePage } from './lib/preparePage';
 import { loadSettings } from './lib/SettingsHandler';
 
-function run() {
+async function run() {
   preparePage();
-  loadSettings();
+  await loadSettings();
   startWorkerCompleteHTMLBody();
   startWorkerCalendarView();
 }

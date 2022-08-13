@@ -70,7 +70,6 @@ function startWorkerCalendarView() {
       }
 
       newEvent.eventTime = getEventTime(eventMetadata);
-      let eventDateMetadata = (newEvent.parentElement.querySelector('.ynRLnc')! as HTMLElement).innerText;
       newEvent.duration = calculateDuration(newEvent.eventTime);
       newEvent.durationFormated = formatDuration(
         newEvent.duration,

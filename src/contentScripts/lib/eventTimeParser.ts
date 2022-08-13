@@ -97,6 +97,7 @@ var monthNamesInt: any = {
     turkish: 'ocak',
     chinese: '一月',
     korean: '1월',
+    russian: 'января',
   },
   february: {
     english: 'february',
@@ -116,6 +117,7 @@ var monthNamesInt: any = {
     turkish: 'şubat',
     chinese: '二月',
     korean: '2월',
+    russian: 'февраля',
   },
   march: {
     english: 'march',
@@ -135,6 +137,7 @@ var monthNamesInt: any = {
     turkish: 'marş',
     chinese: '三月',
     korean: '3월',
+    russian: 'марта',
   },
   april: {
     english: 'april',
@@ -154,6 +157,7 @@ var monthNamesInt: any = {
     turkish: 'nisan',
     chinese: '四月',
     korean: '4월',
+    russian: 'апреля',
   },
   may: {
     english: 'may',
@@ -173,6 +177,7 @@ var monthNamesInt: any = {
     turkish: 'mayıs',
     chinese: '五月',
     korean: '5월',
+    russian: 'мая',
   },
   june: {
     english: 'june',
@@ -192,6 +197,7 @@ var monthNamesInt: any = {
     turkish: 'haziran',
     chinese: '六月',
     korean: '6월',
+    russian: 'июня',
   },
   july: {
     english: 'july',
@@ -211,6 +217,7 @@ var monthNamesInt: any = {
     turkish: 'temmuz',
     chinese: '七月',
     korean: '7월',
+    russian: 'июля',
   },
   august: {
     english: 'august',
@@ -230,6 +237,7 @@ var monthNamesInt: any = {
     turkish: 'ağustos',
     chinese: '八月',
     korean: '8월',
+    russian: 'августа',
   },
   september: {
     english: 'september',
@@ -249,6 +257,7 @@ var monthNamesInt: any = {
     turkish: 'eylül',
     chinese: '九月',
     korean: '9월',
+    russian: 'сентября',
   },
   october: {
     english: 'october',
@@ -268,6 +277,7 @@ var monthNamesInt: any = {
     turkish: 'ekim',
     chinese: '十月',
     korean: '10월',
+    russian: 'октября',
   },
   november: {
     english: 'november',
@@ -287,6 +297,7 @@ var monthNamesInt: any = {
     turkish: 'kasım',
     chinese: '十一月',
     korean: '11월',
+    russian: 'ноября',
   },
   december: {
     english: 'december',
@@ -306,6 +317,7 @@ var monthNamesInt: any = {
     turkish: 'aralık',
     chinese: '十二月',
     korean: '12월',
+    russian: 'декабря',
   },
 };
 // #endregion

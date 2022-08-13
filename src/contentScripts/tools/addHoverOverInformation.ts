@@ -35,7 +35,14 @@ function addHoverOverInformation(event: Event) {
 function formatTime(eventTime: Date[]): string {
   let formattedTime = '';
   if (isSameDate(eventTime[0], eventTime[1])) {
-    formattedTime = eventTime[0].getHours() + ':' + eventTime[0].getMinutes() + ' - ' + eventTime[1].getHours() + ':' + eventTime[1].getMinutes();
+    formattedTime =
+      zeroPad(eventTime[0].getHours(), 2) +
+      ':' +
+      zeroPad(eventTime[0].getMinutes(), 2) +
+      ' - ' +
+      zeroPad(eventTime[1].getHours(), 2) +
+      ':' +
+      zeroPad(eventTime[1].getMinutes(), 2);
   } else {
     // only add time if event doesn't start 00:00
     if (!(eventTime[0].getHours() === 0 && eventTime[0].getMinutes() === 0))

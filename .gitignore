@@ -9,6 +9,7 @@ yarn-error.log*
 
 # Distribution directories
 dist/
+gcalendar-tools_*.zip
 
 # Dependency directories
 node_modules/

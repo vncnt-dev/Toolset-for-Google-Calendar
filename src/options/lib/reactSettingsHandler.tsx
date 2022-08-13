@@ -37,6 +37,8 @@ export const useShareableState = () => {
   };
 
   useEffect(() => {
+    // send chrome message
+    //chrome.runtime.sendMessage("isDarkmode: "+window.matchMedia('(prefers-color-scheme: dark)').matches);
     loadSettings()
       .then((settings) => {
         setSharedSettings(settings);

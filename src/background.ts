@@ -13,7 +13,7 @@ chrome.runtime.onInstalled.addListener(function (details) {
 });
 
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
-  if (request.message === 'GCTopenOptionsPage') {
+  if (request === 'GCTopenOptionsPage') {
     openSettings();
   }
 });

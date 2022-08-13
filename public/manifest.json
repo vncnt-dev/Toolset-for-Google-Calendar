@@ -1,7 +1,17 @@
 {
+  // Required
   "manifest_version": 3,
   "name": "Google Calendar™ Tools",
-  "version": "0.0.0",
+  "version": "1.0.0",
+
+  // Recommended
+  "action": {
+    "default_icon": {
+      "128": "icons/icon128.png",
+      "48": "icons/icon48.png",
+      "16": "icons/icon16.png"
+    }
+  },
   "icons": {
     "128": "icons/icon128.png",
     "16": "icons/icon16.png",
@@ -9,16 +19,11 @@
   },
   //"default_locale": "en",
 
+  // Optional
   "options_page": "options/options.html",
-
   "background": {
     "service_worker": "js/background.js"
   },
-
-  "action": {
-    "default_icon": "icons/icon16.png"
-  },
-
   "content_scripts": [
     {
       "js": ["js/content_script.js"],
@@ -26,6 +31,5 @@
       "matches": ["https://calendar.google.com/*"]
     }
   ],
-
   "permissions": ["storage"]
 }

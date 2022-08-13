@@ -70,7 +70,7 @@ function preparePage() {
 </button>
 `;
   menuPointgtSettings.addEventListener('click', () => {
-    chrome.runtime.sendMessage({ message: 'GCTopenOptionsPage' });
+    chrome.runtime.sendMessage('GCTopenOptionsPage');
   });
   document.getElementById('GCToolsMenueBody')!.appendChild(menuPointgtSettings);
 

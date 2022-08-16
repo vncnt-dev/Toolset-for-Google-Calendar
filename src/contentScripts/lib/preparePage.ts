@@ -36,7 +36,6 @@ function preparePage() {
       modal.style.display = 'none';
     }
   };
-
   // fast access to the Information On Hover Setting, becaus it might be turned on/of more frequently (Google Calendar™ style)
   let menuPointHI = document.createElement('div');
   menuPointHI.classList.add('GCToolsMenueItem');
@@ -52,11 +51,11 @@ function preparePage() {
     </div>
     <span for="c109" class="VYaxId">Information On Hover</span>`;
   menuPointHI.querySelector('#menuPointHICheckbox')!.setAttribute('aria-checked', settings.hoverInformation_isActive.toString());
-  menuPointHI.querySelector('#menuPointHICheckbox')!.classList.add(settings.hoverInformation_isActive ? 'N2RpBe' : '');
+  menuPointHI.querySelector('#menuPointHICheckbox')!.classList.add(settings.hoverInformation_isActive ? 'N2RpBe' : 'foo');
   menuPointHI.addEventListener('click', () => {
     settings.hoverInformation_isActive = !settings.hoverInformation_isActive;
     document.getElementById('menuPointHICheckbox')!.setAttribute('aria-checked', settings.hoverInformation_isActive.toString())
-    document.getElementById('menuPointHICheckbox')!.classList.add(settings.hoverInformation_isActive ? 'N2RpBe' : '');
+    document.getElementById('menuPointHICheckbox')!.classList.add(settings.hoverInformation_isActive ? 'N2RpBe' : 'foo');
     saveSettings(settings);
   });
   document.getElementById('GCToolsMenueBody')!.appendChild(menuPointHI);

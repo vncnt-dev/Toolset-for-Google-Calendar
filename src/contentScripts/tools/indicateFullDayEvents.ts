@@ -15,7 +15,7 @@ var indicateFullDayEvents = function (eventStorageMultiDay: Event[]) {
           let indicatorElement = document.createElement('div');
           indicatorElement.id = id;
           indicatorElement.classList.add('fullDayEventIndicator', 'EfQccc');
-          indicatorElement.style.backgroundColor = changedEvent.eventTimeElement.style.backgroundColor;
+          indicatorElement.style.backgroundColor = changedEvent.eventTimeElement!.style.backgroundColor;
           indicatorElement.style.opacity = calculateOpacity(changedEvent).toString();
           indicatorElement.style.width = '100%';
           indicatorElement.style.zIndex = '3'; // above calendar lines below other events
@@ -33,7 +33,7 @@ var indicateFullDayEvents = function (eventStorageMultiDay: Event[]) {
 
 /** generates ID for indicator element */
 var generateID = function (event: Event) {
-  let rawID = JSON.stringify([event.eventTime, event.eventTimeElement.style.backgroundColor, event.eventName]);
+  let rawID = JSON.stringify([event.eventTime, event.eventTimeElement!.style.backgroundColor, event.eventName]);
   // prevent problems with whitespaces etc., max 65.
   return 'ID' + encodeURIComponent(rawID).replace(/%/g, '_');
 };

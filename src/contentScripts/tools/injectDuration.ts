@@ -3,7 +3,7 @@ import { Event } from '../../interfaces/eventInterface';
 function injectDuration(eventObject: Event) {
   if (eventObject.durationFormated) {
     try {
-      let eventTimeElement = eventObject.eventTimeElement;
+      let eventTimeElement = eventObject.eventTimeElement!;
       let durationElement: HTMLElement;
       if (eventObject.type === 'multiDay') {
         durationElement = eventTimeElement.querySelector('.yzifAd')!.cloneNode(true) as HTMLElement;
@@ -57,7 +57,7 @@ function injectDuration(eventObject: Event) {
       }
 
       // adjust styling
-      if (eventObject.parentElement.style.whiteSpace != 'nowrap') eventObject.parentElement.style.whiteSpace = 'nowrap';
+      if (eventObject.parentElement!.style.whiteSpace != 'nowrap') eventObject.parentElement!.style.whiteSpace = 'nowrap';
     } catch (error) {
       console.warn('GC Tools - injectDurration: ', error);
       return;
@@ -90,7 +90,7 @@ function getPosition(eventTimeElement: HTMLElement, oldDurationElement: HTMLElem
   }
 
   // if the heigt of the Calendar Event element is smaller than the maxHeightForInlineBlock or type is small
-  if (eventObject.parentElement.clientHeight < maxHeightForInlineBlock || eventObject.type == 'short') position = 'inline-block';
+  if (eventObject.parentElement!.clientHeight < maxHeightForInlineBlock || eventObject.type == 'short') position = 'inline-block';
   return position;
 }
 

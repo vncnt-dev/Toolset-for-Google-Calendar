@@ -24,7 +24,14 @@
     {
       "js": ["js/content_script.js"],
       "css": ["styles/content_script.css"],
-      "matches": ["https://calendar.google.com/*"]
+      "matches": ["https://calendar.google.com/*"],
+      "run_at": "document_end"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["web_accessible_resources/XHRInterceptor.js"],
+      "matches": ["<all_urls>"]
     }
   ],
   "permissions": ["storage"]

@@ -37,7 +37,7 @@ function betterAddMeeting() {
         meetingButtonCollectorElement.querySelector('div.tsUyod.XsN7kf')!.classList.remove('tsUyod');
       if (view === 'quickadd' && task.mainElement.style.marginInlineEnd !== '0px') task.mainElement.style.marginInlineEnd = '0px';
     } catch (e) {
-      console.log(e);
+      console.warn(e);
     }
   }
 }

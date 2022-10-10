@@ -1,4 +1,4 @@
-import { getDate, isBetweenDates, isSameDate } from '../lib/miscellaneous';
+import { getDate, isBetweenDates, isSameDay } from '../lib/miscellaneous';
 import { Event } from '../../interfaces/EventInterface';
 
 var indicateFullDayEvents = function (eventStorageMultiDay: Event[]) {
@@ -62,7 +62,7 @@ var calculateTop = function (event: Event, calDate: Date) {
   // heigt of 1h based on sidebar timeline elements
   let baseHeight: number = (document.querySelector('.s4ZaLd')! as HTMLElement).offsetHeight;
   // if calDate is start date of event, return height based on start time
-  if (isSameDate(calDate, event.eventTime[0])) {
+  if (isSameDay(calDate, event.eventTime[0])) {
     return baseHeight * (event.eventTime[0].getHours() + event.eventTime[0].getMinutes() / 60);
   } else {
     // else top is 0
@@ -74,11 +74,11 @@ var calculateHeight = function (event: Event, calDate: Date) {
   // heigt of 1h based on sidebar timeline elements
   let baseHeight: number = (document.querySelector('.s4ZaLd')! as HTMLElement).offsetHeight;
   // if calDate is neither start nor end date of event, return full height
-  if (!isSameDate(calDate, event.eventTime[0]) && !isSameDate(calDate, event.eventTime[1])) return baseHeight * 24;
+  if (!isSameDay(calDate, event.eventTime[0]) && !isSameDay(calDate, event.eventTime[1])) return baseHeight * 24;
   // if calDate is start date of event, height is 24h - start time
-  else if (isSameDate(calDate, event.eventTime[0])) return baseHeight * (24 - (event.eventTime[0].getHours() + event.eventTime[0].getMinutes() / 60));
+  else if (isSameDay(calDate, event.eventTime[0])) return baseHeight * (24 - (event.eventTime[0].getHours() + event.eventTime[0].getMinutes() / 60));
   // if calDate is end date of event, height is end time
-  else if (isSameDate(calDate, event.eventTime[1])) return baseHeight * (event.eventTime[1].getHours() + event.eventTime[1].getMinutes() / 60);
+  else if (isSameDay(calDate, event.eventTime[1])) return baseHeight * (event.eventTime[1].getHours() + event.eventTime[1].getMinutes() / 60);
   else {
     return 0;
   }

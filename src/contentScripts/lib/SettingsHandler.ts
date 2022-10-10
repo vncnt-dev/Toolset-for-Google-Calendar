@@ -14,7 +14,7 @@ var settings: Settings = defaultSettings;
 
 function loadSettings() {
   return storage.sync.get('settings').then((e) => {
-    console.log('GC Tools - getSettings: ', e.settings);
+    console.info('GC Tools - getSettings: ', e.settings);
     settings = e.settings ?? defaultSettings;
     return settings;
   });
@@ -24,7 +24,7 @@ function saveSettings(settings: Settings): Promise<boolean> {
   return storage.sync
     .set({ settings: settings })
     .then((e) => {
-      console.log('GC Tools - saveSettings: ', e); 
+      console.info('GC Tools - saveSettings: ', e); 
       return true;
     })
     .catch((error) => {

@@ -2,6 +2,7 @@ import { Event } from '../../interfaces/eventInterface';
 import { settings } from '../lib/SettingsHandler';
 import * as Tools from './tools';
 import { eventData } from '../lib/parseEventData';
+import { correctEventTime, decodeDataEventId, deepCopy } from '../lib/miscellaneous';
 
 MutationObserver = window.MutationObserver;
 
@@ -20,7 +21,7 @@ var observerCalendarViewFunction = function () {
       startWorkerCalendarView();
     }, Date.now() - lastTime);
   }
-}
+};
 var observerCalendarView = new MutationObserver(observerCalendarViewFunction);
 var observerCompleteHTMLBody = new MutationObserver(function () {
   startWorkerCompleteHTMLBody();
@@ -41,45 +42,53 @@ function createObserverCompleteHTMLBody() {
 }
 
 function startWorkerCalendarView() {
+  var eventStorage: Event[] = [];
   observerCalendarView.disconnect();
   try {
     let eventList: NodeListOf<HTMLElement> = document.querySelectorAll('div[role="button"][data-eventid]');
     eventList.forEach((eventElement) => {
-      // get event display type (normal or small) and  metadata of eventTimeElement
-      let thisEvent: Event = eventData[eventElement.getAttribute('data-eventid')!];
+      let eventIdObj = decodeDataEventId(eventElement.getAttribute('data-eventid')!); 
+      // a single event of a series can be edited, creating an exception that overwrites the original event for that one event
+      // first one is for exceptions, second one is for the original event (series + one-time-events)
+      let thisEvent: Event = eventData[eventIdObj[0]+'_'+eventIdObj[1]]||eventData[eventIdObj[0]];
       if (!thisEvent) return;
       thisEvent.parentElement = eventElement;
-      let eventTimeElement = eventElement.querySelector(".Jmftzc.gVNoLb.EiZ8Dd,.A6wOnd:not(.event-duration)") as HTMLElement;
+      let eventTimeElement = eventElement.querySelector('.Jmftzc.gVNoLb.EiZ8Dd,.A6wOnd:not(.event-duration)') as HTMLElement;
       thisEvent.eventTimeElement = eventTimeElement;
       // very short events (>1h) have a diffenent HTML structure
       thisEvent.type = eventTimeElement.classList.contains('A6wOnd') ? 'short' : 'normal';
+      // update eventTime
+      thisEvent.eventTime = correctEventTime(thisEvent);
+      eventStorage.push(deepCopy(thisEvent));
     });
 
     // multiDay events have to be handled separately, because there HTML structure is different
     let multiDayEventList: NodeListOf<HTMLElement> = document.querySelectorAll('.g3dbUc.jKgTF.QGRmIf:not(.PU9jSd)');
     multiDayEventList.forEach((eventTimeElement) => {
-      let thisEvent: Event = eventData[eventTimeElement!.parentElement!.getAttribute('data-eventid')!];
+      let eventIdObj = decodeDataEventId(eventTimeElement.parentElement!.getAttribute('data-eventid')!); 
+      // a single event of a series can be edited, creating an exception that overwrites the original event for that one event
+      // first one is for exceptions, second one is for the original event (series + one-time-events)
+      let thisEvent: Event = eventData[eventIdObj[0]+'_'+eventIdObj[1]]||eventData[eventIdObj[0]];
       if (!thisEvent) return;
       thisEvent.eventTimeElement = eventTimeElement;
       thisEvent.type = 'multiDay';
       thisEvent.parentElement = eventTimeElement.parentElement!;
+      eventStorage.push(deepCopy(thisEvent));
     });
 
     // array of all multiday events
     let multiDayEvents: Event[] = [];
     // Apply Tools
-    for (let eventId in eventData) {
-      let thisEvent: Event = eventData[eventId];
+    eventStorage.forEach((thisEvent) => {
       // run only if parrentElement and eventTimeElement are set
-      if(!thisEvent.parentElement || !thisEvent.eventTimeElement) continue;
-
+      if (!thisEvent.parentElement || !thisEvent.eventTimeElement) return;
       if (settings.calcDuration_isActive) Tools.injectDuration(thisEvent);
       Tools.addHoverOverInformation(thisEvent);
       if (thisEvent.type === 'multiDay') multiDayEvents.push(thisEvent);
-    }
+    });
     Tools.indicateFullDayEvents(multiDayEvents);
   } catch (error) {
-    console.log('GC Tools - error: ', error);
+    console.error('GC Tools - error: ', error);
   } finally {
     createObserverCalendarView();
   }
@@ -92,4 +101,4 @@ function startWorkerCompleteHTMLBody() {
   createObserverCompleteHTMLBody();
 }
 
-export { startWorkerCalendarView, startWorkerCompleteHTMLBody,observerCalendarViewFunction };
+export { startWorkerCalendarView, startWorkerCompleteHTMLBody, observerCalendarViewFunction };

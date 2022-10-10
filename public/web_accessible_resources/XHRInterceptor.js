@@ -11,7 +11,7 @@
             try {
                 document.dispatchEvent(new CustomEvent('GCT_XMLHttpRequest', { detail: response }));
             } catch (error) {
-                console.log(error);
+                console.warn(error);
             }
         });
         return oldXHROpen.apply(this, arguments);

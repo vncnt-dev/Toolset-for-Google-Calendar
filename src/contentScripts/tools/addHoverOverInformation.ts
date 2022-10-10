@@ -1,5 +1,5 @@
 import { Event } from '../../interfaces/EventInterface';
-import { isSameDate } from '../lib/miscellaneous';
+import { isSameDay } from '../lib/miscellaneous';
 import { settings } from '../lib/SettingsHandler';
 
 function addHoverOverInformation(event: Event) {
@@ -33,8 +33,7 @@ function addHoverOverInformation(event: Event) {
 }
 
 function formatTime(eventTime: Date[]): string {
-  // { year: 'numeric', month: '2-digit', day: '2-digit' ,hour:'2-digit',minute: '2-digit'};
-  if (isSameDate(eventTime[0], eventTime[1])) {
+  if (isSameDay(eventTime[0], eventTime[1])) {
     return (
       zeroPad(eventTime[0].getHours(), 2) +
       ':' +
@@ -42,19 +41,29 @@ function formatTime(eventTime: Date[]): string {
       ' - ' +
       zeroPad(eventTime[1].getHours(), 2) +
       ':' +
-      zeroPad(eventTime[1].getMinutes(), 2))
+      zeroPad(eventTime[1].getMinutes(), 2)
+    );
   } else {
-    let options: Intl.DateTimeFormatOptions
+    let options: Intl.DateTimeFormatOptions;
+    let locales = document.documentElement.lang as Intl.LocalesArgument;
     let formattedTime = '';
-    // only add time if event doesn't start 00:00
-    if (!(eventTime[0].getHours() === 0 && eventTime[0].getMinutes() === 0))
-      options = { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' };
+
+    // only add time if not full day event
+    console.log(eventTime);
+    let isFulldayEvent =
+      eventTime[0].getHours() + eventTime[0].getTimezoneOffset() / 60 == 0 &&
+      eventTime[0].getMinutes() == 0 &&
+      eventTime[1].getHours() + eventTime[1].getTimezoneOffset() / 60 == 0 &&
+      eventTime[1].getMinutes() == 0;
+
+    if (!isFulldayEvent) options = { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' };
     else options = { year: 'numeric', month: '2-digit', day: '2-digit' };
-    formattedTime = eventTime[0].toLocaleDateString(undefined, options) + ' - ';
-    if (!(eventTime[1].getHours() === 23 && eventTime[1].getMinutes() === 59))
-      options = { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' };
+    formattedTime = eventTime[0].toLocaleDateString(locales, options) + ' - ';
+
+    if (!isFulldayEvent) options = { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' };
     else options = { year: 'numeric', month: '2-digit', day: '2-digit' };
-    formattedTime += eventTime[0].toLocaleDateString(undefined, options);
+    formattedTime += eventTime[1].toLocaleDateString(locales, options);
+
     return formattedTime;
   }
 }

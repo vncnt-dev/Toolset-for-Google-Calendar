@@ -36,13 +36,13 @@ var updateEventData = function (XhrData: Array<any>) {
         let eventTime: Date[] = getEventTime(event) as Date[];
         let eventDuration = calculateDuration(eventTime);
         let newEvent: Event = {
-          dataEventId: event[2].split('\\u003d')[1],
+          dataEventId: event[0],
           eventTime: eventTime,
           duration: eventDuration,
           eventLocation: event[7],
           durationFormated: formatDuration(eventDuration, settings.calcDuration_durationFormat, settings.calcDuration_minimumDurationMinutes),
           eventName: event[5],
-          eventCalendar: getEventCalendar(event),
+          eventCalendar: getEventCalendar(event)
         };
         Object.assign(eventData, { [newEvent.dataEventId]: newEvent });
       });
@@ -83,7 +83,6 @@ function formatDuration(diff: number, format: string, minDurationMinutes: number
       // duration of full and multi-day events in days rather than hours
       let durationInDays = durationInHours / 24;
       return durationInDays.toFixed(2) + ' ' + (durationInDays > 1 ? 'days' : 'day');
-      break;
     case 'hourMinutes': // is default case
     default:
       var durationInHours = diff / 60;

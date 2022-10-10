@@ -12,7 +12,7 @@ export const useShareableState = () => {
 
   const saveSharedSettings = async () => {
     let wasSaved = saveSettings(sharedSettings);
-    console.log('saveSharedSettings', wasSaved);
+    console.info('saveSharedSettings', wasSaved);
     if (await wasSaved) {
       toast.success('Saved successfully', {
         position: 'bottom-right',

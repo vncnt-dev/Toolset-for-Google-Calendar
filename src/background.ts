@@ -17,3 +17,5 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
     openSettings();
   }
 });
+
+//chrome.runtime.setUninstallURL('');

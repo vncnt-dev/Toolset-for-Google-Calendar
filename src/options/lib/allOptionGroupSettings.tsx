@@ -80,7 +80,8 @@ export const getAllOptionGroupSettings = (): OptionGroupSettings[] => {
           </p>
           <ul className="list-disc ml-5">
             <li>Google Meet</li>
-            <li>Jitsi</li>
+            <li>Jitsi with </li>
+            <li>Zoom with the <a className='font-bold' href="https://chrome.google.com/webstore/detail/zoom-scheduler/kgjfgplpablkjnlkjmjdecgdpfankdle?hl=de">Zoom Scheduler extension</a></li>
           </ul>
         </div>
       ),
@@ -90,9 +91,96 @@ export const getAllOptionGroupSettings = (): OptionGroupSettings[] => {
     {
       id: 'indicateFullDayEvents',
       titel: 'Indicate Full Day Events',
-      text: <div>Displays full-day and multi-day events in the day and week views by adding the event to the background of the main calendar.</div>,
+      text: (
+        <div>
+          <p>Displays full-day and multi-day events in the day and week views by adding the event to the background of the main calendar.</p>
+          <p className="mt-2">
+            The transparency of the indicator depends on the event duration. You can set a minimum (&gt;=30 days) and a maximum (1 day) transparency.
+          </p>
+          <div className="flex mt-4">
+            <label className="input-group">
+              <span
+                className="w-2/5"
+                style={{
+                  backgroundColor: `rgb(25 115 230 /${sharedSettings.indicateFullDayEvents_minTransparency})`,
+                }}
+              >
+                min. transparency
+              </span>
+              <input
+                type="range"
+                min="0"
+                max="100"
+                value={sharedSettings.indicateFullDayEvents_minTransparency * 100}
+                className="range range-lg rounded-none"
+                step="5"
+                onChange={(e) => {
+                  updateSharedSettings({
+                    indicateFullDayEvents_minTransparency: parseInt(e.target.value) / 100,
+                  });
+                }}
+              />
+            </label>
+            <span className="w-1/10 rounded text-center font-bold ml-2 w-14">
+              {Math.round(sharedSettings.indicateFullDayEvents_minTransparency * 100) + '%'}
+            </span>
+          </div>
+          <div className="flex mt-4">
+            <label className="input-group">
+              <span className="w-2/5" style={{ backgroundColor: `rgb(25 115 230 /${sharedSettings.indicateFullDayEvents_maxTransparency})` }}>
+                max. transparency
+              </span>
+              <input
+                type="range"
+                min="0"
+                max="100"
+                value={sharedSettings.indicateFullDayEvents_maxTransparency * 100}
+                className="range range-lg rounded-none"
+                step="5"
+                onChange={(e) => {
+                  updateSharedSettings({
+                    indicateFullDayEvents_maxTransparency: parseInt(e.target.value) / 100,
+                  });
+                }}
+              />
+            </label>
+            <span className="w-1/10 rounded text-center font-bold ml-2 w-14">
+              {Math.round(sharedSettings.indicateFullDayEvents_maxTransparency * 100) + '%'}
+            </span>
+          </div>
+          <p className="mt-4">By default, the indicators span the entire width, but this can be changed here.</p>
+          <div className="flex mt-4">
+            <label className="input-group">
+              <span className="w-2/5">width</span>
+              <input
+                type="range"
+                min="0"
+                max="100"
+                value={sharedSettings.indicateFullDayEvents_maxWidth}
+                className="range range-lg rounded-none"
+                step="5"
+                onChange={(e) => {
+                  updateSharedSettings({
+                    indicateFullDayEvents_maxWidth: e.target.value,
+                  });
+                }}
+              />
+            </label>
+            <span className="w-1/10 rounded text-center font-bold ml-2 w-14">{sharedSettings.indicateFullDayEvents_maxWidth + '%'}</span>
+          </div>
+        </div>
+      ),
       toggleSettings: 'indicateFullDayEvents_isActive',
       pictureURLs: ['./images/indicateFullDayEvents_1.jpg'],
+    },
+    {
+      id: 'credits',
+      titel: 'Credits',
+      text: (
+        <div>
+          E-mail icon made by Rock Zombie from <a href="https://thenounproject.com/icon/e-mail-398485/">thenounproject.com</a>
+        </div>
+      ),
     },
   ];
 

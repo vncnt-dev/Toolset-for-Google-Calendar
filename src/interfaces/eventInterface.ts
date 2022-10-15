@@ -1,6 +1,6 @@
 export interface Event {
   type?: 'normal' | 'short' | 'multiDay';
-  dataEventId: string;
+  id: string;
   parentElement?: HTMLElement;
   eventTime: Date[];
   eventTimeElement?: HTMLElement;

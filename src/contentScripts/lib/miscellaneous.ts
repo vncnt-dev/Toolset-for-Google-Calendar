@@ -57,7 +57,7 @@ function getDate(dateKey: number) {
   return new Date(year + 1970, month, day);
 }
 
-function isBetweenDates(startDate: Date, endDate: Date, date: Date) {
+function isBetweenDays(startDate: Date, endDate: Date, date: Date) {
   let startYear = startDate.getFullYear();
   let startMonth = startDate.getMonth();
   let startDay = startDate.getDate();
@@ -74,6 +74,10 @@ function isBetweenDates(startDate: Date, endDate: Date, date: Date) {
   );
 }
 
+function isBetweenDates(startDate: Date, endDate: Date, date: Date) {
+  return startDate.getTime() <= date.getTime() && date.getTime() <= endDate.getTime();
+}
+
 function isSameDay(date1: Date, date2: Date) {
   try {
     return date1.getFullYear() === date2.getFullYear() && date1.getMonth() === date2.getMonth() && date1.getDate() === date2.getDate();
@@ -87,4 +91,4 @@ function deepCopy(obj: any) {
   return Object.assign({}, obj);
 }
 
-export { escapeHtml, trimArray, getDate, isBetweenDates, isSameDay, deepCopy, decodeDataEventId, correctEventTime };
+export { escapeHtml, trimArray, getDate, isBetweenDays, isBetweenDates, isSameDay, deepCopy, decodeDataEventId, correctEventTime };

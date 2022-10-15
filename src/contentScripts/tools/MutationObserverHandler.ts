@@ -47,10 +47,10 @@ function startWorkerCalendarView() {
   try {
     let eventList: NodeListOf<HTMLElement> = document.querySelectorAll('div[role="button"][data-eventid]');
     eventList.forEach((eventElement) => {
-      let eventIdObj = decodeDataEventId(eventElement.getAttribute('data-eventid')!); 
+      let eventIdObj = decodeDataEventId(eventElement.getAttribute('data-eventid')!);
       // a single event of a series can be edited, creating an exception that overwrites the original event for that one event
       // first one is for exceptions, second one is for the original event (series + one-time-events)
-      let thisEvent: Event = eventData[eventIdObj[0]+'_'+eventIdObj[1]]||eventData[eventIdObj[0]];
+      let thisEvent: Event = eventData[eventIdObj[0] + '_' + eventIdObj[1]] || eventData[eventIdObj[0]];
       if (!thisEvent) return;
       thisEvent.parentElement = eventElement;
       let eventTimeElement = eventElement.querySelector('.Jmftzc.gVNoLb.EiZ8Dd,.A6wOnd:not(.event-duration)') as HTMLElement;
@@ -65,10 +65,10 @@ function startWorkerCalendarView() {
     // multiDay events have to be handled separately, because there HTML structure is different
     let multiDayEventList: NodeListOf<HTMLElement> = document.querySelectorAll('.g3dbUc.jKgTF.QGRmIf:not(.PU9jSd)');
     multiDayEventList.forEach((eventTimeElement) => {
-      let eventIdObj = decodeDataEventId(eventTimeElement.parentElement!.getAttribute('data-eventid')!); 
+      let eventIdObj = decodeDataEventId(eventTimeElement.parentElement!.getAttribute('data-eventid')!);
       // a single event of a series can be edited, creating an exception that overwrites the original event for that one event
       // first one is for exceptions, second one is for the original event (series + one-time-events)
-      let thisEvent: Event = eventData[eventIdObj[0]+'_'+eventIdObj[1]]||eventData[eventIdObj[0]];
+      let thisEvent: Event = eventData[eventIdObj[0] + '_' + eventIdObj[1]] || eventData[eventIdObj[0]];
       if (!thisEvent) return;
       thisEvent.eventTimeElement = eventTimeElement;
       thisEvent.type = 'multiDay';
@@ -86,7 +86,7 @@ function startWorkerCalendarView() {
       Tools.addHoverOverInformation(thisEvent);
       if (thisEvent.type === 'multiDay') multiDayEvents.push(thisEvent);
     });
-    Tools.indicateFullDayEvents(multiDayEvents);
+    if (settings.indicateFullDayEvents_isActive) Tools.indicateFullDayEvents(multiDayEvents);
   } catch (error) {
     console.error('GC Tools - error: ', error);
   } finally {
@@ -97,7 +97,6 @@ function startWorkerCalendarView() {
 function startWorkerCompleteHTMLBody() {
   observerCompleteHTMLBody.disconnect();
   if (settings.betterAddMeeting_isActive) Tools.betterAddMeeting();
-
   createObserverCompleteHTMLBody();
 }
 

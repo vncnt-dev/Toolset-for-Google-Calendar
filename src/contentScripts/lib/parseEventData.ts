@@ -36,7 +36,7 @@ var updateEventData = function (XhrData: Array<any>) {
         let eventTime: Date[] = getEventTime(event) as Date[];
         let eventDuration = calculateDuration(eventTime);
         let newEvent: Event = {
-          dataEventId: event[0],
+          id: event[0],
           eventTime: eventTime,
           duration: eventDuration,
           eventLocation: event[7],
@@ -44,7 +44,7 @@ var updateEventData = function (XhrData: Array<any>) {
           eventName: event[5],
           eventCalendar: getEventCalendar(event)
         };
-        Object.assign(eventData, { [newEvent.dataEventId]: newEvent });
+        Object.assign(eventData, { [newEvent.id]: newEvent });
       });
     });
     // call observerCalendarViewFunction to make shure, that the displayed info is up to date

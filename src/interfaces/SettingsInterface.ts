@@ -5,4 +5,8 @@ export interface Settings {
   hoverInformation_isActive: boolean;
   betterAddMeeting_isActive: boolean;
   indicateFullDayEvents_isActive: boolean;
+  indicateFullDayEvents_minTransparency: number;
+  indicateFullDayEvents_maxTransparency: number;
+  indicateFullDayEvents_maxWidth: number;
 }
+     

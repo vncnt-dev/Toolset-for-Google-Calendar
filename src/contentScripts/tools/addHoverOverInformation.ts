@@ -5,7 +5,8 @@ import { settings } from '../lib/SettingsHandler';
 function addHoverOverInformation(event: Event) {
   let innerText = formatTime(event.eventTime);
   if (event.durationFormated) innerText += ' (' + event.durationFormated + ')';
-  innerText += '\n' + event.eventName;
+  if(event.eventName) innerText += '\n' + event.eventName;
+  if(event.eventLocation) innerText += '\n' + event.eventLocation;
 
   // set position and content of hoverInformationElement
   event.parentElement!.addEventListener('mousemove', (event) =>
@@ -49,7 +50,6 @@ function formatTime(eventTime: Date[]): string {
     let formattedTime = '';
 
     // only add time if not full day event
-    console.log(eventTime);
     let isFulldayEvent =
       eventTime[0].getHours() + eventTime[0].getTimezoneOffset() / 60 == 0 &&
       eventTime[0].getMinutes() == 0 &&

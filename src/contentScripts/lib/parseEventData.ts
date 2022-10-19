@@ -3,12 +3,8 @@ import { settings } from '../lib/SettingsHandler';
 import { observerCalendarViewFunction } from '../tools/MutationObserverHandler';
 
 function startXhrListener() {
-  var s = document.createElement('script');
-  s.src = chrome.runtime.getURL('/web_accessible_resources/XHRInterceptor.js');
-  (document.head || document.documentElement).appendChild(s);
-  s.onload = function () {
-    s.remove();
-  };
+  insertScriptToPage('xhook.min.js');
+  insertScriptToPage('XHRInterceptor.js');
 
   // Event listener
   document.addEventListener('GCT_XMLHttpRequest', function (event: CustomEventInit) {
@@ -42,7 +38,7 @@ var updateEventData = function (XhrData: Array<any>) {
           eventLocation: event[7],
           durationFormated: formatDuration(eventDuration, settings.calcDuration_durationFormat, settings.calcDuration_minimumDurationMinutes),
           eventName: event[5],
-          eventCalendar: getEventCalendar(event)
+          eventCalendar: getEventCalendar(event),
         };
         Object.assign(eventData, { [newEvent.id]: newEvent });
       });
@@ -51,6 +47,15 @@ var updateEventData = function (XhrData: Array<any>) {
     observerCalendarViewFunction();
   } catch (error) {}
 };
+
+function insertScriptToPage(file: string) {
+  var s = document.createElement('script');
+  s.src = chrome.runtime.getURL('/web_accessible_resources/' + file);
+  (document.head || document.documentElement).appendChild(s);
+  s.onload = function () {
+    s.remove();
+  };
+}
 
 function getEventTime(event: Array<any>): Array<Date> | null {
   if (event[35].length == 1) {
@@ -124,9 +129,10 @@ var escapeJsonString = function (str: String) {
     .replace(/[\n]/g, '\\n')
     .replace(/[\r]/g, '\\r')
     .replace(/[\t]/g, '\\t')
-    .replace(/[^,\[](")[^,\]]/g, function (match) { // replace all " that are within a string 
-        return match.replace(/"/g, "'"); 
-        });
+    .replace(/[^,\[](")[^,\]]/g, function (match) {
+      // replace all " that are within a string
+      return match.replace(/"/g, "'");
+    });
 };
 
 export { startXhrListener, eventData };

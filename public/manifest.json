@@ -30,6 +30,10 @@
   ],
   "web_accessible_resources": [
     {
+      "resources": ["web_accessible_resources/xhook.min.js"],
+      "matches": ["<all_urls>"]
+    },
+    {
       "resources": ["web_accessible_resources/XHRInterceptor.js"],
       "matches": ["<all_urls>"]
     }

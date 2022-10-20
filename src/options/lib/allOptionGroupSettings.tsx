@@ -80,8 +80,18 @@ export const getAllOptionGroupSettings = (): OptionGroupSettings[] => {
           </p>
           <ul className="list-disc ml-5">
             <li>Google Meet</li>
-            <li>Jitsi with </li>
-            <li>Zoom with the <a className='font-bold' href="https://chrome.google.com/webstore/detail/zoom-scheduler/kgjfgplpablkjnlkjmjdecgdpfankdle?hl=de">Zoom Scheduler extension</a></li>
+            <li>
+              Jitsi with the{' '}
+              <a className="font-bold" href="https://chrome.google.com/webstore/detail/jitsi-meetings/kglhbbefdnlheedjiejgomgmfplipfeb">
+                Jitsi Meetings extension
+              </a>
+            </li>
+            <li>
+              Zoom with the{' '}
+              <a className="font-bold" href="https://chrome.google.com/webstore/detail/zoom-scheduler/kgjfgplpablkjnlkjmjdecgdpfankdle">
+                Zoom Scheduler extension
+              </a>
+            </li>
           </ul>
         </div>
       ),
@@ -103,6 +113,7 @@ export const getAllOptionGroupSettings = (): OptionGroupSettings[] => {
                 className="w-2/5"
                 style={{
                   backgroundColor: `rgb(25 115 230 /${sharedSettings.indicateFullDayEvents_minTransparency})`,
+                  color: `${sharedSettings.indicateFullDayEvents_minTransparency > 0.5 ? 'white' : 'black'}`,
                 }}
               >
                 min. transparency
@@ -127,7 +138,13 @@ export const getAllOptionGroupSettings = (): OptionGroupSettings[] => {
           </div>
           <div className="flex mt-4">
             <label className="input-group">
-              <span className="w-2/5" style={{ backgroundColor: `rgb(25 115 230 /${sharedSettings.indicateFullDayEvents_maxTransparency})` }}>
+              <span
+                className="w-2/5"
+                style={{
+                  backgroundColor: `rgb(25 115 230 /${sharedSettings.indicateFullDayEvents_maxTransparency})`,
+                  color: `${sharedSettings.indicateFullDayEvents_maxTransparency > 0.5 ? 'white' : 'black'}`,
+                }}
+              >
                 max. transparency
               </span>
               <input
@@ -172,15 +189,6 @@ export const getAllOptionGroupSettings = (): OptionGroupSettings[] => {
       ),
       toggleSettings: 'indicateFullDayEvents_isActive',
       pictureURLs: ['./images/indicateFullDayEvents_1.jpg'],
-    },
-    {
-      id: 'credits',
-      titel: 'Credits',
-      text: (
-        <div>
-          E-mail icon made by Rock Zombie from <a href="https://thenounproject.com/icon/e-mail-398485/">thenounproject.com</a>
-        </div>
-      ),
     },
   ];
 

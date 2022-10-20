@@ -1,8 +1,8 @@
 .GCToolsModalOpen {
-  margin-left: 10px;
+  margin: 0px 25px;
 }
 .GCToolsModalOpen span {
-display: block;
+  display: block;
   font-size: 10px;
   height: 0;
   transform: translate(-6px, 0%);

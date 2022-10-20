@@ -3,16 +3,6 @@ import { settings, saveSettings } from './SettingsHandler';
 
 function preparePage() {
   /* https://www.w3schools.com/howto/howto_css_modals.asp */
-  let modal = document.createElement('div');
-  modal.innerHTML = `<div id="GCTModal" class="modal">
-    <div class="modal-content" id="GCToolsMenueBody">
-      <span class="close">&times;</span>
-      <h2>Google Calendar™ Tools</h2>
-      <h3 class="O1gyfd">Fast Access</h3>
-    </div>
-</div>`;
-  document.body.appendChild(modal);
-
   // open modal with button click
   let btn = document.createElement('div');
   btn.classList.add('GCToolsModalOpen');
@@ -22,6 +12,19 @@ function preparePage() {
     document.getElementById('GCTModal')!.style.display = 'block';
   });
   document.querySelector('div.BXL82c')!.after(btn);
+
+  /* modal */
+  let modal = document.createElement('div');
+  modal.innerHTML = `
+  <div id="GCTModal" class="modal">
+    <div class="modal-content" id="GCToolsMenueBody"
+    style="border-radius:10px;">
+      <span class="close" style="position: relative;top: -13px;">&times;</span>
+      <h2>Google Calendar™ Tools</h2>
+      <h3 class="O1gyfd">Fast Access Settings</h3>
+    </div>
+  </div>`;
+  document.body.appendChild(modal);
 
   // close Button
   var span = document.getElementsByClassName('close')[0];
@@ -36,7 +39,7 @@ function preparePage() {
       modal.style.display = 'none';
     }
   };
-  // fast access to the Information On Hover Setting, becaus it might be turned on/of more frequently (Google Calendar™ style)
+  // fast access to the "Information On Hover" setting, because it might be turned on/of more frequently (Google Calendar™ style)
   let menuPointHI = document.createElement('div');
   menuPointHI.classList.add('GCToolsMenueItem');
   menuPointHI.innerHTML = `
@@ -54,11 +57,12 @@ function preparePage() {
   menuPointHI.querySelector('#menuPointHICheckbox')!.classList.add(settings.hoverInformation_isActive ? 'N2RpBe' : 'foo');
   menuPointHI.addEventListener('click', () => {
     settings.hoverInformation_isActive = !settings.hoverInformation_isActive;
-    document.getElementById('menuPointHICheckbox')!.setAttribute('aria-checked', settings.hoverInformation_isActive.toString())
+    document.getElementById('menuPointHICheckbox')!.setAttribute('aria-checked', settings.hoverInformation_isActive.toString());
     document.getElementById('menuPointHICheckbox')!.classList.add(settings.hoverInformation_isActive ? 'N2RpBe' : 'foo');
     saveSettings(settings);
   });
   document.getElementById('GCToolsMenueBody')!.appendChild(menuPointHI);
+
   // open the settings menu  (Google Calendar™ style)
   let menuPointgtSettings = document.createElement('div');
   menuPointHI.classList.add('GCToolsMenueItem');

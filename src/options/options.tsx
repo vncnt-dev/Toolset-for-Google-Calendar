@@ -14,10 +14,10 @@ const Options = () => {
       <h1 className="font-medium text-4xl ml-4 mb-4 mt-2">
         Settings
         <a href="https://github.com/vncnt-dev/Google-Calendar-Tools" aria-label="Link to the Github-Repository">
-          <img className="w-14 h-14 float-right mr-4" src="./images/Github-Mark.png" alt="Github Logo" />
+          <img className="w-10 h-10 float-right mr-4" src="./images/Github-Mark.png" alt="Github Logo" />
         </a>
         <a href="mailto:contact@vncnt.dev?subject=GCT%20Feedback%20or%20Question" aria-label="E-mail to the developer">
-          <img className="w-14 h-14 float-right mr-4" src="./images/E-mail.svg" alt="Github Logo" />
+          <img className="w-10 h-10 float-right mr-4" src="./images/E-mail.svg" alt="Github Logo" />
         </a>
       </h1>
       <div className="divider"></div>

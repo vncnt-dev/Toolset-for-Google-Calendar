@@ -1,57 +1,36 @@
-/** calculate difference between start and end date in minutes */
-function calculateDuration(startEndDateTime: Date[]): number {
-  try {
-    return (startEndDateTime[1].getTime() - startEndDateTime[0].getTime()) / 1000 / 60;
-  } catch (e) {
-    console.warn('calculateDuration: error', e, startEndDateTime);
-    return 0;
-  }
+import { Event } from '../../interfaces/eventInterface';
+
+/* based on https://stackoverflow.com/a/46428456 */
+function decodeDataEventId(dataEventId: string): Array<string> {
+  let decoded = atob(dataEventId); // n17t3dbrekq5om2hj91t4pjefk_20221013T210000Z mail@...  -->  >id_date e-mail<
+  return decoded.split(/[_ ]/);
 }
 
-/* Format Date */
-function formatDuration(diff: number, format: string, minDurationMinutes: number): string | null {
-  // if diff is less than minDurationMinutes, return nothing
-  if (minDurationMinutes && diff < minDurationMinutes / 60) return null;
-  switch (format) {
-    case 'decimalHours':
-      var durationInHours = diff / 60;
-      if (durationInHours % 24 > 23.99) durationInHours = Math.ceil(durationInHours);
-      if (durationInHours < 24) return durationInHours.toFixed(2) + ' ' + (durationInHours <= 1 ? 'hour' : 'hours');
-      // duration of full and multi-day events in days rather than hours
-      let durationInDays = durationInHours / 24;
-      return durationInDays.toFixed(2) + ' ' + (durationInDays > 1 ? 'days' : 'day');
-      break;
-    case 'hourMinutes': // is default case
-    default:
-      var durationInHours = diff / 60;
+let multiDayDateKeyMap: Map<string, string> = new Map();
+function correctEventTime(event: Event): Date[] {
+  if (event.type == 'multiDay') {
+    // generate Map to get data-key of multiDay events
+    if (multiDayDateKeyMap.size == 0) {
+      Array.from(event.parentElement!.closest('.MVMVEe')!.childNodes[0].childNodes).forEach((el: any, index) => {
+        multiDayDateKeyMap.set(index.toString(), el.getAttribute('data-key'));
+      });
+    }
+    let index = Array.prototype.indexOf.call(event.parentElement!.closest('.rES0Be')!.children, event.parentElement!.closest('.eADW5d'));
+    var startDate = getDate(parseInt(multiDayDateKeyMap.get(index.toString())!));
+    var endDate = new Date(startDate.getTime() + event.duration * 60 * 1000);
+  } else {
+    let today: Date = getDate(parseInt(event.parentElement!.parentElement!.parentElement!.getAttribute('data-datekey')!));
 
-      if (durationInHours % 24 > 23.99)
-        // if 23:59, round up to 24 hours
-        durationInHours = Math.ceil(durationInHours);
-
-      let hours = Math.floor(durationInHours);
-      let minutes = Math.floor((durationInHours - hours) * 60);
-
-      // also display days if duration is greater than 24 hours
-      let days: number = 0;
-      if (durationInHours >= 24) {
-        days = Math.floor(durationInHours / 24);
-        hours = hours - days * 24;
-      }
-
-      let returnString = '';
-      if (days > 0) returnString += days + 'd ';
-      if (hours > 0) returnString += hours + 'h ';
-      if (minutes > 0) returnString += minutes + 'm';
-
-      return returnString.trim();
+    var startDate: Date = new Date(
+      today.getFullYear(),
+      today.getMonth(),
+      today.getDate(),
+      event.eventTime[0].getHours(),
+      event.eventTime[0].getMinutes(),
+    );
+    var endDate: Date = new Date(startDate.getTime() + event.duration * 60 * 1000);
   }
-}
-
-/* get name of event */
-function getEventName(parentElement: HTMLElement): string {
-  let el = (parentElement.querySelector('.FAxxKc') ?? parentElement.querySelector('.yzifAd')) as HTMLElement;
-  return el.innerText;
+  return [startDate, endDate];
 }
 
 /* escape html */
@@ -78,7 +57,7 @@ function getDate(dateKey: number) {
   return new Date(year + 1970, month, day);
 }
 
-function isBetweenDates(startDate: Date, endDate: Date, date: Date) {
+function isBetweenDays(startDate: Date, endDate: Date, date: Date) {
   let startYear = startDate.getFullYear();
   let startMonth = startDate.getMonth();
   let startDay = startDate.getDate();
@@ -95,13 +74,21 @@ function isBetweenDates(startDate: Date, endDate: Date, date: Date) {
   );
 }
 
-function isSameDate(date1: Date, date2: Date) {
+function isBetweenDates(startDate: Date, endDate: Date, date: Date) {
+  return startDate.getTime() <= date.getTime() && date.getTime() <= endDate.getTime();
+}
+
+function isSameDay(date1: Date, date2: Date) {
   try {
     return date1.getFullYear() === date2.getFullYear() && date1.getMonth() === date2.getMonth() && date1.getDate() === date2.getDate();
   } catch (e) {
-    console.warn('isSameDate: error', e, date1, date2);
+    console.warn('isSameDay: error', e, date1, date2);
     return false;
   }
 }
 
-export { calculateDuration, formatDuration, getEventName, escapeHtml, trimArray, getDate, isBetweenDates, isSameDate };
+function deepCopy(obj: any) {
+  return Object.assign({}, obj);
+}
+
+export { escapeHtml, trimArray, getDate, isBetweenDays, isBetweenDates, isSameDay, deepCopy, decodeDataEventId, correctEventTime };

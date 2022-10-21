@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Google Calendar™ Tools",
-  "version": "1.0.0",
+  "version": "1.1.1",
   "description": "This extension provides multiple small tools for the Google Calendar™.",
 
   "action": {
@@ -24,7 +24,18 @@
     {
       "js": ["js/content_script.js"],
       "css": ["styles/content_script.css"],
-      "matches": ["https://calendar.google.com/*"]
+      "matches": ["https://calendar.google.com/*"],
+      "run_at": "document_end"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["web_accessible_resources/xhook.min.js"],
+      "matches": ["<all_urls>"]
+    },
+    {
+      "resources": ["web_accessible_resources/XHRInterceptor.js"],
+      "matches": ["<all_urls>"]
     }
   ],
   "permissions": ["storage"]

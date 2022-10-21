@@ -11,24 +11,33 @@ export const useShareableState = () => {
   };
 
   const saveSharedSettings = async () => {
+    if (sharedSettings.indicateFullDayEvents_minTransparency > sharedSettings.indicateFullDayEvents_maxTransparency) {
+      toast.error('The minimum transparency cannot be higher than the maximum transparency.', {
+        position: 'bottom-right',
+        autoClose: 3_000,
+      });
+      return;
+    }
+
     let wasSaved = saveSettings(sharedSettings);
-    console.log('saveSharedSettings', wasSaved);
+    console.info('saveSharedSettings', wasSaved);
     if (await wasSaved) {
       toast.success('Saved successfully', {
         position: 'bottom-right',
-        autoClose: 3_000
+        autoClose: 3_000,
       });
     } else {
       toast.warn('Error while saving!', {
         position: 'bottom-right',
-        autoClose: 15_000
+        autoClose: 15_000,
       });
     }
   };
 
   const loadSharedSettings = () => {
-    loadSettings();
-    setSharedSettings(settings);
+    loadSettings().then((loadedSettings) => {
+      setSharedSettings(loadedSettings);
+    });
   };
 
   const restoreDefaultSharedSettings = () => {
@@ -37,8 +46,6 @@ export const useShareableState = () => {
   };
 
   useEffect(() => {
-    // send chrome message
-    //chrome.runtime.sendMessage("isDarkmode: "+window.matchMedia('(prefers-color-scheme: dark)').matches);
     loadSettings()
       .then((settings) => {
         setSharedSettings(settings);

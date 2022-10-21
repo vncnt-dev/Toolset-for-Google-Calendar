@@ -1,10 +1,12 @@
 export interface Event {
-  type: 'normal' | 'short' | 'multiDay';
-  parentElement: HTMLElement;
+  type?: 'normal' | 'short' | 'multiDay';
+  id: string;
+  parentElement?: HTMLElement;
   eventTime: Date[];
-  eventTimeElement: HTMLElement;
+  eventTimeElement?: HTMLElement;
   duration: number;
   durationFormated: string | null;
   eventName: string;
-  eventCalendar: string;
+  eventLocation: string;
+  eventCalendar: [string, string]; // [calendarName, calendarId]
 }

@@ -1,5 +1,6 @@
 import { Settings } from '../../interfaces/SettingsInterface';
 import { storage } from '@extend-chrome/storage';
+import { deepCopy } from './miscellaneous';
 
 var defaultSettings: Settings = {
   calcDuration_isActive: true,
@@ -8,14 +9,17 @@ var defaultSettings: Settings = {
   hoverInformation_isActive: true,
   betterAddMeeting_isActive: true,
   indicateFullDayEvents_isActive: true,
+  indicateFullDayEvents_maxTransparency: 0.9,
+  indicateFullDayEvents_minTransparency: 0.5,
+  indicateFullDayEvents_maxWidth: 100,
 };
 
 var settings: Settings = defaultSettings;
 
 function loadSettings() {
   return storage.sync.get('settings').then((e) => {
-    console.log('GC Tools - getSettings: ', e.settings);
-    settings = e.settings ?? defaultSettings;
+    console.info('GC Tools - getSettings: ', e.settings);
+    settings = Object.assign(deepCopy(defaultSettings), e.settings);
     return settings;
   });
 }
@@ -24,7 +28,7 @@ function saveSettings(settings: Settings): Promise<boolean> {
   return storage.sync
     .set({ settings: settings })
     .then((e) => {
-      console.log('GC Tools - saveSettings: ', e); 
+      console.info('GC Tools - saveSettings: ', e);
       return true;
     })
     .catch((error) => {

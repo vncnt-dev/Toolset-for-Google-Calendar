@@ -1,14 +1,15 @@
 import { Event } from '../../interfaces/EventInterface';
-import { isSameDate } from '../lib/miscellaneous';
+import { isSameDay } from '../lib/miscellaneous';
 import { settings } from '../lib/SettingsHandler';
 
 function addHoverOverInformation(event: Event) {
   let innerText = formatTime(event.eventTime);
   if (event.durationFormated) innerText += ' (' + event.durationFormated + ')';
-  innerText += '\n' + event.eventName;
+  if(event.eventName) innerText += '\n' + event.eventName;
+  if(event.eventLocation) innerText += '\n' + event.eventLocation;
 
   // set position and content of hoverInformationElement
-  event.parentElement.addEventListener('mousemove', (event) =>
+  event.parentElement!.addEventListener('mousemove', (event) =>
     ((innerText) => {
       if (settings.hoverInformation_isActive) {
         document.getElementById('hoverInformationElementText')!.innerText = innerText;
@@ -27,38 +28,44 @@ function addHoverOverInformation(event: Event) {
   );
 
   // hoverout eventlistener
-  event.parentElement.addEventListener('mouseout', (event) => {
+  event.parentElement!.addEventListener('mouseout', (event) => {
     document.getElementById('hoverInformationElement')!.style.visibility = 'hidden';
   });
 }
 
 function formatTime(eventTime: Date[]): string {
-  let formattedTime = '';
-  if (isSameDate(eventTime[0], eventTime[1])) {
-    formattedTime =
+  if (isSameDay(eventTime[0], eventTime[1])) {
+    return (
       zeroPad(eventTime[0].getHours(), 2) +
       ':' +
       zeroPad(eventTime[0].getMinutes(), 2) +
       ' - ' +
       zeroPad(eventTime[1].getHours(), 2) +
       ':' +
-      zeroPad(eventTime[1].getMinutes(), 2);
+      zeroPad(eventTime[1].getMinutes(), 2)
+    );
   } else {
-    // only add time if event doesn't start 00:00
-    if (!(eventTime[0].getHours() === 0 && eventTime[0].getMinutes() === 0))
-      formattedTime = zeroPad(eventTime[0].getHours(), 2) + ':' + zeroPad(eventTime[0].getMinutes(), 2) + ' ';
-    // add day, only add month / year if start and end are not in same month/year
-    formattedTime += zeroPad(eventTime[0].getDate(), 2) + '.';
-    if (eventTime[0].getMonth() !== eventTime[1].getMonth() || eventTime[0].getFullYear() !== eventTime[1].getFullYear())
-      formattedTime += zeroPad(eventTime[0].getMonth(), 2) + '.';
-    if (eventTime[0].getFullYear() !== eventTime[1].getFullYear()) formattedTime += zeroPad(eventTime[0].getFullYear(), 2);
-    // only add time if event doesn't end 23:59, add full date
-    formattedTime += ' - ';
-    if (!(eventTime[1].getHours() === 23 && eventTime[1].getMinutes() === 59))
-      formattedTime += zeroPad(eventTime[1].getHours(), 2) + ':' + zeroPad(eventTime[1].getMinutes(), 2) + ' ';
-    formattedTime += zeroPad(eventTime[1].getDate(), 2) + '.' + zeroPad(eventTime[1].getMonth(), 2) + '.' + eventTime[1].getFullYear();
+    let options: Intl.DateTimeFormatOptions;
+    let locales = document.documentElement.lang as Intl.LocalesArgument;
+    let formattedTime = '';
+
+    // only add time if not full day event
+    let isFulldayEvent =
+      eventTime[0].getHours() + eventTime[0].getTimezoneOffset() / 60 == 0 &&
+      eventTime[0].getMinutes() == 0 &&
+      eventTime[1].getHours() + eventTime[1].getTimezoneOffset() / 60 == 0 &&
+      eventTime[1].getMinutes() == 0;
+
+    if (!isFulldayEvent) options = { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' };
+    else options = { year: 'numeric', month: '2-digit', day: '2-digit' };
+    formattedTime = eventTime[0].toLocaleDateString(locales, options) + ' - ';
+
+    if (!isFulldayEvent) options = { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' };
+    else options = { year: 'numeric', month: '2-digit', day: '2-digit' };
+    formattedTime += eventTime[1].toLocaleDateString(locales, options);
+
+    return formattedTime;
   }
-  return formattedTime;
 }
 
 const zeroPad = (num: number, places: number) => String(num).padStart(places, '0');

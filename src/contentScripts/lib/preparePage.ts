@@ -20,7 +20,7 @@ function preparePage() {
     <div class="modal-content" id="GCToolsMenueBody"
     style="border-radius:10px;">
       <span class="close" style="position: relative;top: -13px;">&times;</span>
-      <h2>Google Calendar™ Tools</h2>
+      <h2>Toolset for Google Calendar™</h2>
       <h3 class="O1gyfd">Fast Access Settings</h3>
     </div>
   </div>`;

@@ -103,7 +103,7 @@ var calculateWidthAndPos = function (
     return eventInStorage.id === event.id;
   });
 
-  let width = 100 / parrallelEvents.length;
+  let width = settings.indicateFullDayEvents_maxWidth / parrallelEvents.length;
   indicatorElement.style.width = width + '%';
   indicatorElement.style.left = width * indexOfCurrentEvent + '%';
   return indicatorElement;

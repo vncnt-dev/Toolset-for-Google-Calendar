@@ -35,8 +35,9 @@ export const useShareableState = () => {
   };
 
   const loadSharedSettings = () => {
-    loadSettings();
-    setSharedSettings(settings);
+    loadSettings().then((loadedSettings) => {
+      setSharedSettings(loadedSettings);
+    });
   };
 
   const restoreDefaultSharedSettings = () => {

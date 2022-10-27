@@ -34,6 +34,3 @@ Displays full-day and multi-day events in the day and week views by adding the e
 
 ## Configurable Settings:
 <img src="./dokumentation/Screenshot-2.jpg" width="50%"></img>
-
-This project contains icons from the [Material Design Icons](https://materialdesignicons.com/) project.
-[LICENSE](https://github.com/Templarian/MaterialDesign/blob/master/LICENSE)

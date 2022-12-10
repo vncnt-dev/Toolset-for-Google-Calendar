@@ -43,9 +43,9 @@ export const OptionGroup = (optionGroupSettings: OptionGroupSettings) => {
         <div className="w-3/5">{optionGroupSettings.text}</div>
         <div className="w-2/5 flex flex-wrap justify-evenly">
           {optionGroupSettings.pictureURLs &&
-            optionGroupSettings.pictureURLs.map((pictureURL: string) => {
+            optionGroupSettings.pictureURLs.map((pictureURL: string, index: number) => {
               return (
-                <div>
+                <div key={index}>
                   <img
                     className="rounded-xl min-w-[250px] max-h-[200px] object-contain"
                     src={pictureURL}

@@ -6,9 +6,9 @@ export const Sidebar = () => {
   let allOptionGroupSettings = getAllOptionGroupSettings();
   return (
     <ul className="steps steps-vertical">
-      {getAllOptionGroupSettings().map((optionGroupSettings: OptionGroupSettings) => {
+      {getAllOptionGroupSettings().map((optionGroupSettings: OptionGroupSettings, index: number) => {
         return (
-          <li data-content="" className="step" id={'nav_' + optionGroupSettings.id}>
+          <li data-content="" className="step" id={'nav_' + optionGroupSettings.id} key={index}>
             <a
               href={'#' + optionGroupSettings.id}
               className="text-base"

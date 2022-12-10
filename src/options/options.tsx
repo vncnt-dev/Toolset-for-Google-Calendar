@@ -28,8 +28,8 @@ const Options = () => {
         <div className="w-4/5 pr-5">
           <div>
             <div id="optionForm" className="overflow-y-scroll" style={{ height: 'calc(100vh - 171px)' }}>
-              {getAllOptionGroupSettings().map((optionGroupSettings: OptionGroupSettings) => {
-                return <OptionGroup {...optionGroupSettings}></OptionGroup>;
+              {getAllOptionGroupSettings().map((optionGroupSettings: OptionGroupSettings, index: number) => {
+                return <OptionGroup key={index} {...optionGroupSettings}></OptionGroup>;
               })}
             </div>
             <div>

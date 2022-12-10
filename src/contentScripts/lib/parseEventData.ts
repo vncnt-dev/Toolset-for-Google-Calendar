@@ -8,20 +8,23 @@ function startXhrListener() {
 
   // Event listener
   document.addEventListener('GCT_XMLHttpRequest', function (event: CustomEventInit) {
-    let req = event.detail as XMLHttpRequest;
-    if (req.responseURL.includes('calendar.google.com/calendar/u/0/sync.prefetcheventrange')) {
-      // this is called when the calendar is initially loaded
-      let data = JSON.parse(escapeJsonString(req.responseText.slice(6)))[0][2][1];
-      updateEventData(data);
-    } else if (req.responseURL.includes('calendar.google.com/calendar/u/0/sync.sync')) {
-      // this is called when an event is added or edited
-      let data = JSON.parse(escapeJsonString(req.responseText.slice(6)))[0][2][3][0][1][0][3];
-      let initDataStrcucture = [['', [data]]];
-      updateEventData(initDataStrcucture);
+    try {
+      let req = event.detail as XMLHttpRequest;
+      if (req.responseURL.includes('calendar.google.com/calendar/u/0/sync.prefetcheventrange')) {
+        // this is called when the calendar is initially loaded
+        let data = JSON.parse(escapeJsonString(req.responseText.slice(6)))[0][2][1];
+        updateEventData(data);
+      } else if (req.responseURL.includes('calendar.google.com/calendar/u/0/sync.sync')) {
+        // this is called when an event is added or edited
+        let data = JSON.parse(escapeJsonString(req.responseText.slice(6)))[0][2][3][0][1][0][3];
+        let initDataStrcucture = [['', [data]]];
+        updateEventData(initDataStrcucture);
+      }
+    } catch (error) {
+      console.warn('GCT_XMLHttpRequest', error);
     }
   });
 }
-
 var eventData: Record<string, Event> = {};
 
 var updateEventData = function (XhrData: Array<any>) {

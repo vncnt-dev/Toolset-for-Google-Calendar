@@ -33,7 +33,7 @@ const Options = () => {
               })}
             </div>
             <div>
-              <OptionsFormActions></OptionsFormActions>
+              <OptionsFormActions />
             </div>
           </div>
         </div>

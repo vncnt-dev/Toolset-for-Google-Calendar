@@ -1,4 +1,5 @@
 import React from 'react';
+import { Settings, SettingsIsActive } from '../../interfaces/SettingsInterface';
 import { settings, saveSettings } from '../lib/SettingsHandler';
 
 export const FastActionsModal = () => {
@@ -6,7 +7,7 @@ export const FastActionsModal = () => {
     document.getElementById('GCTModal')!.style.display = 'none';
   };
 
-  const handleFilesChange = async (event: any) => {
+  const handleIcsChange = async (event: any) => {
     let files = event.target.files;
     if (!files) return;
     let ical;
@@ -28,22 +29,11 @@ export const FastActionsModal = () => {
     }
     // reset input to no selected file
     event.target.value = '';
-
-    /* https://calendar.google.com/calendar/u/0/r/settings/export */
-    let googleImporter = document.createElement('div');
-    googleImporter.innerHTML = `
-          <form jsname="GBqgNb" method="POST" enctype="multipart/form-data">
-            <input type="file" class="xBQ53c" name="filename" jsname="nGoat">
-          </form>
-          <span jsname="V67aGc" style="display: none;" id="googleImporter" ></span>`;
-
-    // set ical file as value of input
-    googleImporter.querySelector('input')!.value = ical;
-    googleImporter.click();
+    document.getElementById('sendICS')!.click();
   };
 
-  const handleiInfoOnHoverClick = (event: any) => {
-    settings.hoverInformation_isActive = (event.target! as HTMLInputElement).checked!;
+  const toggleFeature = (feature: keyof SettingsIsActive) => {
+    settings[feature] = !settings[feature];
     saveSettings(settings);
   };
 
@@ -59,18 +49,65 @@ export const FastActionsModal = () => {
       <h2>Toolset for Google Calendar™</h2>
       <h3 className="O1gyfd">Ical Importer</h3>
       <p>This Importer allows you to easily import multiple iCalendar files into Google Calendar.</p>
-      <input type="file" accept=".ics" multiple onChange={handleFilesChange} />
-      <h3 className="O1gyfd">Fast Access Settings</h3>
+
+      <div className="Trypk" tabIndex={0} role="button" aria-label="Datei von meinem Computer auswählen">
+        <label className="IZXV0b">
+          <i className="google-material-icons meh4fc hggPq CJ947" aria-hidden="true">
+            file_upload
+          </i>
+          <span>Select .ics Files</span>
+          <input type="file" accept=".ics" multiple className="xBQ53c" name="filename" onChange={handleIcsChange} />
+          {/* @ts-ignore: because of jscontroller */}
+          <button className="hidden" id="sendICS" jscontroller="soHxf" jsaction="click:cOuCgd;" jsname="N8B8lb"></button>
+        </label>
+      </div>
+
+      <h3 className="O1gyfd">Switch Features On/Off</h3>
       <div className="GCToolsMenueItem">
         <div className="GCToolsMenueItem">
-          <div className="form-field">
-            <input type="checkbox" id="infoOnHover" onChange={handleiInfoOnHoverClick} />
-            <label htmlFor="infoOnHover">Information On Hover</label>
+          <p>Get more information about the features and additional customization options on the option page.</p>
+          <div className="grid grid-cols-2">
+            <div className="block">
+              <input
+                type="checkbox"
+                id="infoOnHover"
+                onChange={() => toggleFeature('calcDuration_isActive')}
+                checked={settings['calcDuration_isActive']}
+              />
+              <label htmlFor="infoOnHover">Display Event-Duration</label>
+            </div>
+            <div className="block">
+              <input
+                type="checkbox"
+                id="infoOnHover"
+                onChange={() => toggleFeature('hoverInformation_isActive')}
+                checked={settings['hoverInformation_isActive']}
+              />
+              <label htmlFor="infoOnHover">Information On Hover</label>
+            </div>
+            <div className="block">
+              <input
+                type="checkbox"
+                id="infoOnHover"
+                onChange={() => toggleFeature('betterAddMeeting_isActive')}
+                checked={settings['betterAddMeeting_isActive']}
+              />
+              <label htmlFor="infoOnHover">Better Add Meeting Buttons</label>
+            </div>
+            <div className="block">
+              <input
+                type="checkbox"
+                id="infoOnHover"
+                onChange={() => toggleFeature('indicateFullDayEvents_isActive')}
+                checked={settings['indicateFullDayEvents_isActive']}
+              />
+              <label htmlFor="infoOnHover">Indicate Full Day Events</label>
+            </div>
           </div>
         </div>
       </div>
       <button className="VfPpkd-LgbsSe VfPpkd-LgbsSe-OWXEXe-INsAgc VfPpkd-LgbsSe-OWXEXe-dgl2Hf Rj2Mlf" onClick={openSettings}>
-        <span className="VfPpkd-vQzf8d">Open Settings</span>
+        <span className="VfPpkd-vQzf8d">Open Options Page</span>
       </button>
     </div>
   );

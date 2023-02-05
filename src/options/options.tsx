@@ -12,7 +12,7 @@ const Options = () => {
   return (
     <div>
       <h1 className="font-medium text-4xl ml-4 mb-4 mt-2">
-        Settings
+        Options
         <a href="https://github.com/vncnt-dev/Google-Calendar-Tools" aria-label="Link to the Github-Repository">
           <img className="w-10 h-10 float-right mr-4" src="./images/Github-Mark.png" alt="Github Logo" />
         </a>

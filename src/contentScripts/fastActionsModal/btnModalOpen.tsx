@@ -9,7 +9,7 @@ export const BtnGCToolsModalOpen = () => {
   return (
     <button className="GCToolsModalOpen" onClick={openModal}>
       <BtnModalOpenIcon />
-      <span>GC Tools</span>
+      <div className='hint'>GC Tools</div>
     </button>
   );
 };

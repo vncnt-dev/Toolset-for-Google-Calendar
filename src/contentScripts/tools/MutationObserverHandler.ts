@@ -6,7 +6,7 @@ import { correctEventTime, decodeDataEventId, deepCopy } from '../lib/miscellane
 
 MutationObserver = window.MutationObserver;
 
-var timer: NodeJS.Timer,
+var timer: NodeJS.Timeout,
   lastTime: number = 0;
 
 var observerCalendarViewFunction = function () {

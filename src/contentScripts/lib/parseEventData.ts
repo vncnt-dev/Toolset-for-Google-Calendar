@@ -34,32 +34,39 @@ function startXhrListener() {
       console.warn('GCT_XMLHttpRequest', error, event);
     }
   });
-
 }
 var eventData: Record<string, Event> = {};
 
 var updateEventData = function (XhrData: Array<any>) {
+  /* console.log('GC Tools - updateEventData', XhrData); */
   try {
     XhrData.forEach((calender: any) => {
       // every calender has an array of events
-      calender[1].forEach((event: any) => {
+      const newEventData = calender[1].reduce((acc: any, event: any) => {
         let eventTime: Date[] = getEventTime(event) as Date[];
+        if (!eventTime) return acc;
         let eventDuration = calculateDuration(eventTime);
+        let recurrenceRuleString = JSON.parse(`"${event[12]?.[0] ?? ''}"`);
         let newEvent: Event = {
           id: event[0],
           eventTime: eventTime,
           duration: eventDuration,
-          eventLocation: event[7],
+          eventLocation: event[7]?.trim(),
           durationFormated: formatDuration(eventDuration, settings.calcDuration_durationFormat, settings.calcDuration_minimumDurationMinutes),
-          eventName: event[5],
+          eventName: event[5]?.trim(),
+          description: event[64]?.[1]?.trim(),
           eventCalendar: getEventCalendar(event),
+          recurrenceRule: recurrenceRuleString?.slice(recurrenceRuleString.indexOf(':') + 1),
         };
-        Object.assign(eventData, { [newEvent.id]: newEvent });
-      });
+        return { ...acc, [newEvent.id]: newEvent };
+      }, {});
+      eventData = { ...eventData, ...newEventData };
     });
     // call observerCalendarViewFunction to make shure, that the displayed info is up to date
     observerCalendarViewFunction();
-  } catch (error) {}
+  } catch (error) {
+    console.log('GC Tools - updateEventData: ', error);
+  }
 };
 
 function insertScriptToPage(file: string) {
@@ -72,6 +79,7 @@ function insertScriptToPage(file: string) {
 }
 
 function getEventTime(event: Array<any>): Array<Date> | null {
+  if (!event[35]) return null;
   if (event[35].length == 1) {
     return [new Date(event[35][0]), new Date(event[36][0])];
   } else if (event[35].length == 3) {

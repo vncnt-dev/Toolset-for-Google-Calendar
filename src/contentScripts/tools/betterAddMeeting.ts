@@ -104,8 +104,6 @@ function betterAddMeeting() {
   }
   if (meetingButtonCollectorElement === null) return;
   getMeetingButtons(view);
-  /* console.log(addMeetingButtons); */
-
   for (let taskKey in addMeetingButtons) {
     let task = addMeetingButtons[taskKey];
     try {

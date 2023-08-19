@@ -14,7 +14,6 @@ var indicateFullDayEvents = (eventStorageMultiDay: Event[]) => {
   setItemInCache('minTransparency', settings.indicateFullDayEvents_minTransparency);
 
   const dateColumnElements = Array.from(document.querySelectorAll('.YvjgZe'));
-  console.log('indicateFullDayEvents: ', eventStorageMultiDay);
   try {
     for (const changedEvent of eventStorageMultiDay) {
       const id = generateID(changedEvent);

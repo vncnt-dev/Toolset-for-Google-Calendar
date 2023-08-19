@@ -4,6 +4,7 @@ import * as Tools from './tools';
 import { eventData } from '../lib/parseEventData';
 import { correctEventTime, decodeDataEventId, deepCopy } from '../lib/miscellaneous';
 import { resetCache, getItemFromCache, setItemInCache } from '../lib/cache';
+import { exportToIcalPrepare } from './tools';
 
 MutationObserver = window.MutationObserver;
 
@@ -43,7 +44,6 @@ function createObserverCompleteHTMLBody() {
 }
 
 function startWorkerCalendarView() {
-  console.log('GC Tools - startWorkerCalendarView');
   resetCache();
   var eventStorage: Event[] = [];
   observerCalendarView.disconnect();
@@ -92,6 +92,10 @@ function startWorkerCalendarView() {
     }
     multiDayEvents = multiDayEvents.filter((event, index, self) => self.findIndex((t) => t.id === event.id) === index); // remove double entries
     if (settings.indicateFullDayEvents_isActive) Tools.indicateFullDayEvents(multiDayEvents);
+    exportToIcalPrepare();
+
+    setItemInCache('eventStorage', eventStorage);
+    setItemInCache('multiDayEvents', multiDayEvents);
   } catch (error) {
     console.error('GC Tools - error: ', error);
   } finally {
@@ -102,6 +106,7 @@ function startWorkerCalendarView() {
 function startWorkerCompleteHTMLBody() {
   observerCompleteHTMLBody.disconnect();
   if (settings.betterAddMeeting_isActive) Tools.betterAddMeeting();
+
   createObserverCompleteHTMLBody();
 }
 

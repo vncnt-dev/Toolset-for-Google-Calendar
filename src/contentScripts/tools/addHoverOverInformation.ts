@@ -1,12 +1,12 @@
-import { Event } from '../../interfaces/EventInterface';
+import { Event } from '../../interfaces/eventInterface';
 import { isSameDay } from '../lib/miscellaneous';
 import { settings } from '../lib/SettingsHandler';
 
 function addHoverOverInformation(event: Event) {
   let innerText = formatTime(event.eventTime);
-  if (event.durationFormated) innerText += ' (' + event.durationFormated + ')';
-  if(event.eventName) innerText += '\n' + event.eventName;
-  if(event.eventLocation) innerText += '\n' + event.eventLocation;
+  if (event.durationFormated) innerText += ` (${event.durationFormated})`;
+  if (event.eventName) innerText += `\n${event.eventName}`;
+  if (event.eventLocation) innerText += `\n${event.eventLocation}`;
 
   // set position and content of hoverInformationElement
   event.parentElement!.addEventListener('mousemove', (event) =>
@@ -18,11 +18,11 @@ function addHoverOverInformation(event: Event) {
         // position hoverInformationElement under mouse pointer
         // if mouse in near the buttom of the screen, move it up
         if (event.clientY + hoverInformationElement.clientHeight > window.innerHeight) {
-          hoverInformationElement.style.top = event.clientY - hoverInformationElement.clientHeight + 10 + 'px';
+          hoverInformationElement.style.top = `${event.clientY - hoverInformationElement.clientHeight + 10}px`;
         } else {
-          hoverInformationElement.style.top = event.clientY - 10 + 'px';
+          hoverInformationElement.style.top = `${event.clientY - 10}px`;
         }
-        hoverInformationElement.style.left = event.clientX + 'px';
+        hoverInformationElement.style.left = `${event.clientX}px`;
       }
     })(innerText),
   );
@@ -36,13 +36,13 @@ function addHoverOverInformation(event: Event) {
 function formatTime(eventTime: Date[]): string {
   if (isSameDay(eventTime[0], eventTime[1])) {
     return (
-      zeroPad(eventTime[0].getHours(), 2) +
+      eventTime[0].getHours().toString().padStart(2, '0') +
       ':' +
-      zeroPad(eventTime[0].getMinutes(), 2) +
+      eventTime[0].getMinutes().toString().padStart(2, '0') +
       ' - ' +
-      zeroPad(eventTime[1].getHours(), 2) +
+      eventTime[1].getHours().toString().padStart(2, '0') +
       ':' +
-      zeroPad(eventTime[1].getMinutes(), 2)
+      eventTime[1].getMinutes().toString().padStart(2, '0')
     );
   } else {
     let options: Intl.DateTimeFormatOptions;
@@ -67,7 +67,5 @@ function formatTime(eventTime: Date[]): string {
     return formattedTime;
   }
 }
-
-const zeroPad = (num: number, places: number) => String(num).padStart(places, '0');
 
 export { addHoverOverInformation };

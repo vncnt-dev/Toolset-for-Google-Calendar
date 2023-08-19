@@ -16,22 +16,25 @@ function startXhrListener() {
           let data = JSON.parse(escapeJsonString(req.responseText.slice(6)))[0][2][1];
           updateEventData(data);
         } catch (error) {
-          console.warn('GCT_XMLHttpRequest-update', error, JSON.parse(escapeJsonString(req.responseText.slice(6))) || req.responseText);
+          console.warn('GCT_XMLHttpRequest-init', error, JSON.parse(escapeJsonString(req.responseText.slice(6))) || req.responseText);
         }
       } else if (req.responseURL.includes('calendar.google.com/calendar/u/0/sync.sync')) {
         try {
           // this is called when an event is added or edited
-          let data = JSON.parse(escapeJsonString(req.responseText.slice(6)))[0][2][3][0][1][0][3];
+          let responseAsJson = JSON.parse(escapeJsonString(req.responseText.slice(6)));
+          // if no events are in the response, return (this is the case when an event is deleted
+          let data = responseAsJson[0][2][3][0][1][0][3];
           let initDataStrcucture = [['', [data]]];
           updateEventData(initDataStrcucture);
         } catch (error) {
-          console.warn('GCT_XMLHttpRequest-update', error, JSON.parse(escapeJsonString(req.responseText.slice(6))) || req.responseText);
+          /* console.warn('GCT_XMLHttpRequest-update', error, JSON.parse(escapeJsonString(req.responseText.slice(6))) || req.responseText); */
         }
       }
     } catch (error) {
       console.warn('GCT_XMLHttpRequest', error, event);
     }
   });
+
 }
 var eventData: Record<string, Event> = {};
 

@@ -3,7 +3,7 @@ import { Event } from '../../interfaces/eventInterface';
 function injectDuration(eventObject: Event) {
   if (eventObject.durationFormated) {
     try {
-      let eventTimeElement = eventObject.eventTimeElement!;
+      let eventTimeElement = eventObject.timeElement!;
       let durationElement: HTMLElement;
       if (eventObject.type === 'multiDay') {
         durationElement = eventTimeElement.querySelector('.yzifAd')!.cloneNode(true) as HTMLElement;

@@ -1,9 +1,7 @@
-import { getItemFromCache, setItemInCache } from '../lib/cache';
+import { getItemFromCache } from '../lib/cache';
 import { Event } from '../../interfaces/eventInterface';
 
 const exportToIcalPrepare = () => {
-  console.log('GC Tools - exportToIcalPrepare');
-
   const menuItem = Array.from(document.querySelectorAll('ul.VfPpkd-StrnGf-rymPhb.DMZ54e')).filter((ulElement) => {
     return (ulElement.parentNode as HTMLElement).hasAttribute('data-eventid');
   })[0];
@@ -48,17 +46,17 @@ ${generateVTimeZone(timeZone)}\r
 BEGIN:VEVENT\r
 UID:${activeEvent.id}@google.com\r
 DTSTAMP;TZID=${timeZone}:${formatDateToIcal(new Date())}\r
-DTSTART;TZID=${timeZone}:${formatDateToIcal(activeEvent.eventTime[0])}\r
-DTEND;TZID=${timeZone}:${formatDateToIcal(activeEvent.eventTime[1])}\r
+DTSTART;TZID=${timeZone}:${formatDateToIcal(activeEvent.time[0])}\r
+DTEND;TZID=${timeZone}:${formatDateToIcal(activeEvent.time[1])}\r
 DESCRIPTION:${activeEvent.description ?? ''}\r
-LOCATION:${activeEvent.eventLocation ?? ''}\r
+LOCATION:${activeEvent.location ?? ''}\r
 ${activeEvent.recurrenceRule ? `RRULE:${activeEvent.recurrenceRule}\r` : ''}\
-SUMMARY:${activeEvent.eventName}\r
+SUMMARY:${activeEvent.name}\r
 END:VEVENT\r
 END:VCALENDAR`;
   console.log(icalString);
   // only keep: letters, numbers, spaces, dots, dashes
-  downloadStringAsFile(icalString, activeEvent.eventName.replace(/[^\w\s\.-\d]/g, '-') + '.ics');
+  downloadStringAsFile(icalString, activeEvent.name.replace(/[^\w\s\.-\d]/g, '-') + '.ics');
 };
 
 function formatDateToIcal(date: Date) {

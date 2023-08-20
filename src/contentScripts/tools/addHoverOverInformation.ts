@@ -3,10 +3,10 @@ import { isSameDay } from '../lib/miscellaneous';
 import { settings } from '../lib/SettingsHandler';
 
 function addHoverOverInformation(event: Event) {
-  let innerText = formatTime(event.eventTime);
+  let innerText = formatTime(event.time);
   if (event.durationFormated) innerText += ` (${event.durationFormated})`;
-  if (event.eventName) innerText += `\n${event.eventName}`;
-  if (event.eventLocation) innerText += `\n${event.eventLocation}`;
+  if (event.name) innerText += `\n${event.name}`;
+  if (event.location) innerText += `\n${event.location}`;
 
   // set position and content of hoverInformationElement
   event.parentElement!.addEventListener('mousemove', (event) =>

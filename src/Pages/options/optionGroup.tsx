@@ -1,5 +1,5 @@
 import React from 'react';
-import { OptionGroupSettings } from '../interfaces/optionGroupSettingsInterface';
+import { OptionGroupSettings } from '../../interfaces/optionGroupSettingsInterface';
 import { useShareableState } from './lib/reactSettingsHandler';
 import { useBetween } from 'use-between';
 import { getAllOptionGroupSettings } from './lib/allOptionGroupSettings';
@@ -56,7 +56,7 @@ export const OptionGroup = (optionGroupSettings: OptionGroupSettings) => {
                   <input type="checkbox" id={pictureURL.slice(pictureURL.lastIndexOf("/"))} className="modal-toggle" />
                   <div className="modal">
                     <div className="modal-box max-h-fit max-w-fit">
-                      <img className="rounded-xl object-contain max-h-[80vh] max-w-[80vw]" src={pictureURL} />
+                    <img className="rounded-xl object-contain max-h-[80vh] max-w-[80vw] sm:min-w-[500px] min-w-[50vw]" src={pictureURL} />
                       <div className="modal-action">
                         <label htmlFor={pictureURL.slice(pictureURL.lastIndexOf("/"))} className="btn">
                           Close

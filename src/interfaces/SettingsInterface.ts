@@ -4,6 +4,7 @@ export interface SettingsIsActive {
   hoverInformation_isActive: boolean;
   betterAddMeeting_isActive: boolean;
   indicateFullDayEvents_isActive: boolean;
+  exportAsIcs_isActive: boolean;
 }
 
 

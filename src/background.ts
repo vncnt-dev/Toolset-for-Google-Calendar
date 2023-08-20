@@ -10,6 +10,9 @@ chrome.runtime.onInstalled.addListener(function (details) {
   if (details.reason == 'install') {
     openSettings();
   }
+  if (details.reason == 'update') {
+    chrome.tabs.create({ url: 'changelog/changelog.html' });
+  }
 });
 
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
@@ -18,4 +21,4 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
   }
 });
 
-//chrome.runtime.setUninstallURL('');
+chrome.runtime.setUninstallURL('https://forms.gle/4Cz8mugpeky6EE9j7');

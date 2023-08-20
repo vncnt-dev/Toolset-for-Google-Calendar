@@ -49,13 +49,13 @@ var updateEventData = function (XhrData: Array<any>) {
         let recurrenceRuleString = JSON.parse(`"${event[12]?.[0] ?? ''}"`);
         let newEvent: Event = {
           id: event[0],
-          eventTime: eventTime,
+          time: eventTime,
           duration: eventDuration,
-          eventLocation: event[7]?.trim(),
+          location: event[7]?.trim(),
           durationFormated: formatDuration(eventDuration, settings.calcDuration_durationFormat, settings.calcDuration_minimumDurationMinutes),
-          eventName: event[5]?.trim(),
+          name: event[5]?.trim(),
           description: event[64]?.[1]?.trim(),
-          eventCalendar: getEventCalendar(event),
+          calendar: getEventCalendar(event),
           recurrenceRule: recurrenceRuleString?.slice(recurrenceRuleString.indexOf(':') + 1),
         };
         return { ...acc, [newEvent.id]: newEvent };
@@ -79,7 +79,7 @@ function insertScriptToPage(file: string) {
 }
 
 function getEventTime(event: Array<any>): Array<Date> | null {
-  if (!event[35]) return null;
+  if (!event?.[35]) return null;
   if (event[35].length == 1) {
     return [new Date(event[35][0]), new Date(event[36][0])];
   } else if (event[35].length == 3) {
@@ -101,7 +101,7 @@ function calculateDuration(startEndDateTime: Date[]): number {
 /* Format Date */
 function formatDuration(diff: number, format: string, minDurationMinutes: number): string | null {
   // if diff is less than minDurationMinutes, return nothing
-  if (minDurationMinutes && diff < minDurationMinutes / 60) return null;
+  if (minDurationMinutes && diff < minDurationMinutes) return null;
   switch (format) {
     case 'decimalHours':
       var durationInHours = diff / 60;
@@ -137,9 +137,9 @@ function formatDuration(diff: number, format: string, minDurationMinutes: number
   }
 }
 
-function getEventCalendar(event: Array<any>): [string, string] {
-  if (event[34][1] !== null) return [event[34][1], event[34][0]];
-  return [event[34][0], event[34][0]];
+function getEventCalendar(event: Array<any>): { id: string; name: string } {
+  const [id, name] = event[34];
+  return { id, name: name ?? id };
 }
 
 var escapeJsonString = function (str: String) {

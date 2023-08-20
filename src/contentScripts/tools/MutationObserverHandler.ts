@@ -3,8 +3,7 @@ import { settings } from '../lib/SettingsHandler';
 import * as Tools from './tools';
 import { eventData } from '../lib/parseEventData';
 import { correctEventTime, decodeDataEventId, deepCopy } from '../lib/miscellaneous';
-import { resetCache, getItemFromCache, setItemInCache } from '../lib/cache';
-import { exportToIcalPrepare } from './tools';
+import { resetCache, setItemInCache } from '../lib/cache';
 
 MutationObserver = window.MutationObserver;
 
@@ -57,10 +56,10 @@ function startWorkerCalendarView() {
       if (!thisEvent) continue;
       thisEvent.parentElement = eventElement;
       let eventTimeElement = eventElement.querySelector('.Jmftzc.gVNoLb.EiZ8Dd,.A6wOnd:not(.event-duration)') as HTMLElement;
-      thisEvent.eventTimeElement = eventTimeElement;
+      thisEvent.timeElement = eventTimeElement;
       // very short events (>1h) have a diffenent HTML structure
       thisEvent.type = eventTimeElement.classList.contains('A6wOnd') ? 'short' : 'normal';
-      thisEvent.eventTime = correctEventTime(thisEvent);
+      thisEvent.time = correctEventTime(thisEvent);
       eventStorage.push(deepCopy(thisEvent));
     }
 
@@ -72,16 +71,16 @@ function startWorkerCalendarView() {
       // first one is for exceptions, second one is for the original event (series + one-time-events)
       let thisEvent: Event = eventData[eventIdObj[0] + '_' + eventIdObj[1]] || eventData[eventIdObj[0]];
       if (!thisEvent) continue;
-      thisEvent.eventTimeElement = eventTimeElement;
+      thisEvent.timeElement = eventTimeElement;
       thisEvent.parentElement = eventTimeElement.parentElement!;
       thisEvent.type = 'multiDay';
-      thisEvent.eventTime = correctEventTime(thisEvent);
+      thisEvent.time = correctEventTime(thisEvent);
       eventStorage.push(deepCopy(thisEvent));
     }
 
     let multiDayEvents: Event[] = [];
     for (let thisEvent of eventStorage) {
-      if (!thisEvent.parentElement || !thisEvent.eventTimeElement) continue;
+      if (!thisEvent.parentElement || !thisEvent.timeElement) continue;
       if (settings.calcDuration_isActive) {
         Tools.injectDuration(thisEvent);
       }
@@ -92,7 +91,7 @@ function startWorkerCalendarView() {
     }
     multiDayEvents = multiDayEvents.filter((event, index, self) => self.findIndex((t) => t.id === event.id) === index); // remove double entries
     if (settings.indicateFullDayEvents_isActive) Tools.indicateFullDayEvents(multiDayEvents);
-    exportToIcalPrepare();
+    if (settings.exportAsIcs_isActive) Tools.exportToIcalPrepare();
 
     setItemInCache('eventStorage', eventStorage);
     setItemInCache('multiDayEvents', multiDayEvents);

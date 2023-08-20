@@ -24,7 +24,7 @@ function correctEventTime(event: Event): Date[] {
     return [startDate, endDate];
   } else {
     const duration = event.duration;
-    const eventTime = event.eventTime[0];
+    const eventTime = event.time[0];
     const datekey = event.parentElement?.parentElement?.parentElement?.getAttribute('data-datekey')!;
     const today = getDateFromDateKey(parseInt(datekey));
 

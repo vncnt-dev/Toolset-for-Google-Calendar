@@ -1,3 +1,5 @@
+import { loadSettings,settings } from './contentScripts/lib/SettingsHandler';
+
 function openSettings() {
   chrome.runtime.openOptionsPage();
 }
@@ -11,7 +13,9 @@ chrome.runtime.onInstalled.addListener(function (details) {
     openSettings();
   }
   if (details.reason == 'update') {
-    chrome.tabs.create({ url: 'changelog/changelog.html' });
+    loadSettings().then((settings) => {
+      if(settings.showChangeLog_isActive) chrome.tabs.create({ url: 'changelog/changelog.html' });
+    });
   }
 });
 

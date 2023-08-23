@@ -13,6 +13,7 @@ var defaultSettings: Settings = {
   indicateFullDayEvents_minTransparency: 0.5,
   indicateFullDayEvents_maxWidth: 100,
   exportAsIcs_isActive: true,
+  showChangeLog_isActive: true,
 };
 
 var settings: Settings = defaultSettings;

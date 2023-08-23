@@ -5,6 +5,7 @@ export interface SettingsIsActive {
   betterAddMeeting_isActive: boolean;
   indicateFullDayEvents_isActive: boolean;
   exportAsIcs_isActive: boolean;
+  showChangeLog_isActive: boolean;
 }
 
 

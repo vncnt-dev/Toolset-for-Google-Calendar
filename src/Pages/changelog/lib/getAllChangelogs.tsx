@@ -5,11 +5,15 @@ export const getAllChangelogs = (): Changelog[] => {
   let allChangelogs: Changelog[] = [
     {
       version: '1.2.0',
-      titel: 'v1.2.0 - Bugfixes and export as ics/iCal',
+      titel: 'v1.2.0 - Bugfixes and ics/iCal functionality',
       text: (
         <div>
-          This update fixes some bugs and adds the possibility to export individual events as ics/iCal file. <br />
-          The feature is enabled by default but can be disabled in the settings.
+          This update fixes bugs and adds the functionality to:
+          <br />
+          <ul className="list-disc list-inside">
+            <li>export individual events as ics/iCal file</li>
+            <li>combine multiple ics-files to one ics file, that can be imported into Google Calendar™ using the nativ import function</li>
+          </ul>
         </div>
       ),
     },

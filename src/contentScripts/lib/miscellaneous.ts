@@ -1,3 +1,4 @@
+import ReactDOMServer from 'react-dom/server';
 import { Event } from '../../interfaces/eventInterface';
 import { getItemFromCache, setItemInCache } from '../lib/cache';
 
@@ -28,7 +29,7 @@ function correctEventTime(event: Event): Date[] {
     const datekey = event.parentElement?.parentElement?.parentElement?.getAttribute('data-datekey')!;
     const today = getDateFromDateKey(parseInt(datekey));
 
-    const startDate = new Date(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate(), eventTime.getHours(), eventTime.getMinutes()));
+    const startDate = new Date(today.getFullYear(), today.getMonth(), today.getDate(), eventTime.getHours(), eventTime.getMinutes());
     const endDate = new Date(startDate.getTime() + duration * 60 * 1000);
     return [startDate, endDate];
   }
@@ -84,4 +85,37 @@ function deepCopy<T>(obj: T): T {
   return { ...obj };
 }
 
-export { escapeHtml, trimArray, getDateFromDateKey, isBetweenDays, isBetweenDates, isSameDay, deepCopy, decodeDataEventId, correctEventTime };
+function downloadStringAsFile(string: string, filename: string) {
+  const blob = new Blob([string], { type: 'text/plain' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+function JsxElementToHtmlElement(jsxElement: JSX.Element): HTMLElement {
+  return htmlStringToHtmlElement(ReactDOMServer.renderToStaticMarkup(jsxElement));
+}
+
+function htmlStringToHtmlElement(html: string): HTMLElement {
+  var template = document.createElement('template');
+  html = html.trim();
+  template.innerHTML = html;
+  return (template.content.firstChild as HTMLElement) ?? document.createElement('div');
+}
+
+export {
+  escapeHtml,
+  trimArray,
+  getDateFromDateKey,
+  isBetweenDays,
+  isBetweenDates,
+  isSameDay,
+  deepCopy,
+  decodeDataEventId,
+  correctEventTime,
+  downloadStringAsFile,
+  JsxElementToHtmlElement,
+  htmlStringToHtmlElement,
+};

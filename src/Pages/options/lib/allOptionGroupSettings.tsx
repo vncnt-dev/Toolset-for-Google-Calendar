@@ -192,7 +192,7 @@ export const getAllOptionGroupSettings = (): OptionGroupSettings[] => {
     },
     {
       id: 'exportAsIcs',
-      titel: 'Export Event as ics/iCal',
+      titel: 'Export Event As Ics/iCal',
       text: (
         <div>
           <p>
@@ -203,6 +203,18 @@ export const getAllOptionGroupSettings = (): OptionGroupSettings[] => {
       ),
       toggleSettings: 'exportAsIcs_isActive',
       pictureURLs: ['./images/exportAsIcs_1.jpg'],
+    },
+    {
+      id: 'changelog',
+      titel: 'Open Changelog-Page After Update',
+      text: (
+        <div>
+          Opens this <a href="/changelog/changelog.html"
+          className='font-bold text-blue-500'
+          >changelog page</a> after an update.
+        </div>
+      ),
+      toggleSettings: 'showChangeLog_isActive'
     },
   ];
 

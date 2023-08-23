@@ -1,20 +1,23 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
+import ReactDOMServer from 'react-dom/server';
 import { BtnGCToolsModalOpen } from './btnModalOpen';
 import { FastActionsModal } from './fastActionsModal';
 import './fastActionsModal.css';
+import { JsxElementToHtmlElement } from '../lib/miscellaneous';
 
 export function fastActionsModalInit() {
   /*** init hoverover element in Google Calendar™ style ***/
   // this element is used to display the hover information
-  let hoverElement: HTMLElement = document.createElement('div');
-  hoverElement.innerHTML = `
-    <span class="RM9ulf catR2e PgfOZ qs41qe" id="hoverInformationElement">
-      <span class="AZnilc R8qYlc" id="hoverInformationElementText">
+
+  const hoverElement = JsxElementToHtmlElement(
+    <span className="RM9ulf catR2e PgfOZ qs41qe" id="hoverInformationElement">
+      <span className="AZnilc R8qYlc" id="hoverInformationElementText">
         Text
       </span>
-    </span>
-  `;
+    </span>,
+  );
+  console.log(hoverElement.innerHTML);
   document.getElementsByTagName('body')[0].appendChild(hoverElement);
 
   /*** init modal ***/
@@ -33,8 +36,7 @@ export function fastActionsModalInit() {
   );
 
   /* modal */
-  let modal = document.createElement('div');
-  modal.innerHTML = `<div id="GCTModal" class="modal"></div>`;
+  let modal = JsxElementToHtmlElement(<div id="GCTModal" className="modal"></div>);
   document.body.appendChild(modal);
 
   window.onclick = function (event) {

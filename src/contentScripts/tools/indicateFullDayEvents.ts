@@ -21,7 +21,7 @@ var indicateFullDayEvents = (eventStorageMultiDay: Event[]) => {
       for (const DateColumnElement of dateColumnElements) {
         const DateOfDateColumnElement = getDateFromDateKey(parseInt(DateColumnElement.getAttribute('data-datekey')!));
         // if event is on current calDate, proceed
-        if (isBetweenDays(changedEvent.time[0], changedEvent.time[1], DateOfDateColumnElement)) {
+        if (isBetweenDays(changedEvent.dates.start, changedEvent.dates.end, DateOfDateColumnElement)) {
           const indicatorElement = document.createElement('div');
           indicatorElement.id = `${id}`;
           indicatorElement.classList.add('fullDayEventIndicator', 'EfQccc');
@@ -46,7 +46,7 @@ var indicateFullDayEvents = (eventStorageMultiDay: Event[]) => {
 
 /** generates ID for indicator element */
 var generateID = function (event: Event) {
-  let rawID = JSON.stringify([event.time, event.timeElement!.style.backgroundColor, event.name]);
+  let rawID = JSON.stringify([event.dates, event.timeElement!.style.backgroundColor, event.name]);
   // prevent problems with whitespaces etc., max 65. characters
   return 'ID' + encodeURIComponent(rawID).replace(/%/g, '_').slice(0, 65);
 };
@@ -54,8 +54,8 @@ var generateID = function (event: Event) {
 /** generate opacity for event, based on duration */
 var calculateOpacity = function (event: Event) {
   const durationInDays = event.duration / 60 / 24;
-  const maxTransparency: number = getItemFromCache('maxTransparency');
-  const minTransparency: number = getItemFromCache('minTransparency');
+  const maxTransparency: number = getItemFromCache('maxTransparency')!;
+  const minTransparency: number = getItemFromCache('minTransparency')!;
 
   let transparency;
   if (durationInDays > daysMaxTransparency) {
@@ -71,23 +71,23 @@ var calculateOpacity = function (event: Event) {
 };
 
 var calculateTop = function (event: Event, calDate: Date) {
-  let baseHeight: number = getItemFromCache('baseHeight');
+  let baseHeight: number = getItemFromCache('baseHeight')!;
   // if calDate is start date of event, return height based on start time
-  if (isSameDay(calDate, event.time[0])) {
-    return baseHeight * (event.time[0].getHours() + event.time[0].getMinutes() / 60);
+  if (isSameDay(calDate, event.dates.start)) {
+    return baseHeight * (event.dates.start.getHours() + event.dates.start.getMinutes() / 60);
   } else {
     return 0;
   }
 };
 
 var calculateHeight = function (event: Event, calDate: Date) {
-  let baseHeight: number = getItemFromCache('baseHeight');
+  let baseHeight: number = getItemFromCache('baseHeight')!;
   // if calDate is neither start nor end date of event, return full height
-  if (!isSameDay(calDate, event.time[0]) && !isSameDay(calDate, event.time[1])) return baseHeight * 24;
+  if (!isSameDay(calDate, event.dates.start) && !isSameDay(calDate, event.dates.end)) return baseHeight * 24;
   // if calDate is start date of event, height is 24h - start time
-  else if (isSameDay(calDate, event.time[0])) return baseHeight * (24 - (event.time[0].getHours() + event.time[0].getMinutes() / 60));
+  else if (isSameDay(calDate, event.dates.start)) return baseHeight * (24 - (event.dates.start.getHours() + event.dates.start.getMinutes() / 60));
   // if calDate is end date of event, height is end time
-  else if (isSameDay(calDate, event.time[1])) return baseHeight * (event.time[1].getHours() + event.time[1].getMinutes() / 60);
+  else if (isSameDay(calDate, event.dates.end)) return baseHeight * (event.dates.end.getHours() + event.dates.end.getMinutes() / 60);
   else {
     return 0;
   }
@@ -102,10 +102,10 @@ var calculateWidthAndPos = function (
   // get count of parrallel multi-day-events on same day
   let parrallelEvents = eventStorageMultiDay.filter(function (eventInStorage) {
     if (
-      isBetweenDays(eventInStorage.time[0], eventInStorage.time[1], DateOfDateColumnElement) && // event is on current calDate
+      isBetweenDays(eventInStorage.dates.start, eventInStorage.dates.end, DateOfDateColumnElement) && // event is on current calDate
       // it posible that an event is on the same day as the current event, but not parrallel ->
-      (isBetweenDates(eventInStorage.time[0], eventInStorage.time[1], event.time[0]) || // starts during other event
-        isBetweenDates(eventInStorage.time[0], eventInStorage.time[1], event.time[1])) // ends during other event
+      (isBetweenDates(eventInStorage.dates.start, eventInStorage.dates.end, event.dates.start) || // starts during other event
+        isBetweenDates(eventInStorage.dates.start, eventInStorage.dates.end, event.dates.end)) // ends during other event
     )
       return eventInStorage;
   });

@@ -20,7 +20,6 @@ export const useShareableState = () => {
     }
 
     let wasSaved = saveSettings(sharedSettings);
-    console.info('saveSharedSettings', wasSaved);
     if (await wasSaved) {
       toast.success('Saved successfully', {
         position: 'bottom-right',

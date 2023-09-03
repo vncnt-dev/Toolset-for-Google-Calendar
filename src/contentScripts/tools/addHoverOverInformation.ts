@@ -1,9 +1,9 @@
-import { Event } from '../../interfaces/eventInterface';
+import { Event, EventDates } from '../../interfaces/eventInterface';
 import { isSameDay } from '../lib/miscellaneous';
 import { settings } from '../lib/SettingsHandler';
 
 function addHoverOverInformation(event: Event) {
-  let innerText = formatTime(event.time);
+  let innerText = formatTime(event.dates);
   if (event.durationFormated) innerText += ` (${event.durationFormated})`;
   if (event.name) innerText += `\n${event.name}`;
   if (event.location) innerText += `\n${event.location}`;
@@ -33,16 +33,16 @@ function addHoverOverInformation(event: Event) {
   });
 }
 
-function formatTime(eventTime: Date[]): string {
-  if (isSameDay(eventTime[0], eventTime[1])) {
+function formatTime(eventTime: EventDates): string {
+  if (isSameDay(eventTime.start, eventTime.end)) {
     return (
-      eventTime[0].getHours().toString().padStart(2, '0') +
+      eventTime.start.getHours().toString().padStart(2, '0') +
       ':' +
-      eventTime[0].getMinutes().toString().padStart(2, '0') +
+      eventTime.start.getMinutes().toString().padStart(2, '0') +
       ' - ' +
-      eventTime[1].getHours().toString().padStart(2, '0') +
+      eventTime.end.getHours().toString().padStart(2, '0') +
       ':' +
-      eventTime[1].getMinutes().toString().padStart(2, '0')
+      eventTime.end.getMinutes().toString().padStart(2, '0')
     );
   } else {
     let options: Intl.DateTimeFormatOptions;
@@ -51,18 +51,18 @@ function formatTime(eventTime: Date[]): string {
 
     // only add time if not full day event
     let isFulldayEvent =
-      eventTime[0].getHours() + eventTime[0].getTimezoneOffset() / 60 == 0 &&
-      eventTime[0].getMinutes() == 0 &&
-      eventTime[1].getHours() + eventTime[1].getTimezoneOffset() / 60 == 0 &&
-      eventTime[1].getMinutes() == 0;
+      eventTime.start.getHours() + eventTime.start.getTimezoneOffset() / 60 == 0 &&
+      eventTime.start.getMinutes() == 0 &&
+      eventTime.end.getHours() + eventTime.end.getTimezoneOffset() / 60 == 0 &&
+      eventTime.end.getMinutes() == 0;
 
     if (!isFulldayEvent) options = { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' };
     else options = { year: 'numeric', month: '2-digit', day: '2-digit' };
-    formattedTime = eventTime[0].toLocaleDateString(locales, options) + ' - ';
+    formattedTime = eventTime.start.toLocaleDateString(locales, options) + ' - ';
 
     if (!isFulldayEvent) options = { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' };
     else options = { year: 'numeric', month: '2-digit', day: '2-digit' };
-    formattedTime += eventTime[1].toLocaleDateString(locales, options);
+    formattedTime += eventTime.end.toLocaleDateString(locales, options);
 
     return formattedTime;
   }

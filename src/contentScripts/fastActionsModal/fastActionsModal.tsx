@@ -9,7 +9,6 @@ export const FastActionsModal = () => {
   };
 
   const handleIcsChange = async (event: any) => {
-    console.log('handleIcsChange');
     let files = event.target.files;
     if (!files) return;
 
@@ -19,11 +18,43 @@ export const FastActionsModal = () => {
     }
 
     let combinedIcs = fileContents[0];
+    let timeZones = [];
+    if (combinedIcs.indexOf('BEGIN:VTIMEZONE') !== -1) {
+      timeZones.push(
+        combinedIcs.slice(combinedIcs.indexOf('TZID:') + 5, nextIndexOf(combinedIcs, new RegExp('\n|\r'), combinedIcs.indexOf('TZID:') + 5)),
+      );
+    }
+
     for (let i = 1; i < fileContents.length; i++) {
       let events = fileContents[i].slice(fileContents[i].indexOf('BEGIN:VEVENT'), fileContents[i].lastIndexOf('END:VEVENT') + 11);
+
+      if (fileContents[i].indexOf('TZID:') !== -1) {
+        let timeZoneId = fileContents[i].slice(
+          fileContents[i].indexOf('TZID:') + 5,
+          nextIndexOf(fileContents[i], new RegExp('\n|\r'), fileContents[i].indexOf('TZID:') + 5),
+        );
+        if (timeZones.indexOf(timeZoneId) === -1) {
+          console.log('new timezone: ' + timeZoneId, timeZones);
+          timeZones.push(timeZoneId);
+          if (combinedIcs.indexOf('END:VTIMEZONE') === -1) {
+            combinedIcs =
+              combinedIcs.slice(0, combinedIcs.indexOf('BEGIN:VEVENT')) +
+              fileContents[i].slice(0, fileContents[i].indexOf('BEGIN:VEVENT')) +
+              combinedIcs.slice(combinedIcs.indexOf('BEGIN:VEVENT'));
+          } else {
+            combinedIcs = combinedIcs.slice(0, combinedIcs.indexOf('END:VTIMEZONE') + 13) + '\r\n' +
+            fileContents[i].slice(fileContents[i].indexOf('BEGIN:VTIMEZONE'), fileContents[i].indexOf('END:VTIMEZONE') + 13) +
+              combinedIcs.slice(combinedIcs.indexOf('END:VTIMEZONE') + 13);
+          }
+        }
+      }
+
       combinedIcs =
         combinedIcs.slice(0, combinedIcs.lastIndexOf('END:VEVENT') + 11) + events + combinedIcs.slice(combinedIcs.lastIndexOf('END:VEVENT') + 11);
     }
+    // remove empty lines and \n to CRLF
+    combinedIcs = combinedIcs.replace(/^\s*[\r\n]/gm, '').replace(/\n/g, '\r\n').replace(/\r\r\n/g, '\r\n');
+
     downloadStringAsFile(combinedIcs, 'combined.ics');
 
     // reset input to no selected file
@@ -40,15 +71,17 @@ export const FastActionsModal = () => {
         &times;
       </span>
       <h2>Toolset for Google Calendar™</h2>
-      <h3 className="O1gyfd">Ical Combiner</h3>
-      <p>This combines multiple .ics files into one, that then can be imported into Google Calendar™ using the native import functionallity.</p>
+      <h3 className="O1gyfd">ics Combiner</h3>
+      <p>
+        This combines multiple .ics (iCal) files into one, that then can be imported into Google Calendar™ using the native import functionallity.
+      </p>
       <div className="container" style={{ display: 'flex', flexDirection: 'row', width: '100%' }}>
         <div className="Trypk" tabIndex={0} role="button" aria-label="Datei von meinem Computer auswählen" style={{ width: '50%' }}>
           <label className="IZXV0b">
             <i className="google-material-icons meh4fc hggPq CJ947" aria-hidden="true">
               file_upload
             </i>
-            <span>Select .ics Files</span>
+            <span>Select the .ics files to combine</span>
             <input type="file" accept=".ics" multiple className="xBQ53c" name="filename" onChange={handleIcsChange} />
           </label>
         </div>
@@ -94,3 +127,12 @@ const GoogleButtonBlueOutline = (props: { text: string; onClick: () => void }) =
     </button>
   );
 };
+
+function nextIndexOf(str: string, search: string | RegExp, start: number) {
+  return typeof search === 'string' ? str.indexOf(search, start) : regexIndexOf(str, search, start);
+}
+
+function regexIndexOf(string: string, regex: RegExp, startpos: number = 0) {
+  var indexOf = string.substring(startpos).search(regex);
+  return indexOf >= 0 ? indexOf + startpos : indexOf;
+}

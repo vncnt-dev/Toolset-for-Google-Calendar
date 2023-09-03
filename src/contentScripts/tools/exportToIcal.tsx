@@ -31,43 +31,42 @@ const exportToIcal = () => {
   const activeEventId = popupView.getAttribute('data-eventid');
   if (!activeEventId) return;
 
-  const eventStorage: Event[] = getItemFromCache('eventStorage') || [];
+  const eventStorage: Event[] | [] = getItemFromCache('eventStorage') || [];
   const activeEvent = eventStorage.find((event) => event.parentElement?.getAttribute('data-eventid') === activeEventId);
   if (!activeEvent) return;
   /* https://datatracker.ietf.org/doc/html/rfc5545 */
-  const icalString = `BEGIN:VCALENDAR\r
-VERSION:2.0\r
-PRODID:-//Google Inc//Google Calendar 70.9054//EN\r
-CALSCALE:GREGORIAN\r
-BEGIN:VTIMEZONE\r
-TZID:UTC\r
-BEGIN:DAYLIGHT\r
-TZOFFSETFROM:+0000\r
-TZOFFSETTO:+0000\r
-TZNAME:Daylight Saving Time\r
-DTSTART:19700329T020000\r
-RRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=-1SU\r
-END:DAYLIGHT\r
-BEGIN:STANDARD\r
-TZOFFSETFROM:+0000\r
-TZOFFSETTO:+0000\r
-TZNAME:Standard Time\r
-DTSTART:19701101T030000\r
-RRULE:FREQ=YEARLY;BYMONTH=11;BYDAY=1SU\r
-END:STANDARD\r
-END:VTIMEZONE\r
-BEGIN:VEVENT\r
-UID:${activeEvent.id}@google.com\r
-DTSTAMP;TZID=UTC:${formatDateToIcal(new Date())}\r
-DTSTART;TZID=UTC:${formatDateToIcal(activeEvent.time[0])}\r
-DTEND;TZID=UTC:${formatDateToIcal(activeEvent.time[1])}\r
-DESCRIPTION:${activeEvent.description ?? ''}\r
-LOCATION:${activeEvent.location ?? ''}\r
-${activeEvent.recurrenceRule ? `RRULE:${activeEvent.recurrenceRule}\r` : ''}\
-SUMMARY:${activeEvent.name}\r
-END:VEVENT\r
+  const icalString = `BEGIN:VCALENDAR\r\n
+VERSION:2.0\r\n
+PRODID:-//Google Inc//Google Calendar 70.9054//EN\r\n
+CALSCALE:GREGORIAN\r\n
+BEGIN:VTIMEZONE\r\n
+TZID:UTC\r\n
+BEGIN:DAYLIGHT\r\n
+TZOFFSETFROM:+0000\r\n
+TZOFFSETTO:+0000\r\n
+TZNAME:Daylight Saving Time\r\n
+DTSTART:19700329T020000\r\n
+RRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=-1SU\r\n
+END:DAYLIGHT\r\n
+BEGIN:STANDARD\r\n
+TZOFFSETFROM:+0000\r\n
+TZOFFSETTO:+0000\r\n
+TZNAME:Standard Time\r\n
+DTSTART:19701101T030000\r\n
+RRULE:FREQ=YEARLY;BYMONTH=11;BYDAY=1SU\r\n
+END:STANDARD\r\n
+END:VTIMEZONE\r\n
+BEGIN:VEVENT\r\n
+UID:${activeEvent.id}@google.com\r\n
+DTSTAMP;TZID=UTC:${formatDateToIcal(new Date())}\r\n
+DTSTART;TZID=UTC:${formatDateToIcal(activeEvent.dates.start)}\r\n
+DTEND;TZID=UTC:${formatDateToIcal(activeEvent.dates.end)}\r\n
+DESCRIPTION:${activeEvent.description ?? ''}\r\n
+LOCATION:${activeEvent.location ?? ''}\r\n
+${activeEvent.recurrenceRule ? `RRULE:${activeEvent.recurrenceRule}\r\n` : ''}\
+SUMMARY:${activeEvent.name}\r\n
+END:VEVENT\r\n
 END:VCALENDAR`;
-  console.log(icalString);
   // only keep: letters, numbers, spaces, dots, dashes
   downloadStringAsFile(icalString, activeEvent.name.replace(/[^\w\s\.-\d]/g, '-') + '.ics');
 };

@@ -1,14 +1,16 @@
-let cache: { [key: string]: any } = {};
+import { GctCache } from '../../interfaces/cache';
+
+let cache: GctCache = {};
 
 const resetCache = () => {
   cache = {};
 };
 
-const getItemFromCache = (key: string) => {
+const getItemFromCache = <T extends keyof GctCache>(key: T): GctCache[T] => {
   return cache[key];
 };
 
-const setItemInCache = (key: string, value: any) => {
+const setItemInCache = <T extends keyof GctCache>(key: T, value: GctCache[T]) => {
   cache[key] = value;
 };
 

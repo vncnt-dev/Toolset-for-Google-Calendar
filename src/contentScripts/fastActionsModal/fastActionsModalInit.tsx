@@ -17,7 +17,6 @@ export function fastActionsModalInit() {
       </span>
     </span>,
   );
-  console.log(hoverElement.innerHTML);
   document.getElementsByTagName('body')[0].appendChild(hoverElement);
 
   /*** init modal ***/

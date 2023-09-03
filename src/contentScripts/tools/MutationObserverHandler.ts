@@ -2,7 +2,7 @@ import { Event } from '../../interfaces/eventInterface';
 import { settings } from '../lib/SettingsHandler';
 import * as Tools from './tools';
 import { eventData } from '../lib/parseEventData';
-import { correctEventTime, decodeDataEventId, deepCopy } from '../lib/miscellaneous';
+import { correctEventTime, decodeDataEventId, deepCopy, getUserInfo } from '../lib/miscellaneous';
 import { resetCache, setItemInCache } from '../lib/cache';
 
 MutationObserver = window.MutationObserver;
@@ -44,6 +44,7 @@ function createObserverCompleteHTMLBody() {
 
 function startWorkerCalendarView() {
   resetCache();
+  setItemInCache('userInfo', getUserInfo());
   var eventStorage: Event[] = [];
   observerCalendarView.disconnect();
   try {
@@ -59,7 +60,7 @@ function startWorkerCalendarView() {
       thisEvent.timeElement = eventTimeElement;
       // very short events (>1h) have a diffenent HTML structure
       thisEvent.type = eventTimeElement.classList.contains('A6wOnd') ? 'short' : 'normal';
-      thisEvent.time = correctEventTime(thisEvent);
+      thisEvent.dates = correctEventTime(thisEvent);
       eventStorage.push(deepCopy(thisEvent));
     }
 
@@ -74,7 +75,7 @@ function startWorkerCalendarView() {
       thisEvent.timeElement = eventTimeElement;
       thisEvent.parentElement = eventTimeElement.parentElement!;
       thisEvent.type = 'multiDay';
-      thisEvent.time = correctEventTime(thisEvent);
+      thisEvent.dates = correctEventTime(thisEvent);
       eventStorage.push(deepCopy(thisEvent));
     }
 

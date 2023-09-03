@@ -2,7 +2,7 @@ export interface Event {
   type?: 'normal' | 'short' | 'multiDay';
   id: string;
   parentElement?: HTMLElement;
-  time: Date[];
+  dates:EventDates
   timeElement?: HTMLElement;
   duration: number;
   durationFormated: string | null;
@@ -14,4 +14,10 @@ export interface Event {
     id: string;
     name: string;
   };
+}
+
+export interface EventDates {
+  start: Date;
+  end: Date;
+  areCorrectedTimes: Boolean;
 }

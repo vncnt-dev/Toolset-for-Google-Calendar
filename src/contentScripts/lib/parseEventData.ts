@@ -43,13 +43,13 @@ var updateEventData = function (XhrData: Array<any>) {
     XhrData.forEach((calender: any) => {
       // every calender has an array of events
       const newEventData = calender[1].reduce((acc: any, event: any) => {
-        let eventTime: Date[] = getEventTime(event) as Date[];
-        if (!eventTime) return acc;
-        let eventDuration = calculateDuration(eventTime);
+        let eventTimeArray: Date[] = getEventTimeArray(event) as Date[];
+        if (!eventTimeArray) return acc;
+        let eventDuration = calculateDuration(eventTimeArray);
         let recurrenceRuleString = JSON.parse(`"${event[12]?.[0] ?? ''}"`);
         let newEvent: Event = {
           id: event[0],
-          time: eventTime,
+          dates: { start: eventTimeArray[0], end: eventTimeArray[1], areCorrectedTimes: false },
           duration: eventDuration,
           location: event[7]?.trim(),
           durationFormated: formatDuration(eventDuration, settings.calcDuration_durationFormat, settings.calcDuration_minimumDurationMinutes),
@@ -78,7 +78,7 @@ function insertScriptToPage(file: string) {
   };
 }
 
-function getEventTime(event: Array<any>): Array<Date> | null {
+function getEventTimeArray(event: Array<any>): Array<Date> | null {
   if (!event?.[35]) return null;
   if (event[35].length == 1) {
     return [new Date(event[35][0]), new Date(event[36][0])];

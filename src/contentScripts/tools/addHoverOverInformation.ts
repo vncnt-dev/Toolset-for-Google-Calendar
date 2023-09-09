@@ -1,16 +1,17 @@
-import { Event } from '../../interfaces/EventInterface';
+import { Event, EventDates } from '../../interfaces/eventInterface';
 import { isSameDay } from '../lib/miscellaneous';
-import { settings } from '../lib/SettingsHandler';
+import { loadSettings } from '../lib/SettingsHandler';
 
 function addHoverOverInformation(event: Event) {
-  let innerText = formatTime(event.eventTime);
-  if (event.durationFormated) innerText += ' (' + event.durationFormated + ')';
-  if(event.eventName) innerText += '\n' + event.eventName;
-  if(event.eventLocation) innerText += '\n' + event.eventLocation;
+  let innerText = formatTime(event.dates);
+  if (event.durationFormated) innerText += ` (${event.durationFormated})`;
+  if (event.name) innerText += `\n${event.name}`;
+  if (event.location) innerText += `\n${event.location}`;
 
   // set position and content of hoverInformationElement
-  event.parentElement!.addEventListener('mousemove', (event) =>
-    ((innerText) => {
+  event.parentElement!.addEventListener('mousemove',(event) =>
+    ( async (innerText) => {
+      let settings = await loadSettings();
       if (settings.hoverInformation_isActive) {
         document.getElementById('hoverInformationElementText')!.innerText = innerText;
         let hoverInformationElement = document.getElementById('hoverInformationElement')!;
@@ -18,11 +19,11 @@ function addHoverOverInformation(event: Event) {
         // position hoverInformationElement under mouse pointer
         // if mouse in near the buttom of the screen, move it up
         if (event.clientY + hoverInformationElement.clientHeight > window.innerHeight) {
-          hoverInformationElement.style.top = event.clientY - hoverInformationElement.clientHeight + 10 + 'px';
+          hoverInformationElement.style.top = `${event.clientY - hoverInformationElement.clientHeight + 10}px`;
         } else {
-          hoverInformationElement.style.top = event.clientY - 10 + 'px';
+          hoverInformationElement.style.top = `${event.clientY - 10}px`;
         }
-        hoverInformationElement.style.left = event.clientX + 'px';
+        hoverInformationElement.style.left = `${event.clientX}px`;
       }
     })(innerText),
   );
@@ -33,16 +34,16 @@ function addHoverOverInformation(event: Event) {
   });
 }
 
-function formatTime(eventTime: Date[]): string {
-  if (isSameDay(eventTime[0], eventTime[1])) {
+function formatTime(eventTime: EventDates): string {
+  if (isSameDay(eventTime.start, eventTime.end)) {
     return (
-      zeroPad(eventTime[0].getHours(), 2) +
+      eventTime.start.getHours().toString().padStart(2, '0') +
       ':' +
-      zeroPad(eventTime[0].getMinutes(), 2) +
+      eventTime.start.getMinutes().toString().padStart(2, '0') +
       ' - ' +
-      zeroPad(eventTime[1].getHours(), 2) +
+      eventTime.end.getHours().toString().padStart(2, '0') +
       ':' +
-      zeroPad(eventTime[1].getMinutes(), 2)
+      eventTime.end.getMinutes().toString().padStart(2, '0')
     );
   } else {
     let options: Intl.DateTimeFormatOptions;
@@ -51,23 +52,21 @@ function formatTime(eventTime: Date[]): string {
 
     // only add time if not full day event
     let isFulldayEvent =
-      eventTime[0].getHours() + eventTime[0].getTimezoneOffset() / 60 == 0 &&
-      eventTime[0].getMinutes() == 0 &&
-      eventTime[1].getHours() + eventTime[1].getTimezoneOffset() / 60 == 0 &&
-      eventTime[1].getMinutes() == 0;
+      eventTime.start.getHours() + eventTime.start.getTimezoneOffset() / 60 == 0 &&
+      eventTime.start.getMinutes() == 0 &&
+      eventTime.end.getHours() + eventTime.end.getTimezoneOffset() / 60 == 0 &&
+      eventTime.end.getMinutes() == 0;
 
     if (!isFulldayEvent) options = { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' };
     else options = { year: 'numeric', month: '2-digit', day: '2-digit' };
-    formattedTime = eventTime[0].toLocaleDateString(locales, options) + ' - ';
+    formattedTime = eventTime.start.toLocaleDateString(locales, options) + ' - ';
 
     if (!isFulldayEvent) options = { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' };
     else options = { year: 'numeric', month: '2-digit', day: '2-digit' };
-    formattedTime += eventTime[1].toLocaleDateString(locales, options);
+    formattedTime += eventTime.end.toLocaleDateString(locales, options);
 
     return formattedTime;
   }
 }
-
-const zeroPad = (num: number, places: number) => String(num).padStart(places, '0');
 
 export { addHoverOverInformation };

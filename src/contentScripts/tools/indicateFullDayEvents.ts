@@ -1,93 +1,83 @@
-import { getDateFromDateKey, isBetweenDates, isBetweenDays, isSameDay } from '../lib/miscellaneous';
-import { Event } from '../../interfaces/eventInterface';
+import { getDate, isBetweenDates, isBetweenDays, isSameDay } from '../lib/miscellaneous';
+import { Event } from '../../interfaces/EventInterface';
 import { settings } from '../lib/SettingsHandler';
-import { getItemFromCache, setItemInCache } from '../lib/cache';
 
-const daysMaxTransparency = 30;
-const daysMinTransparency = 1;
-
-var indicateFullDayEvents = (eventStorageMultiDay: Event[]) => {
-  if (eventStorageMultiDay.length === 0) return;
-  // heigt of 1h based on sidebar timeline elements
-  setItemInCache('baseHeight', (document.querySelector('.s4ZaLd')! as HTMLElement).offsetHeight);
-  setItemInCache('maxTransparency', settings.indicateFullDayEvents_maxTransparency);
-  setItemInCache('minTransparency', settings.indicateFullDayEvents_minTransparency);
-
-  const dateColumnElements = Array.from(document.querySelectorAll('.YvjgZe'));
+var indicateFullDayEvents = function (eventStorageMultiDay: Event[]) {
   try {
-    for (const changedEvent of eventStorageMultiDay) {
-      const id = generateID(changedEvent);
-      if (document.getElementById(id)) continue; // indicator element already exists
-      for (const DateColumnElement of dateColumnElements) {
-        const DateOfDateColumnElement = getDateFromDateKey(parseInt(DateColumnElement.getAttribute('data-datekey')!));
+    eventStorageMultiDay.forEach(function (changedEvent) {
+      let id = generateID(changedEvent);
+      if (document.getElementById(id)) return; // indicator element already exists
+      /** all days (HTML-Columns) on current view, as array */
+      Array.from(document.querySelectorAll('.YvjgZe')).forEach(function (DateColumnElement) {
+        // get date of DateColumnElement
+        let DateOfDateColumnElement = getDate(parseInt(DateColumnElement.getAttribute('data-datekey')!));
         // if event is on current calDate, proceed
-        if (isBetweenDays(changedEvent.dates.start, changedEvent.dates.end, DateOfDateColumnElement)) {
-          const indicatorElement = document.createElement('div');
-          indicatorElement.id = `${id}`;
+        if (isBetweenDays(changedEvent.eventTime[0], changedEvent.eventTime[1], DateOfDateColumnElement)) {
+          let indicatorElement = document.createElement('div');
+          indicatorElement.id = id;
           indicatorElement.classList.add('fullDayEventIndicator', 'EfQccc');
-          indicatorElement.style.backgroundColor = `${changedEvent.timeElement!.style.backgroundColor}`;
-          indicatorElement.style.opacity = `${calculateOpacity(changedEvent)}`;
-          indicatorElement.style.zIndex = `3`; // above calendar lines below other events
-          indicatorElement.style.top = `${calculateTop(changedEvent, DateOfDateColumnElement)}px`;
-          indicatorElement.style.height = `${calculateHeight(changedEvent, DateOfDateColumnElement)}px`;
-          calculateWidthAndPos(changedEvent, eventStorageMultiDay, DateOfDateColumnElement, indicatorElement);
+          indicatorElement.style.backgroundColor = changedEvent.eventTimeElement!.style.backgroundColor;
+          indicatorElement.style.opacity = calculateOpacity(changedEvent).toString();
+          indicatorElement.style.zIndex = '3'; // above calendar lines below other events
+          indicatorElement.style.top = calculateTop(changedEvent, DateOfDateColumnElement) + 'px';
+          indicatorElement.style.height = calculateHeight(changedEvent, DateOfDateColumnElement) + 'px';
+          indicatorElement = calculateWidthAndPos(changedEvent, eventStorageMultiDay, DateOfDateColumnElement, indicatorElement);
 
-          const eventContainer = DateColumnElement.querySelector('div.WJVfWe.A3o4Oe');
-          if (eventContainer) {
-            eventContainer.appendChild(indicatorElement);
-          }
+          DateColumnElement.querySelector('div.WJVfWe.A3o4Oe')!.appendChild(indicatorElement);
         }
-      }
-    }
+      });
+    });
   } catch (error) {
-    console.error('indicateFullDayEvents: ', error);
+    console.warn('indicateFullDayEvents: ', error);
   }
 };
 
 /** generates ID for indicator element */
 var generateID = function (event: Event) {
-  let rawID = JSON.stringify([event.dates, event.timeElement!.style.backgroundColor, event.name]);
-  // prevent problems with whitespaces etc., max 65. characters
-  return 'ID' + encodeURIComponent(rawID).replace(/%/g, '_').slice(0, 65);
+  let rawID = JSON.stringify([event.eventTime, event.eventTimeElement!.style.backgroundColor, event.eventName]);
+  // prevent problems with whitespaces etc., max 65.
+  return 'ID' + encodeURIComponent(rawID).replace(/%/g, '_');
 };
 
 /** generate opacity for event, based on duration */
 var calculateOpacity = function (event: Event) {
-  const durationInDays = event.duration / 60 / 24;
-  const maxTransparency: number = getItemFromCache('maxTransparency')!;
-  const minTransparency: number = getItemFromCache('minTransparency')!;
+  let duration = event.duration / 60 / 24;
+  let transparency = 0;
+  let maxTransparencyAt = 30; // 30 days
+  let minTransparencyAt = 1;
+  let maxTransparency = settings.indicateFullDayEvents_maxTransparency;
+  let minTransparency = settings.indicateFullDayEvents_minTransparency;
 
-  let transparency;
-  if (durationInDays > daysMaxTransparency) {
-    transparency = maxTransparency;
-  } else if (durationInDays < daysMinTransparency) {
-    transparency = minTransparency;
-  } else {
-    const durationRatio = (durationInDays - daysMinTransparency) / (daysMaxTransparency - daysMinTransparency);
-    transparency = durationRatio * (maxTransparency - minTransparency) + minTransparency;
-  }
+  // generate transparency based on duration
+  if (duration > maxTransparencyAt) transparency = maxTransparency;
+  else if (duration < minTransparencyAt) transparency = minTransparency;
+  else
+    transparency = ((duration - minTransparencyAt) / (maxTransparencyAt - minTransparencyAt)) * (maxTransparency - minTransparency) + minTransparency;
 
   return 1 - transparency; // invert transparency to get opacity
 };
 
 var calculateTop = function (event: Event, calDate: Date) {
-  let baseHeight: number = getItemFromCache('baseHeight')!;
+  // heigt of 1h based on sidebar timeline elements
+  let baseHeight: number = (document.querySelector('.s4ZaLd')! as HTMLElement).offsetHeight;
   // if calDate is start date of event, return height based on start time
-  if (isSameDay(calDate, event.dates.start)) {
-    return baseHeight * (event.dates.start.getHours() + event.dates.start.getMinutes() / 60);
+  if (isSameDay(calDate, event.eventTime[0])) {
+    return baseHeight * (event.eventTime[0].getHours() + event.eventTime[0].getMinutes() / 60);
   } else {
+    // else top is 0
     return 0;
   }
 };
 
 var calculateHeight = function (event: Event, calDate: Date) {
-  let baseHeight: number = getItemFromCache('baseHeight')!;
+  // heigt of 1h based on sidebar timeline elements
+  let baseHeight: number = (document.querySelector('.s4ZaLd')! as HTMLElement).offsetHeight;
   // if calDate is neither start nor end date of event, return full height
-  if (!isSameDay(calDate, event.dates.start) && !isSameDay(calDate, event.dates.end)) return baseHeight * 24;
+  if (!isSameDay(calDate, event.eventTime[0]) && !isSameDay(calDate, event.eventTime[1])) return baseHeight * 24;
   // if calDate is start date of event, height is 24h - start time
-  else if (isSameDay(calDate, event.dates.start)) return baseHeight * (24 - (event.dates.start.getHours() + event.dates.start.getMinutes() / 60));
+  else if (isSameDay(calDate, event.eventTime[0])) return baseHeight * (24 - (event.eventTime[0].getHours() + event.eventTime[0].getMinutes() / 60));
   // if calDate is end date of event, height is end time
-  else if (isSameDay(calDate, event.dates.end)) return baseHeight * (event.dates.end.getHours() + event.dates.end.getMinutes() / 60);
+  else if (isSameDay(calDate, event.eventTime[1])) return baseHeight * (event.eventTime[1].getHours() + event.eventTime[1].getMinutes() / 60);
   else {
     return 0;
   }
@@ -102,10 +92,9 @@ var calculateWidthAndPos = function (
   // get count of parrallel multi-day-events on same day
   let parrallelEvents = eventStorageMultiDay.filter(function (eventInStorage) {
     if (
-      isBetweenDays(eventInStorage.dates.start, eventInStorage.dates.end, DateOfDateColumnElement) && // event is on current calDate
-      // it posible that an event is on the same day as the current event, but not parrallel ->
-      (isBetweenDates(eventInStorage.dates.start, eventInStorage.dates.end, event.dates.start) || // starts during other event
-        isBetweenDates(eventInStorage.dates.start, eventInStorage.dates.end, event.dates.end)) // ends during other event
+      isBetweenDays(eventInStorage.eventTime[0], eventInStorage.eventTime[1], DateOfDateColumnElement) && // event is on current calDate
+      (isBetweenDates(eventInStorage.eventTime[0], eventInStorage.eventTime[1], event.eventTime[0]) || // starts during other event
+        isBetweenDates(eventInStorage.eventTime[0], eventInStorage.eventTime[1], event.eventTime[1])) // ends during other event
     )
       return eventInStorage;
   });

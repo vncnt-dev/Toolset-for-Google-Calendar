@@ -3,7 +3,7 @@ import { Event } from '../../interfaces/eventInterface';
 function injectDuration(eventObject: Event) {
   if (eventObject.durationFormated) {
     try {
-      let eventTimeElement = eventObject.timeElement!;
+      let eventTimeElement = eventObject.eventTimeElement!;
       let durationElement: HTMLElement;
       if (eventObject.type === 'multiDay') {
         durationElement = eventTimeElement.querySelector('.yzifAd')!.cloneNode(true) as HTMLElement;
@@ -17,26 +17,21 @@ function injectDuration(eventObject: Event) {
       let position = getPosition(eventTimeElement, oldDurationElement as HTMLElement, eventObject);
 
       // if new position does not match old position, remove old duration element
-      if (oldDurationElement && oldDurationElement.getAttribute('position') !== position) {
+      if (oldDurationElement && oldDurationElement.getAttribute('position') != position) {
         oldDurationElement.remove();
         oldDurationElement = null;
       }
 
-      if (position === 'inline-block') {
+      if (position == 'inline-block') {
         // durationelement next to time
-        const durationText = `(${eventObject.durationFormated})`;
         if (!oldDurationElement) {
-          if (eventObject.type !== 'multiDay') {
-            eventTimeElement.style.display = 'inline-block';
-          }
+          if (eventObject.type != 'multiDay') eventTimeElement.style.display = 'inline-block';
           durationElement.style.display = 'inline-block';
           durationElement.style.paddingLeft = '5px';
-          durationElement.innerText = durationText;
-        } else {
-          if ((oldDurationElement as HTMLElement).innerText !== durationText) {
-            // update duration
-            (oldDurationElement as HTMLElement).innerText = durationText;
-          }
+          durationElement.innerText = '(' + eventObject.durationFormated + ')';
+        } else if ((oldDurationElement as HTMLElement).innerText != '(' + eventObject.durationFormated + ')') {
+          // update duration
+          (oldDurationElement as HTMLElement).innerText = '(' + eventObject.durationFormated + ')';
         }
         // else nothing to do, because the duration element is already in the right position
       } else {
@@ -62,9 +57,7 @@ function injectDuration(eventObject: Event) {
       }
 
       // adjust styling
-      if (eventObject.parentElement!.style.whiteSpace !== 'nowrap') {
-        eventObject.parentElement!.style.whiteSpace = 'nowrap';
-      }
+      if (eventObject.parentElement!.style.whiteSpace != 'nowrap') eventObject.parentElement!.style.whiteSpace = 'nowrap';
     } catch (error) {
       console.warn('GC Tools - injectDurration: ', error);
       return;
@@ -75,7 +68,7 @@ function injectDuration(eventObject: Event) {
 /* sum up height of eventTimeElement and all siblings of  eventTimeElement */
 function getHeight(element: HTMLElement) {
   let height = 0;
-  const siblings = element.parentElement!.querySelectorAll(':scope > *');
+  let siblings = element.parentElement!.children;
   for (let i = 0; i < siblings.length; i++) {
     height += siblings[i].clientHeight;
   }

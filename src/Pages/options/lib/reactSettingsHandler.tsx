@@ -1,35 +1,83 @@
 import { useEffect, useState } from 'react';
-import { settings, loadSettings, saveSettings, defaultSettings } from '../../../contentScripts/lib/SettingsHandler';
-import { toast } from 'react-toastify';
+import { loadSettings, saveSettings, defaultSettings } from '../../../contentScripts/lib/SettingsHandler';
+import { Id as ToastId, ToastOptions, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 export const useShareableState = () => {
-  const [sharedSettings, setSharedSettings] = useState(settings);
+  const [sharedSettings, setSharedSettings] = useState(defaultSettings);
 
+  const [lastSavedDateSuccess, setLastSavedDateSuccess] = useState(new Date());
+  const [lastSavedIdSuccess, setLastSavedIdSuccess] = useState<ToastId | null>(null);
+  const [lastSavedDateWarn, setLastSavedDateWarn] = useState(new Date());
+  const [lastSavedIdWarn, setLastSavedIdWarn] = useState<ToastId | null>(null);
+  const [lastSavedDateError, setLastSavedDateError] = useState(new Date());
+  const [lastSavedIdError, setLastSavedIdError] = useState<ToastId | null>(null);
+
+  useEffect(() => {
+    loadSettings()
+      .then((settings) => {
+        setSharedSettings(settings);
+      })
+      .catch((error) => {
+        console.warn(error);
+      });
+  }, []);
+
+  useEffect(() => {
+    saveSharedSettings();
+  }, [sharedSettings]);
   const updateSharedSettings = (newSettings: any) => {
     setSharedSettings({ ...sharedSettings, ...newSettings });
   };
 
   const saveSharedSettings = async () => {
+    let now = new Date();
+
     if (sharedSettings.indicateFullDayEvents_minTransparency > sharedSettings.indicateFullDayEvents_maxTransparency) {
-      toast.error('The minimum transparency cannot be higher than the maximum transparency.', {
-        position: 'bottom-right',
-        autoClose: 3_000,
-      });
+      if (now.getTime() - lastSavedDateError.getTime() > 2900) {
+        setLastSavedIdError(
+          toast.error('The minimum transparency cannot be higher than the maximum transparency.', {
+            position: 'bottom-right',
+            autoClose: 3_000,
+          }),
+        );
+      } else {
+        toast.update(lastSavedIdError!, {
+          position: 'bottom-right',
+          autoClose: 3_000,
+          render: 'The minimum transparency cannot be higher than the maximum transparency.',
+        });
+      }
+      setLastSavedDateError(now);
       return;
     }
 
     let wasSaved = saveSettings(sharedSettings);
+    const config: ToastOptions<{}> = {
+      position: 'bottom-right',
+      autoClose: 3_000,
+    };
+
     if (await wasSaved) {
-      toast.success('Saved successfully', {
-        position: 'bottom-right',
-        autoClose: 3_000,
-      });
+      if (now.getTime() - lastSavedDateSuccess.getTime() > 2900) {
+        setLastSavedIdSuccess(toast.success('Saved successfully', config));
+      } else {
+        toast.update(lastSavedIdSuccess!, {
+          ...config,
+          render: 'Saved successfully',
+        });
+      }
+      setLastSavedDateSuccess(now);
     } else {
-      toast.warn('Error while saving!', {
-        position: 'bottom-right',
-        autoClose: 15_000,
-      });
+      if (now.getTime() - lastSavedDateWarn.getTime() > 14900) {
+        setLastSavedIdWarn(toast.warn('Error while saving!', config));
+      } else {
+        toast.update(lastSavedIdWarn!, {
+          ...config,
+          render: 'Error while saving!',
+        });
+      }
+      setLastSavedDateWarn(now);
     }
   };
 
@@ -43,16 +91,6 @@ export const useShareableState = () => {
     setSharedSettings(defaultSettings);
     saveSettings(defaultSettings);
   };
-
-  useEffect(() => {
-    loadSettings()
-      .then((settings) => {
-        setSharedSettings(settings);
-      })
-      .catch((error) => {
-        console.warn(error);
-      });
-  }, []);
 
   return {
     sharedSettings,

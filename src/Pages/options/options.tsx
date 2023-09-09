@@ -32,9 +32,6 @@ const Options = () => {
                 return <OptionGroup key={index} {...optionGroupSettings}></OptionGroup>;
               })}
             </div>
-            <div>
-              <OptionsFormActions />
-            </div>
           </div>
         </div>
       </div>

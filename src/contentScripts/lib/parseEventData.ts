@@ -1,5 +1,5 @@
 import { Event } from '../../interfaces/eventInterface';
-import { settings } from '../lib/SettingsHandler';
+import { loadSettings } from '../lib/SettingsHandler';
 import { observerCalendarViewFunction } from '../tools/MutationObserverHandler';
 
 function startXhrListener() {
@@ -37,7 +37,8 @@ function startXhrListener() {
 }
 var eventData: Record<string, Event> = {};
 
-var updateEventData = function (XhrData: Array<any>) {
+var updateEventData = async function (XhrData: Array<any>) {
+  let settings = await loadSettings();
   /* console.log('GC Tools - updateEventData', XhrData); */
   try {
     XhrData.forEach((calender: any) => {

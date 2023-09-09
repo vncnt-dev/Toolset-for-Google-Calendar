@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Settings, SettingsIsActive } from '../../interfaces/SettingsInterface';
-import { settings, saveSettings } from '../lib/SettingsHandler';
+import { loadSettings, saveSettings } from '../lib/SettingsHandler';
 import { downloadStringAsFile } from '../lib/miscellaneous';
 
 export const FastActionsModal = () => {
@@ -42,8 +42,10 @@ export const FastActionsModal = () => {
               fileContents[i].slice(0, fileContents[i].indexOf('BEGIN:VEVENT')) +
               combinedIcs.slice(combinedIcs.indexOf('BEGIN:VEVENT'));
           } else {
-            combinedIcs = combinedIcs.slice(0, combinedIcs.indexOf('END:VTIMEZONE') + 13) + '\r\n' +
-            fileContents[i].slice(fileContents[i].indexOf('BEGIN:VTIMEZONE'), fileContents[i].indexOf('END:VTIMEZONE') + 13) +
+            combinedIcs =
+              combinedIcs.slice(0, combinedIcs.indexOf('END:VTIMEZONE') + 13) +
+              '\r\n' +
+              fileContents[i].slice(fileContents[i].indexOf('BEGIN:VTIMEZONE'), fileContents[i].indexOf('END:VTIMEZONE') + 13) +
               combinedIcs.slice(combinedIcs.indexOf('END:VTIMEZONE') + 13);
           }
         }
@@ -53,7 +55,10 @@ export const FastActionsModal = () => {
         combinedIcs.slice(0, combinedIcs.lastIndexOf('END:VEVENT') + 11) + events + combinedIcs.slice(combinedIcs.lastIndexOf('END:VEVENT') + 11);
     }
     // remove empty lines and \n to CRLF
-    combinedIcs = combinedIcs.replace(/^\s*[\r\n]/gm, '').replace(/\n/g, '\r\n').replace(/\r\r\n/g, '\r\n');
+    combinedIcs = combinedIcs
+      .replace(/^\s*[\r\n]/gm, '')
+      .replace(/\n/g, '\r\n')
+      .replace(/\r\r\n/g, '\r\n');
 
     downloadStringAsFile(combinedIcs, 'combined.ics');
 
@@ -107,15 +112,32 @@ export const FastActionsModal = () => {
 };
 
 const FastSettingsToggle = (props: { feature: keyof SettingsIsActive; name: string }) => {
+  const [settings, setSettings] = React.useState<Settings>({} as Settings);
+
+  useEffect(() => {
+    loadSettings().then((settings) => {
+      setSettings(settings);
+    });
+  }, []);
+
+  useEffect(() => {
+    saveSettings({ [props.feature]: settings[props.feature] });
+  }, [settings]);
+
   const toggleFeature = (feature: keyof SettingsIsActive) => {
-    settings[feature] = !settings[feature];
-    saveSettings(settings);
+    console.log(settings);
+    console.log('toggleFeature', feature, settings[feature]);
+    setSettings({ ...settings, [feature]: !settings[feature] });
   };
 
   return (
     <div className="block" style={{ marginBottom: '10px' }}>
-      <input type="checkbox" id={props.feature} onChange={() => toggleFeature(props.feature)} checked={settings[props.feature]} />
-      <label htmlFor={props.feature}>{props.name}</label>
+      {settings && settings[props.feature] !== undefined && (
+        <div>
+          <input type="checkbox" id={props.feature} onChange={() => toggleFeature(props.feature)} checked={settings[props.feature]} />
+          <label htmlFor={props.feature}>{props.name}</label>
+        </div>
+      )}
     </div>
   );
 };

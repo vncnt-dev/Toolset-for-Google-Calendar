@@ -16,16 +16,28 @@ var defaultSettings: Settings = {
   showChangeLog_isActive: true,
 };
 
-var settings: Settings = defaultSettings;
+var settings: Settings;
 
-function loadSettings() {
-  return storage.sync.get('settings').then((e) => {
-    settings = Object.assign(deepCopy(defaultSettings), e.settings);
-    return settings;
-  });
+function loadSettings(force = false) {
+  if (force || !settings) {
+    return storage.sync.get('settings').then((e) => {
+      settings = Object.assign(deepCopy(defaultSettings), e.settings);
+      return settings;
+    });
+  } else {
+    return new Promise<Settings>((resolve) => {
+      resolve(settings);
+    });
+  }
 }
 
-function saveSettings(settings: Settings): Promise<boolean> {
+// allow subset of settings
+function saveSettings(newSettings: Partial<Settings>): Promise<boolean> {
+  // delete undefined values
+  (Object.keys(newSettings) as Array<keyof Settings>).forEach((key) => newSettings[key] === undefined && delete newSettings[key]);
+  if (!settings || Object.keys(newSettings).length === 0) return Promise.resolve(true);
+
+  settings = Object.assign(deepCopy(settings), newSettings);
   return storage.sync
     .set({ settings: settings })
     .then((e) => {
@@ -36,4 +48,4 @@ function saveSettings(settings: Settings): Promise<boolean> {
       return false;
     });
 }
-export { settings, loadSettings, saveSettings, defaultSettings };
+export { loadSettings, saveSettings, defaultSettings };

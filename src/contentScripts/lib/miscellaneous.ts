@@ -57,7 +57,6 @@ function correctEventTime(event: Event): EventDates {
     startDate = new Date(today.getFullYear(), today.getMonth(), today.getDate(), eventTime.getHours(), eventTime.getMinutes());
     if (userInfo.gmtOffset && startDate.getTimezoneOffset() != userInfo.gmtOffset) {
       startDate.setTime(startDate.getTime() + (startDate.getTimezoneOffset() - userInfo.gmtOffset) * 60 * 1000);
-      console.log('corrected event time', startDate, userInfo.gmtOffset, startDate.getTimezoneOffset());
     }
     endDate = new Date(startDate.getTime() + duration * 60 * 1000);
   }

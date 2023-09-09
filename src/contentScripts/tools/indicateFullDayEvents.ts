@@ -1,12 +1,14 @@
 import { getDateFromDateKey, isBetweenDates, isBetweenDays, isSameDay } from '../lib/miscellaneous';
 import { Event } from '../../interfaces/eventInterface';
-import { settings } from '../lib/SettingsHandler';
+import { Settings } from '../../interfaces/SettingsInterface';
+import { loadSettings } from '../lib/SettingsHandler';
 import { getItemFromCache, setItemInCache } from '../lib/cache';
 
 const daysMaxTransparency = 30;
 const daysMinTransparency = 1;
 
-var indicateFullDayEvents = (eventStorageMultiDay: Event[]) => {
+var indicateFullDayEvents = async (eventStorageMultiDay: Event[]) => {
+  let settings = await loadSettings();
   if (eventStorageMultiDay.length === 0) return;
   // heigt of 1h based on sidebar timeline elements
   setItemInCache('baseHeight', (document.querySelector('.s4ZaLd')! as HTMLElement).offsetHeight);
@@ -30,7 +32,7 @@ var indicateFullDayEvents = (eventStorageMultiDay: Event[]) => {
           indicatorElement.style.zIndex = `3`; // above calendar lines below other events
           indicatorElement.style.top = `${calculateTop(changedEvent, DateOfDateColumnElement)}px`;
           indicatorElement.style.height = `${calculateHeight(changedEvent, DateOfDateColumnElement)}px`;
-          calculateWidthAndPos(changedEvent, eventStorageMultiDay, DateOfDateColumnElement, indicatorElement);
+          calculateWidthAndPos(changedEvent, eventStorageMultiDay, DateOfDateColumnElement, indicatorElement, settings);
 
           const eventContainer = DateColumnElement.querySelector('div.WJVfWe.A3o4Oe');
           if (eventContainer) {
@@ -98,6 +100,7 @@ var calculateWidthAndPos = function (
   eventStorageMultiDay: Event[],
   DateOfDateColumnElement: Date,
   indicatorElement: HTMLDivElement,
+  settings: Settings
 ): HTMLDivElement {
   // get count of parrallel multi-day-events on same day
   let parrallelEvents = eventStorageMultiDay.filter(function (eventInStorage) {

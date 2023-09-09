@@ -1,5 +1,5 @@
 import { Event } from '../../interfaces/eventInterface';
-import { settings } from '../lib/SettingsHandler';
+import { loadSettings } from '../lib/SettingsHandler';
 import * as Tools from './tools';
 import { eventData } from '../lib/parseEventData';
 import { correctEventTime, decodeDataEventId, deepCopy, getUserInfo } from '../lib/miscellaneous';
@@ -10,7 +10,7 @@ MutationObserver = window.MutationObserver;
 var timer: NodeJS.Timeout,
   lastTime: number = 0;
 
-var observerCalendarViewFunction = function () {
+const observerCalendarViewFunction = function () {
   // if lasttime is at least 100 ms ago, run worker, else wait until lasttime is at least 100 ms ago
   if (lastTime + 100 < Date.now()) {
     lastTime = Date.now();
@@ -23,8 +23,8 @@ var observerCalendarViewFunction = function () {
     }, Date.now() - lastTime);
   }
 };
-var observerCalendarView = new MutationObserver(observerCalendarViewFunction);
-var observerCompleteHTMLBody = new MutationObserver(function () {
+const observerCalendarView = new MutationObserver(observerCalendarViewFunction);
+const observerCompleteHTMLBody = new MutationObserver(function () {
   startWorkerCompleteHTMLBody();
 });
 
@@ -42,7 +42,8 @@ function createObserverCompleteHTMLBody() {
   });
 }
 
-function startWorkerCalendarView() {
+async function startWorkerCalendarView() {
+  let settings = await loadSettings();
   resetCache();
   setItemInCache('userInfo', getUserInfo());
   var eventStorage: Event[] = [];
@@ -103,7 +104,8 @@ function startWorkerCalendarView() {
   }
 }
 
-function startWorkerCompleteHTMLBody() {
+async function startWorkerCompleteHTMLBody() {
+  let settings = await loadSettings();
   observerCompleteHTMLBody.disconnect();
   if (settings.betterAddMeeting_isActive) Tools.betterAddMeeting();
 

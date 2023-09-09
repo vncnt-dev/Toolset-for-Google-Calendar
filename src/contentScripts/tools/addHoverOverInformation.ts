@@ -1,6 +1,6 @@
 import { Event, EventDates } from '../../interfaces/eventInterface';
 import { isSameDay } from '../lib/miscellaneous';
-import { settings } from '../lib/SettingsHandler';
+import { loadSettings } from '../lib/SettingsHandler';
 
 function addHoverOverInformation(event: Event) {
   let innerText = formatTime(event.dates);
@@ -9,8 +9,9 @@ function addHoverOverInformation(event: Event) {
   if (event.location) innerText += `\n${event.location}`;
 
   // set position and content of hoverInformationElement
-  event.parentElement!.addEventListener('mousemove', (event) =>
-    ((innerText) => {
+  event.parentElement!.addEventListener('mousemove',(event) =>
+    ( async (innerText) => {
+      let settings = await loadSettings();
       if (settings.hoverInformation_isActive) {
         document.getElementById('hoverInformationElementText')!.innerText = innerText;
         let hoverInformationElement = document.getElementById('hoverInformationElement')!;

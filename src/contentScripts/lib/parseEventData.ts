@@ -11,44 +11,62 @@ function startXhrListener() {
     try {
       let req = event.detail as XMLHttpRequest;
       if (req.responseURL.includes('calendar.google.com/calendar/u/0/sync.prefetcheventrange')) {
-        // this is called when the calendar is initially loaded
-        let data = JSON.parse(escapeJsonString(req.responseText.slice(6)))[0][2][1];
-        updateEventData(data);
+        try {
+          // this is called when the calendar is initially loaded
+          let data = JSON.parse(escapeJsonString(req.responseText.slice(6)))[0][2][1];
+          updateEventData(data);
+        } catch (error) {
+          console.warn('GCT_XMLHttpRequest-init', error, JSON.parse(escapeJsonString(req.responseText.slice(6))) || req.responseText);
+        }
       } else if (req.responseURL.includes('calendar.google.com/calendar/u/0/sync.sync')) {
-        // this is called when an event is added or edited
-        let data = JSON.parse(escapeJsonString(req.responseText.slice(6)))[0][2][3][0][1][0][3];
-        let initDataStrcucture = [['', [data]]];
-        updateEventData(initDataStrcucture);
+        try {
+          // this is called when an event is added or edited
+          let responseAsJson = JSON.parse(escapeJsonString(req.responseText.slice(6)));
+          // if no events are in the response, return (this is the case when an event is deleted
+          let data = responseAsJson[0][2][3][0][1][0][3];
+          let initDataStrcucture = [['', [data]]];
+          updateEventData(initDataStrcucture);
+        } catch (error) {
+          /* console.warn('GCT_XMLHttpRequest-update', error, JSON.parse(escapeJsonString(req.responseText.slice(6))) || req.responseText); */
+        }
       }
     } catch (error) {
-      console.warn('GCT_XMLHttpRequest', error);
+      console.warn('GCT_XMLHttpRequest', error, event);
     }
   });
 }
 var eventData: Record<string, Event> = {};
 
 var updateEventData = function (XhrData: Array<any>) {
+  /* console.log('GC Tools - updateEventData', XhrData); */
   try {
     XhrData.forEach((calender: any) => {
       // every calender has an array of events
-      calender[1].forEach((event: any) => {
-        let eventTime: Date[] = getEventTime(event) as Date[];
-        let eventDuration = calculateDuration(eventTime);
+      const newEventData = calender[1].reduce((acc: any, event: any) => {
+        let eventTimeArray: Date[] = getEventTimeArray(event) as Date[];
+        if (!eventTimeArray) return acc;
+        let eventDuration = calculateDuration(eventTimeArray);
+        let recurrenceRuleString = JSON.parse(`"${event[12]?.[0] ?? ''}"`);
         let newEvent: Event = {
           id: event[0],
-          eventTime: eventTime,
+          dates: { start: eventTimeArray[0], end: eventTimeArray[1], areCorrectedTimes: false },
           duration: eventDuration,
-          eventLocation: event[7],
+          location: event[7]?.trim(),
           durationFormated: formatDuration(eventDuration, settings.calcDuration_durationFormat, settings.calcDuration_minimumDurationMinutes),
-          eventName: event[5],
-          eventCalendar: getEventCalendar(event),
+          name: event[5]?.trim(),
+          description: event[64]?.[1]?.trim(),
+          calendar: getEventCalendar(event),
+          recurrenceRule: recurrenceRuleString?.slice(recurrenceRuleString.indexOf(':') + 1),
         };
-        Object.assign(eventData, { [newEvent.id]: newEvent });
-      });
+        return { ...acc, [newEvent.id]: newEvent };
+      }, {});
+      eventData = { ...eventData, ...newEventData };
     });
     // call observerCalendarViewFunction to make shure, that the displayed info is up to date
     observerCalendarViewFunction();
-  } catch (error) {}
+  } catch (error) {
+    console.log('GC Tools - updateEventData: ', error);
+  }
 };
 
 function insertScriptToPage(file: string) {
@@ -60,7 +78,8 @@ function insertScriptToPage(file: string) {
   };
 }
 
-function getEventTime(event: Array<any>): Array<Date> | null {
+function getEventTimeArray(event: Array<any>): Array<Date> | null {
+  if (!event?.[35]) return null;
   if (event[35].length == 1) {
     return [new Date(event[35][0]), new Date(event[36][0])];
   } else if (event[35].length == 3) {
@@ -82,7 +101,7 @@ function calculateDuration(startEndDateTime: Date[]): number {
 /* Format Date */
 function formatDuration(diff: number, format: string, minDurationMinutes: number): string | null {
   // if diff is less than minDurationMinutes, return nothing
-  if (minDurationMinutes && diff < minDurationMinutes / 60) return null;
+  if (minDurationMinutes && diff < minDurationMinutes) return null;
   switch (format) {
     case 'decimalHours':
       var durationInHours = diff / 60;
@@ -118,9 +137,9 @@ function formatDuration(diff: number, format: string, minDurationMinutes: number
   }
 }
 
-function getEventCalendar(event: Array<any>): [string, string] {
-  if (event[34][1] !== null) return [event[34][1], event[34][0]];
-  return [event[34][0], event[34][0]];
+function getEventCalendar(event: Array<any>): { id: string; name: string } {
+  const [id, name] = event[34];
+  return { id, name: name ?? id };
 }
 
 var escapeJsonString = function (str: String) {

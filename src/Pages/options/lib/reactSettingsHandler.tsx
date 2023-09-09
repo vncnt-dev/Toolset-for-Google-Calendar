@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { settings, loadSettings, saveSettings, defaultSettings } from '../../contentScripts/lib/SettingsHandler';
+import { settings, loadSettings, saveSettings, defaultSettings } from '../../../contentScripts/lib/SettingsHandler';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -20,7 +20,6 @@ export const useShareableState = () => {
     }
 
     let wasSaved = saveSettings(sharedSettings);
-    console.info('saveSharedSettings', wasSaved);
     if (await wasSaved) {
       toast.success('Saved successfully', {
         position: 'bottom-right',

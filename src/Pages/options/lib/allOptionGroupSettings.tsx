@@ -1,6 +1,6 @@
 import React from 'react';
 import { useBetween } from 'use-between';
-import { OptionGroupSettings } from '../../interfaces/optionGroupSettingsInterface';
+import { OptionGroupSettings } from '../../../interfaces/optionGroupSettingsInterface';
 import { useShareableState } from './reactSettingsHandler';
 
 export const getAllOptionGroupSettings = (): OptionGroupSettings[] => {
@@ -189,6 +189,32 @@ export const getAllOptionGroupSettings = (): OptionGroupSettings[] => {
       ),
       toggleSettings: 'indicateFullDayEvents_isActive',
       pictureURLs: ['./images/indicateFullDayEvents_1.jpg'],
+    },
+    {
+      id: 'exportAsIcs',
+      titel: 'Export Event As Ics/iCal',
+      text: (
+        <div>
+          <p>
+            Adds a button to the event details page to export the event as ICS/iCal. <br></br>
+            This allows you to import the event into other calendar applications.
+          </p>
+        </div>
+      ),
+      toggleSettings: 'exportAsIcs_isActive',
+      pictureURLs: ['./images/exportAsIcs_1.jpg'],
+    },
+    {
+      id: 'changelog',
+      titel: 'Open Changelog-Page After Update',
+      text: (
+        <div>
+          Opens this <a href="/changelog/changelog.html"
+          className='font-bold text-blue-500'
+          >changelog page</a> after an update.
+        </div>
+      ),
+      toggleSettings: 'showChangeLog_isActive'
     },
   ];
 

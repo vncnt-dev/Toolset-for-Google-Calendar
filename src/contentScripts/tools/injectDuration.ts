@@ -1,11 +1,11 @@
-import { Event } from '../../interfaces/eventInterface';
+import { CalEvent } from '../../interfaces/eventInterface';
 
-function injectDuration(eventObject: Event) {
-  if (eventObject.durationFormated) {
+function injectDuration(calEvent: CalEvent) {
+  if (calEvent.durationFormated) {
     try {
-      let eventTimeElement = eventObject.timeElement!;
+      let eventTimeElement = calEvent.timeElement!;
       let durationElement: HTMLElement;
-      if (eventObject.type === 'multiDay') {
+      if (calEvent.type === 'allDay' || calEvent.type === 'nonAllDayMultiDay') {
         durationElement = eventTimeElement.querySelector('.yzifAd')!.cloneNode(true) as HTMLElement;
       } else {
         durationElement = eventTimeElement.cloneNode(true) as HTMLElement;
@@ -14,7 +14,7 @@ function injectDuration(eventObject: Event) {
       durationElement.classList.add('event-duration');
 
       let oldDurationElement = eventTimeElement.parentElement!.querySelector('.event-duration');
-      let position = getPosition(eventTimeElement, oldDurationElement as HTMLElement, eventObject);
+      let position = getPosition(eventTimeElement, oldDurationElement as HTMLElement, calEvent);
 
       // if new position does not match old position, remove old duration element
       if (oldDurationElement && oldDurationElement.getAttribute('position') !== position) {
@@ -24,9 +24,9 @@ function injectDuration(eventObject: Event) {
 
       if (position === 'inline-block') {
         // durationelement next to time
-        const durationText = `(${eventObject.durationFormated})`;
+        const durationText = `(${calEvent.durationFormated})`;
         if (!oldDurationElement) {
-          if (eventObject.type !== 'multiDay') {
+          if (calEvent.type !== 'allDay' && calEvent.type !== 'nonAllDayMultiDay') {
             eventTimeElement.style.display = 'inline-block';
           }
           durationElement.style.display = 'inline-block';
@@ -43,10 +43,10 @@ function injectDuration(eventObject: Event) {
         // durationelement below time
         if (!oldDurationElement) {
           eventTimeElement.style.display = 'block';
-          durationElement.innerText = eventObject.durationFormated;
-        } else if ((oldDurationElement as HTMLElement).innerText != eventObject.durationFormated) {
+          durationElement.innerText = calEvent.durationFormated;
+        } else if ((oldDurationElement as HTMLElement).innerText != calEvent.durationFormated) {
           // update duration
-          (oldDurationElement as HTMLElement).innerText = eventObject.durationFormated;
+          (oldDurationElement as HTMLElement).innerText = calEvent.durationFormated;
         }
       }
 
@@ -54,7 +54,7 @@ function injectDuration(eventObject: Event) {
         // save new position of duration element
         durationElement.setAttribute('position', position);
         // insert durationElement after eventTimeElement
-        if (eventObject.type === 'multiDay') {
+        if (calEvent.type == 'allDay' || calEvent.type == 'nonAllDayMultiDay') {
           eventTimeElement.querySelector('.yzifAd')!.parentElement!.append(durationElement);
         } else {
           eventTimeElement.after(durationElement);
@@ -62,8 +62,8 @@ function injectDuration(eventObject: Event) {
       }
 
       // adjust styling
-      if (eventObject.parentElement!.style.whiteSpace !== 'nowrap') {
-        eventObject.parentElement!.style.whiteSpace = 'nowrap';
+      if (calEvent.parentElement!.style.whiteSpace !== 'nowrap') {
+        calEvent.parentElement!.style.whiteSpace = 'nowrap';
       }
     } catch (error) {
       console.warn('GC Tools - injectDurration: ', error);
@@ -82,8 +82,8 @@ function getHeight(element: HTMLElement) {
   return height;
 }
 
-function getPosition(eventTimeElement: HTMLElement, oldDurationElement: HTMLElement, eventObject: Event) {
-  if (eventObject.type === 'multiDay') {
+function getPosition(eventTimeElement: HTMLElement, oldDurationElement: HTMLElement, eventObject: CalEvent) {
+  if (eventObject.type == 'allDay' || eventObject.type == 'nonAllDayMultiDay') {
     return 'inline-block';
   }
 

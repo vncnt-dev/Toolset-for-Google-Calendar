@@ -1,11 +1,10 @@
 import { UserInfo } from './userInfo';
-import { Event } from './eventInterface';
+import { CalEvent } from './eventInterface';
 
 export interface GctCache {
   userInfo?: UserInfo | null;
-  multiDayDateKeyMap?: Map<string, string>;
-  eventStorage?: Event[];
-  multiDayEvents?: Event[];
+  eventStorage?: CalEvent[];
+  allOrMultiDayEvents?: CalEvent[];
   baseHeight?: number;
   maxTransparency?: number;
   minTransparency?: number;

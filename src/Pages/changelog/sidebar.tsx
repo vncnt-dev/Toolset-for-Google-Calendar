@@ -6,7 +6,7 @@ export const Sidebar = () => {
   let allChangelogGroupSettings = getAllChangelogs();
   return (
     <ul className="steps steps-vertical">
-      {getAllChangelogs().map((changelog: Changelog, index: number) => {
+      {getAllChangelogs().reverse().map((changelog: Changelog, index: number) => {
         return (
           <li data-content="" className="step" id={'nav_v' + changelog.version} key={index}>
             <a
@@ -20,7 +20,7 @@ export const Sidebar = () => {
                 document.getElementById('nav_v' + changelog.version)?.classList.add('step-neutral');
               }}
             >
-              {changelog.titel}
+              {changelog.version}
             </a>
           </li>
         );

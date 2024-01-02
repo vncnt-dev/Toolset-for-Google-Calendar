@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Toolset for Google Calendar™",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "description": "This extension provides multiple small tools for the Google Calendar™.",
 
   "action": {

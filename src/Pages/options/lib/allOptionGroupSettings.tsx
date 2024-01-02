@@ -99,11 +99,11 @@ export const getAllOptionGroupSettings = (): OptionGroupSettings[] => {
       pictureURLs: ['./images/betterAddMeeting_1.jpg'],
     },
     {
-      id: 'indicateFullDayEvents',
-      titel: 'Indicate Full Day Events',
+      id: 'indicateAllDayEvents',
+      titel: 'Indicate All- and Multi-Day Events',
       text: (
         <div>
-          <p>Displays full-day and multi-day events in the day and week views by adding the event to the background of the main calendar.</p>
+          <p>Displays all-day and multi-day events in the day and week views by adding the event to the background of the main calendar.</p>
           <p className="mt-2">
             The transparency of the indicator depends on the event duration. You can set a minimum (&gt;=30 days) and a maximum (1 day) transparency.
           </p>
@@ -112,8 +112,8 @@ export const getAllOptionGroupSettings = (): OptionGroupSettings[] => {
               <span
                 className="w-2/5"
                 style={{
-                  backgroundColor: `rgb(25 115 230 /${sharedSettings.indicateFullDayEvents_minTransparency})`,
-                  color: `${sharedSettings.indicateFullDayEvents_minTransparency > 0.5 ? 'white' : 'black'}`,
+                  backgroundColor: `rgb(25 115 230 /${sharedSettings.indicateAllDayEvents_minTransparency})`,
+                  color: `${sharedSettings.indicateAllDayEvents_minTransparency > 0.5 ? 'white' : 'black'}`,
                 }}
               >
                 min. transparency
@@ -122,18 +122,18 @@ export const getAllOptionGroupSettings = (): OptionGroupSettings[] => {
                 type="range"
                 min="0"
                 max="100"
-                value={sharedSettings.indicateFullDayEvents_minTransparency * 100}
+                value={sharedSettings.indicateAllDayEvents_minTransparency * 100}
                 className="range range-lg rounded-none"
                 step="5"
                 onChange={(e) => {
                   updateSharedSettings({
-                    indicateFullDayEvents_minTransparency: parseInt(e.target.value) / 100,
+                    indicateAllDayEvents_minTransparency: parseInt(e.target.value) / 100,
                   });
                 }}
               />
             </label>
             <span className="w-1/10 rounded text-center font-bold ml-2 w-14">
-              {Math.round(sharedSettings.indicateFullDayEvents_minTransparency * 100) + '%'}
+              {Math.round(sharedSettings.indicateAllDayEvents_minTransparency * 100) + '%'}
             </span>
           </div>
           <div className="flex mt-4">
@@ -141,8 +141,8 @@ export const getAllOptionGroupSettings = (): OptionGroupSettings[] => {
               <span
                 className="w-2/5"
                 style={{
-                  backgroundColor: `rgb(25 115 230 /${sharedSettings.indicateFullDayEvents_maxTransparency})`,
-                  color: `${sharedSettings.indicateFullDayEvents_maxTransparency > 0.5 ? 'white' : 'black'}`,
+                  backgroundColor: `rgb(25 115 230 /${sharedSettings.indicateAllDayEvents_maxTransparency})`,
+                  color: `${sharedSettings.indicateAllDayEvents_maxTransparency > 0.5 ? 'white' : 'black'}`,
                 }}
               >
                 max. transparency
@@ -151,18 +151,18 @@ export const getAllOptionGroupSettings = (): OptionGroupSettings[] => {
                 type="range"
                 min="0"
                 max="100"
-                value={sharedSettings.indicateFullDayEvents_maxTransparency * 100}
+                value={sharedSettings.indicateAllDayEvents_maxTransparency * 100}
                 className="range range-lg rounded-none"
                 step="5"
                 onChange={(e) => {
                   updateSharedSettings({
-                    indicateFullDayEvents_maxTransparency: parseInt(e.target.value) / 100,
+                    indicateAllDayEvents_maxTransparency: parseInt(e.target.value) / 100,
                   });
                 }}
               />
             </label>
             <span className="w-1/10 rounded text-center font-bold ml-2 w-14">
-              {Math.round(sharedSettings.indicateFullDayEvents_maxTransparency * 100) + '%'}
+              {Math.round(sharedSettings.indicateAllDayEvents_maxTransparency * 100) + '%'}
             </span>
           </div>
           <p className="mt-4">By default, the indicators span the entire width, but this can be changed here.</p>
@@ -173,22 +173,22 @@ export const getAllOptionGroupSettings = (): OptionGroupSettings[] => {
                 type="range"
                 min="0"
                 max="100"
-                value={sharedSettings.indicateFullDayEvents_maxWidth}
+                value={sharedSettings.indicateAllDayEvents_maxWidth}
                 className="range range-lg rounded-none"
                 step="5"
                 onChange={(e) => {
                   updateSharedSettings({
-                    indicateFullDayEvents_maxWidth: e.target.value,
+                    indicateAllDayEvents_maxWidth: e.target.value,
                   });
                 }}
               />
             </label>
-            <span className="w-1/10 rounded text-center font-bold ml-2 w-14">{sharedSettings.indicateFullDayEvents_maxWidth + '%'}</span>
+            <span className="w-1/10 rounded text-center font-bold ml-2 w-14">{sharedSettings.indicateAllDayEvents_maxWidth + '%'}</span>
           </div>
         </div>
       ),
-      toggleSettings: 'indicateFullDayEvents_isActive',
-      pictureURLs: ['./images/indicateFullDayEvents_1.jpg'],
+      toggleSettings: 'indicateAllDayEvents_isActive',
+      pictureURLs: ['./images/indicateAllDayEvents_1.jpg'],
     },
     {
       id: 'exportAsIcs',

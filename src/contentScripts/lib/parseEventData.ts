@@ -1,6 +1,8 @@
-import { Event } from '../../interfaces/eventInterface';
+import { CalEvent, EventDates } from '../../interfaces/eventInterface';
 import { loadSettings } from '../lib/SettingsHandler';
 import { observerCalendarViewFunction } from '../tools/MutationObserverHandler';
+
+var xhrEventData: Record<string, CalEvent> = {};
 
 function startXhrListener() {
   insertScriptToPage('xhook.min.js');
@@ -14,7 +16,7 @@ function startXhrListener() {
         try {
           // this is called when the calendar is initially loaded
           let data = JSON.parse(escapeJsonString(req.responseText.slice(6)))[0][2][1];
-          updateEventData(data);
+          updateXhrEventData(data);
         } catch (error) {
           console.warn('GCT_XMLHttpRequest-init', error, JSON.parse(escapeJsonString(req.responseText.slice(6))) || req.responseText);
         }
@@ -25,7 +27,7 @@ function startXhrListener() {
           // if no events are in the response, return (this is the case when an event is deleted
           let data = responseAsJson[0][2][3][0][1][0][3];
           let initDataStrcucture = [['', [data]]];
-          updateEventData(initDataStrcucture);
+          updateXhrEventData(initDataStrcucture);
         } catch (error) {
           /* console.warn('GCT_XMLHttpRequest-update', error, JSON.parse(escapeJsonString(req.responseText.slice(6))) || req.responseText); */
         }
@@ -35,20 +37,44 @@ function startXhrListener() {
     }
   });
 }
-var eventData: Record<string, Event> = {};
 
-var updateEventData = async function (XhrData: Array<any>) {
+function getEventXhrDataById(HtmlEventId: string): CalEvent | undefined {
+  /* 
+  every event (series) has an id
+  for single events, the HTML Element of an event holds the id in the data-eventid attribute "eventid ..."
+  for event series, the HTML Element of an event holds the date of this element and event id of the series "eventid_currentDate ..."
+
+  xhrEventData uses "eventid" for single events and and event series
+  but if the user edits an event within a series an exception is created, which is stored in xhrEventData as "eventid_currentDate"
+  
+  to get the correct event from xhrEventData, we have to check for "eventid_currentDate" first because there might be an exception for this Date,
+  and only if there is no exception, we need to check for "eventid"
+  */
+  let event: CalEvent = xhrEventData[HtmlEventId]; // check for "eventid_currentDate"
+  if (!event) {
+    event = xhrEventData[HtmlEventId.split('_')[0]]; // check for "eventid"
+  }
+  if (!event) {
+    console.log('GC Tools - warning: event not found in xhrEventData: ', HtmlEventId);
+    return;
+  }
+
+  return structuredClone(event);
+}
+async function updateXhrEventData(XhrData: Array<any>) {
   let settings = await loadSettings();
   /* console.log('GC Tools - updateEventData', XhrData); */
   try {
+    console.log('GC Tools - updateEventData: ', XhrData);
     XhrData.forEach((calender: any) => {
       // every calender has an array of events
       const newEventData = calender[1].reduce((acc: any, event: any) => {
         let eventTimeArray: Date[] = getEventTimeArray(event) as Date[];
         if (!eventTimeArray) return acc;
-        let eventDuration = calculateDuration(eventTimeArray);
+        let eventDuration = calculateDurationInMinutes(eventTimeArray);
         let recurrenceRuleString = JSON.parse(`"${event[12]?.[0] ?? ''}"`);
-        let newEvent: Event = {
+
+        let newEvent: CalEvent = {
           id: event[0],
           dates: { start: eventTimeArray[0], end: eventTimeArray[1], areCorrectedTimes: false },
           duration: eventDuration,
@@ -59,16 +85,26 @@ var updateEventData = async function (XhrData: Array<any>) {
           calendar: getEventCalendar(event),
           recurrenceRule: recurrenceRuleString?.slice(recurrenceRuleString.indexOf(':') + 1),
         };
+
+        newEvent.type = 'normal';
+        if (eventDuration >= 24 * 60) {
+          if (isAllDayEvent(newEvent.dates)) {
+            newEvent.type = 'allDay';
+          } else {
+            newEvent.type = 'nonAllDayMultiDay';
+          }
+        }
+
         return { ...acc, [newEvent.id]: newEvent };
       }, {});
-      eventData = { ...eventData, ...newEventData };
+      xhrEventData = { ...xhrEventData, ...newEventData };
     });
-    // call observerCalendarViewFunction to make shure, that the displayed info is up to date
+    // call observerCalendarViewFunction to make sure, that the displayed info is up to date
     observerCalendarViewFunction();
   } catch (error) {
     console.log('GC Tools - updateEventData: ', error);
   }
-};
+}
 
 function insertScriptToPage(file: string) {
   var s = document.createElement('script');
@@ -90,7 +126,7 @@ function getEventTimeArray(event: Array<any>): Array<Date> | null {
 }
 
 /** calculate difference between start and end date in minutes */
-function calculateDuration(startEndDateTime: Date[]): number {
+function calculateDurationInMinutes(startEndDateTime: Date[]): number {
   try {
     return (startEndDateTime[1].getTime() - startEndDateTime[0].getTime()) / 1000 / 60;
   } catch (e) {
@@ -138,6 +174,15 @@ function formatDuration(diff: number, format: string, minDurationMinutes: number
   }
 }
 
+function isAllDayEvent(eventTime: EventDates): boolean {
+  return (
+    eventTime.start.getHours() + eventTime.start.getTimezoneOffset() / 60 == 0 &&
+    eventTime.start.getMinutes() == 0 &&
+    eventTime.end.getHours() + eventTime.end.getTimezoneOffset() / 60 == 0 &&
+    eventTime.end.getMinutes() == 0
+  );
+}
+
 function getEventCalendar(event: Array<any>): { id: string; name: string } {
   const [id, name] = event[34];
   return { id, name: name ?? id };
@@ -158,4 +203,4 @@ var escapeJsonString = function (str: String) {
     });
 };
 
-export { startXhrListener, eventData };
+export { startXhrListener, getEventXhrDataById };

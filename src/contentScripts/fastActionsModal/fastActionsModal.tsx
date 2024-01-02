@@ -102,7 +102,7 @@ export const FastActionsModal = () => {
             <FastSettingsToggle feature="calcDuration_isActive" name="Display Event-Duration" />
             <FastSettingsToggle feature="hoverInformation_isActive" name="Information On Hover" />
             <FastSettingsToggle feature="betterAddMeeting_isActive" name="Better Add Meeting Buttons" />
-            <FastSettingsToggle feature="indicateFullDayEvents_isActive" name="Indicate Full-Day Events" />
+            <FastSettingsToggle feature="indicateAllDayEvents_isActive" name="Indicate Full and Multi-Day Events" />
           </div>
         </div>
       </div>

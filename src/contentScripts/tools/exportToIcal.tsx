@@ -1,6 +1,6 @@
 import React from 'react';
 import { getItemFromCache } from '../lib/cache';
-import { Event } from '../../interfaces/eventInterface';
+import { CalEvent } from '../../interfaces/eventInterface';
 import { JsxElementToHtmlElement, downloadStringAsFile } from '../lib/miscellaneous';
 
 const exportToIcalPrepare = () => {
@@ -31,7 +31,7 @@ const exportToIcal = () => {
   const activeEventId = popupView.getAttribute('data-eventid');
   if (!activeEventId) return;
 
-  const eventStorage: Event[] | [] = getItemFromCache('eventStorage') || [];
+  const eventStorage: CalEvent[] | [] = getItemFromCache('eventStorage') || [];
   const activeEvent = eventStorage.find((event) => event.parentElement?.getAttribute('data-eventid') === activeEventId);
   if (!activeEvent) return;
   /* https://datatracker.ietf.org/doc/html/rfc5545 */

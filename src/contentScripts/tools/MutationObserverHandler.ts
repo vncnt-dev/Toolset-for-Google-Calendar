@@ -1,32 +1,13 @@
-import { Event } from '../../interfaces/eventInterface';
+import { CalEvent } from '../../interfaces/eventInterface';
 import { loadSettings } from '../lib/SettingsHandler';
 import * as Tools from './tools';
-import { eventData } from '../lib/parseEventData';
-import { correctEventTime, decodeDataEventId, deepCopy, getUserInfo } from '../lib/miscellaneous';
+import { getEventXhrDataById } from '../lib/parseEventData';
+import { correctEventTime, decodeDataEventId, getUserInfo } from '../lib/miscellaneous';
 import { resetCache, setItemInCache } from '../lib/cache';
 
 MutationObserver = window.MutationObserver;
-
-var timer: NodeJS.Timeout,
-  lastTime: number = 0;
-
-const observerCalendarViewFunction = function () {
-  // if lasttime is at least 100 ms ago, run worker, else wait until lasttime is at least 100 ms ago
-  if (lastTime + 100 < Date.now()) {
-    lastTime = Date.now();
-    startWorkerCalendarView();
-  } else {
-    clearTimeout(timer);
-    timer = setTimeout(function () {
-      lastTime = Date.now();
-      startWorkerCalendarView();
-    }, Date.now() - lastTime);
-  }
-};
 const observerCalendarView = new MutationObserver(observerCalendarViewFunction);
-const observerCompleteHTMLBody = new MutationObserver(function () {
-  startWorkerCompleteHTMLBody();
-});
+const observerCompleteHTMLBody = new MutationObserver(startWorkerCompleteHTMLBody);
 
 function createObserverCalendarView() {
   observerCalendarView.observe(document.querySelector('#YPCqFe')!, {
@@ -42,61 +23,91 @@ function createObserverCompleteHTMLBody() {
   });
 }
 
+var timer: NodeJS.Timeout;
+var lastTime: number = 0;
+function observerCalendarViewFunction () {
+  // if lasttime is at least 100 ms ago, run worker, else wait until lasttime is at least 100 ms ago
+  if (lastTime + 100 < Date.now()) {
+    lastTime = Date.now();
+    startWorkerCalendarView();
+  } else {
+    clearTimeout(timer);
+    timer = setTimeout(function () {
+      lastTime = Date.now();
+      startWorkerCalendarView();
+    }, Date.now() - lastTime);
+  }
+};
+
 async function startWorkerCalendarView() {
   let settings = await loadSettings();
   resetCache();
   setItemInCache('userInfo', getUserInfo());
-  var eventStorage: Event[] = [];
+  /**
+   * contains information about all events of the current view, including allOrMultiDay events
+   */
+  var eventStorage: CalEvent[] = [];
+  /**
+   * contains information about all allOrMultiDay events of the current view
+   */
+  var allOrMultiDayEventStorage: CalEvent[] = [];
   observerCalendarView.disconnect();
   try {
-    let eventList: NodeListOf<HTMLElement> = document.querySelectorAll('div[role="button"][data-eventid]');
-    for (let eventElement of eventList) {
-      let eventIdObj = decodeDataEventId(eventElement.getAttribute('data-eventid')!);
-      // a single event of a series can be edited, creating an exception that overwrites the original event for that one event
-      // first one is for exceptions, second one is for the original event (series + one-time-events)
-      let thisEvent: Event = eventData[eventIdObj[0] + '_' + eventIdObj[1]] || eventData[eventIdObj[0]];
-      if (!thisEvent) continue;
-      thisEvent.parentElement = eventElement;
-      let eventTimeElement = eventElement.querySelector('.Jmftzc.gVNoLb.EiZ8Dd,.A6wOnd:not(.event-duration)') as HTMLElement;
-      thisEvent.timeElement = eventTimeElement;
-      // very short events (>1h) have a diffenent HTML structure
-      thisEvent.type = eventTimeElement.classList.contains('A6wOnd') ? 'short' : 'normal';
-      thisEvent.dates = correctEventTime(thisEvent);
-      eventStorage.push(deepCopy(thisEvent));
+    let calEventList: NodeListOf<HTMLElement> = document.querySelectorAll('div[role="button"][data-eventid]');
+    // events that are >24h or "full day" have to be handled separately, because there HTML structure is different
+    let allOrMultiDayCalEventList: NodeListOf<HTMLElement> = document.querySelectorAll('.g3dbUc.jKgTF.QGRmIf:not(.PU9jSd)');
+
+    for (let calEventHtmlElement of calEventList) {
+      try {
+        let eventId = decodeDataEventId(calEventHtmlElement.getAttribute('data-eventid')!);
+        let thisEvent: CalEvent = getEventXhrDataById(eventId)!;
+        if (!thisEvent) continue;
+
+        thisEvent.parentElement = calEventHtmlElement;
+        thisEvent.timeElement = calEventHtmlElement.querySelector('.Jmftzc.gVNoLb.EiZ8Dd,.A6wOnd:not(.event-duration)') as HTMLElement;
+        // very short events (>1h) have a diffenent HTML structure
+        if (thisEvent.timeElement.classList.contains('A6wOnd')) {
+          thisEvent.type = 'short';
+        }
+        thisEvent.dates = correctEventTime(thisEvent,eventId);
+
+        eventStorage.push(thisEvent);
+      } catch (error) {
+        console.error('GC Tools - error while parsing event: ', error);
+      }
     }
 
-    // multiDay events have to be handled separately, because there HTML structure is different
-    let multiDayEventList: NodeListOf<HTMLElement> = document.querySelectorAll('.g3dbUc.jKgTF.QGRmIf:not(.PU9jSd)');
-    for (let eventTimeElement of multiDayEventList) {
-      let eventIdObj = decodeDataEventId(eventTimeElement.parentElement!.getAttribute('data-eventid')!);
-      // a single event of a series can be edited, creating an exception that overwrites the original event for that one event
-      // first one is for exceptions, second one is for the original event (series + one-time-events)
-      let thisEvent: Event = eventData[eventIdObj[0] + '_' + eventIdObj[1]] || eventData[eventIdObj[0]];
-      if (!thisEvent) continue;
-      thisEvent.timeElement = eventTimeElement;
-      thisEvent.parentElement = eventTimeElement.parentElement!;
-      thisEvent.type = 'multiDay';
-      thisEvent.dates = correctEventTime(thisEvent);
-      eventStorage.push(deepCopy(thisEvent));
+    for (let calEventHtmlElement of allOrMultiDayCalEventList) {
+      try {
+        let eventId = decodeDataEventId(calEventHtmlElement.parentElement!.getAttribute('data-eventid')!);
+        let thisEvent: CalEvent = getEventXhrDataById(eventId)!;
+        if (!thisEvent) continue;
+
+        thisEvent.parentElement = calEventHtmlElement.parentElement!;
+        thisEvent.timeElement = calEventHtmlElement;
+
+        thisEvent.dates = correctEventTime(thisEvent,eventId);
+
+        allOrMultiDayEventStorage.push(thisEvent);
+        eventStorage.push(thisEvent);
+      } catch (error) {
+        console.error('GC Tools - error while parsing allOrMultiDay event: ', error);
+      }
     }
 
-    let multiDayEvents: Event[] = [];
     for (let thisEvent of eventStorage) {
       if (!thisEvent.parentElement || !thisEvent.timeElement) continue;
-      if (settings.calcDuration_isActive) {
-        Tools.injectDuration(thisEvent);
-      }
       Tools.addHoverOverInformation(thisEvent);
-      if (thisEvent.type === 'multiDay') {
-        multiDayEvents.push(thisEvent);
-      }
+      if (settings.calcDuration_isActive) Tools.injectDuration(thisEvent);
     }
-    multiDayEvents = multiDayEvents.filter((event, index, self) => self.findIndex((t) => t.id === event.id) === index); // remove double entries
-    if (settings.indicateFullDayEvents_isActive) Tools.indicateFullDayEvents(multiDayEvents);
+
+    if (settings.indicateAllDayEvents_isActive) Tools.indicateAllDayEvents(allOrMultiDayEventStorage);
     if (settings.exportAsIcs_isActive) Tools.exportToIcalPrepare();
 
+    console.log('GC Tools - eventStorage: ', eventStorage);
+    console.log('GC Tools - allOrMultiDayEvents: ', allOrMultiDayEventStorage);
     setItemInCache('eventStorage', eventStorage);
-    setItemInCache('multiDayEvents', multiDayEvents);
+    setItemInCache('allOrMultiDayEvents', allOrMultiDayEventStorage);
   } catch (error) {
     console.error('GC Tools - error: ', error);
   } finally {

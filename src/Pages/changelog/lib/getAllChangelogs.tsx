@@ -17,6 +17,17 @@ export const getAllChangelogs = (): Changelog[] => {
         </div>
       ),
     },
+    {
+      version: '1.3.0',
+      titel: 'v1.3.0 - Bugfixes f.e. for "Indicate All- and Multi-Day Events"',
+      text: (
+        <div>
+          This update fixes multiple bugs especially for the "Indicate All- and Multi-Day Events" functionality.
+          <br />
+          The indicator should now start and end at the correct time.
+        </div>
+      ),
+    },
   ];
 
   return allChangelogs;

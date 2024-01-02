@@ -1,13 +1,12 @@
 import ReactDOMServer from 'react-dom/server';
-import { Event, EventDates } from '../../interfaces/eventInterface';
+import { CalEvent, EventDates } from '../../interfaces/eventInterface';
 import { getItemFromCache, setItemInCache } from '../lib/cache';
 import { UserInfo } from '../../interfaces/userInfo';
-import { start } from 'repl';
 
 /* based on https://stackoverflow.com/a/46428456 */
-function decodeDataEventId(dataEventId: string): Array<string> {
+function decodeDataEventId(dataEventId: string): string {
   let decoded = atob(dataEventId); // n17t3dbrekq5om2hj91t4pjefk_20221013T210000Z mail@...  -->  >id_date e-mail<
-  return decoded.split(/[_ ]/);
+  return decoded.slice(0, decoded.indexOf(' '));
 }
 
 /* 
@@ -15,51 +14,54 @@ function decodeDataEventId(dataEventId: string): Array<string> {
 function getUserInfo(): UserInfo | null {
   let userInfoElement = document.getElementById('xUserInfo');
   if (!userInfoElement) return null;
-  let gmtOffset: string | number | null = userInfoElement.querySelector('#xGmtOffset')?.textContent ?? null;
-  if (typeof gmtOffset === 'string') gmtOffset = -(parseInt(gmtOffset) / 1000 / 60);
+
+  let queryUserInfoElement = (selector: string) => userInfoElement!.querySelector(selector)?.textContent ?? null;
+  let gmtOffset: string | number | null = queryUserInfoElement('#xGmtOffset');
+  if (typeof gmtOffset === 'string')
+    gmtOffset = -(parseInt(gmtOffset) / 1000 / 60) + 60; // +60 because google seems to base the timezone offset on the DST not normal time
+  else gmtOffset = new Date().getTimezoneOffset();
 
   let userInfo: UserInfo = {
-    email: userInfoElement.querySelector('#xUserEmail')?.textContent ?? null,
-    name: userInfoElement.querySelector('#xUserName')?.textContent ?? null,
-    timezone: userInfoElement.querySelector('#xTimezone')?.textContent ?? null,
-    gmtOffset: gmtOffset ? gmtOffset : new Date().getTimezoneOffset(),
-    locale: userInfoElement.querySelector('#xUserLocale')?.textContent ?? null,
+    email: queryUserInfoElement('#xUserEmail'),
+    name: queryUserInfoElement('#xUserName'),
+    timezone: queryUserInfoElement('#xTimezone'),
+    gmtOffset: gmtOffset,
+    locale: queryUserInfoElement('#xUserLocale'),
   };
   return userInfo;
 }
 
-function correctEventTime(event: Event): EventDates {
-  if(event.dates.areCorrectedTimes) return event.dates;
-  const multiDayDateKeyMap = getItemFromCache('multiDayDateKeyMap') || new Map<string, string>();
-  let userInfo = getItemFromCache('userInfo')!;
-  let startDate: Date, endDate: Date;
-  if (event.type === 'multiDay') {
-    // generate Map to get data-key of multiDay events
-    if (multiDayDateKeyMap.size === 0) {
-      Array.from(event.parentElement?.closest('.MVMVEe')?.childNodes[0]?.childNodes || []).forEach((el: any, index) => {
-        multiDayDateKeyMap.set(index.toString(), el.getAttribute('data-datekey'));
-      });
-      setItemInCache('multiDayDateKeyMap', multiDayDateKeyMap);
-    }
-    const index = Array.prototype.indexOf.call(event.parentElement?.closest('.rES0Be')?.children, event.parentElement?.closest('.eADW5d'));
-    startDate = getDateFromDateKey(parseInt(multiDayDateKeyMap.get(index.toString())!));
-    startDate.setHours(event.dates.start.getHours(), event.dates.start.getMinutes());
-    if (userInfo.gmtOffset && startDate.getTimezoneOffset() != userInfo.gmtOffset) {
-      startDate.setTime(startDate.getTime() + (startDate.getTimezoneOffset() - userInfo.gmtOffset) * 60 * 1000);
-    }
-    endDate = new Date(startDate.getTime() + event.duration * 60 * 1000);
-  } else {
-    const duration = event.duration;
-    const eventTime = event.dates.start;
-    const datekey = event.parentElement?.parentElement?.parentElement?.getAttribute('data-datekey')!;
-    const today = getDateFromDateKey(parseInt(datekey));
+function correctEventTime(event: CalEvent, HtmlEventId: string): EventDates {
+  if (event.dates.areCorrectedTimes) return event.dates;
+  const userInfo = getItemFromCache('userInfo')!;
+  const duration = event.duration;
+  let startDate: Date;
+  let endDate: Date;
 
-    startDate = new Date(today.getFullYear(), today.getMonth(), today.getDate(), eventTime.getHours(), eventTime.getMinutes());
+  let datekey = HtmlEventId.split('_')[1];
+  if (datekey) {
+    let dateString = datekey.slice(0, 4) + '-' + datekey.slice(4, 6) + '-' + datekey.slice(6, 8);
+    if (datekey.includes('Z')) {
+      // 20310617T230000Z
+      dateString += 'T' + datekey.slice(9, 11) + ':' + datekey.slice(11, 13) + ':' + datekey.slice(13, 15) + 'Z';
+    }
+    startDate = new Date(dateString);
+    if (isNaN(startDate.getTime())) startDate = event.dates.start;
+  } else {
+    startDate = event.dates.start;
+  }
+
+  console.log(startDate, userInfo.gmtOffset, startDate.getTimezoneOffset());
+  if (event.type === 'allDay') {
+    startDate.setHours(0, 0);
+    endDate = new Date(startDate.getTime() + (duration * 60 - 1) * 1000); // -1 because allDay should end at 23:59:59 not 00:00:00 the next day
+  } else {
     if (userInfo.gmtOffset && startDate.getTimezoneOffset() != userInfo.gmtOffset) {
       startDate.setTime(startDate.getTime() + (startDate.getTimezoneOffset() - userInfo.gmtOffset) * 60 * 1000);
     }
     endDate = new Date(startDate.getTime() + duration * 60 * 1000);
   }
+
   return { start: startDate, end: endDate, areCorrectedTimes: true };
 }
 
@@ -76,7 +78,7 @@ function trimArray(arr: Array<String>): Array<String> {
 }
 
 /**
- * caluates day of gcal day element based on data-datekey attribute
+ * caluates day based on data-datekey attribute
  * source: https://stackoverflow.com/a/58081383
  * */
 function getDateFromDateKey(dateKey: number): Date {
@@ -87,30 +89,25 @@ function getDateFromDateKey(dateKey: number): Date {
   return new Date(year + 1970, month, day, 0, 0, 0, 0);
 }
 
-function isBetweenDays(startDate: Date, endDate: Date, betweenDate: Date): boolean {
-  const start = new Date(1971, startDate.getMonth(), startDate.getDate()).getTime();
-  const end = new Date(1971, endDate.getMonth(), endDate.getDate()).getTime();
-  const test = new Date(1971, betweenDate.getMonth(), betweenDate.getDate()).getTime();
-  return start <= test && test <= end;
+function isBetweenDays(startDate: Date, endDate: Date, testDate: Date): boolean {
+  const startTime = new Date(startDate).setHours(0, 0, 0, 0);
+  const endTime = new Date(endDate).setHours(23, 59, 59, 999);
+  const testTime = testDate.getTime();
+  return startTime <= testTime && testTime <= endTime;
 }
 
-function isBetweenDates(startDate: Date, endDate: Date, date: Date): boolean {
+/**
+ * is testDateDate in [startDate, endDate)
+ */
+function isBetweenDateTimes(startDate: Date, endDate: Date, date: Date): boolean {
   const start = startDate.getTime();
   const end = endDate.getTime();
   const d = date.getTime();
-  return start <= d && d <= end;
+  return start <= d && d < end;
 }
 
 function isSameDay(date1: Date, date2: Date): boolean {
   return date1.getFullYear() === date2.getFullYear() && date1.getMonth() === date2.getMonth() && date1.getDate() === date2.getDate();
-}
-
-function deepCopy<T>(obj: T): T {
-  if (typeof obj !== 'object' || obj === null) {
-    console.error('deepCopy: ', obj, ' is not an object');
-    return obj;
-  }
-  return { ...obj };
 }
 
 function downloadStringAsFile(string: string, filename: string) {
@@ -134,17 +131,16 @@ function htmlStringToHtmlElement(html: string): HTMLElement {
 }
 
 export {
-  escapeHtml,
-  trimArray,
-  getDateFromDateKey,
-  isBetweenDays,
-  isBetweenDates,
-  isSameDay,
-  deepCopy,
-  decodeDataEventId,
   correctEventTime,
+  decodeDataEventId,
   downloadStringAsFile,
-  JsxElementToHtmlElement,
-  htmlStringToHtmlElement,
+  escapeHtml,
+  getDateFromDateKey,
   getUserInfo,
+  htmlStringToHtmlElement,
+  isBetweenDateTimes,
+  isBetweenDays,
+  isSameDay,
+  JsxElementToHtmlElement,
+  trimArray,
 };

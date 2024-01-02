@@ -27,12 +27,13 @@ const Changelog = () => {
         <div className="w-4/5 pr-5">
           <div>
             <div id="changelogForm" className="overflow-y-scroll" style={{ height: 'calc(100vh - 171px)' }}>
-              {getAllChangelogs().map((changelogs: Changelog, index: number) => {
-                return <ChangelogGroup key={index} {...changelogs}></ChangelogGroup>;
-              })}
+              {getAllChangelogs()
+                .reverse()
+                .map((changelogs: Changelog, index: number) => {
+                  return <ChangelogGroup key={index} {...changelogs}></ChangelogGroup>;
+                })}
             </div>
-            <div>
-            </div>
+            <div></div>
           </div>
         </div>
       </div>

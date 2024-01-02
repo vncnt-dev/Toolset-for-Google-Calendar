@@ -31,6 +31,7 @@ const Options = () => {
               {getAllOptionGroupSettings().map((optionGroupSettings: OptionGroupSettings, index: number) => {
                 return <OptionGroup key={index} {...optionGroupSettings}></OptionGroup>;
               })}
+              <OptionsFormActions/>
             </div>
           </div>
         </div>

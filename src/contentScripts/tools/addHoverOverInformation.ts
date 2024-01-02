@@ -1,16 +1,16 @@
-import { Event, EventDates } from '../../interfaces/eventInterface';
+import { CalEvent, EventDates } from '../../interfaces/eventInterface';
 import { isSameDay } from '../lib/miscellaneous';
 import { loadSettings } from '../lib/SettingsHandler';
 
-function addHoverOverInformation(event: Event) {
-  let innerText = formatTime(event.dates);
+function addHoverOverInformation(event: CalEvent) {
+  let innerText = formatTime(event);
   if (event.durationFormated) innerText += ` (${event.durationFormated})`;
   if (event.name) innerText += `\n${event.name}`;
   if (event.location) innerText += `\n${event.location}`;
 
   // set position and content of hoverInformationElement
-  event.parentElement!.addEventListener('mousemove',(event) =>
-    ( async (innerText) => {
+  event.parentElement!.addEventListener('mousemove', (event) =>
+    (async (innerText) => {
       let settings = await loadSettings();
       if (settings.hoverInformation_isActive) {
         document.getElementById('hoverInformationElementText')!.innerText = innerText;
@@ -34,38 +34,26 @@ function addHoverOverInformation(event: Event) {
   });
 }
 
-function formatTime(eventTime: EventDates): string {
-  if (isSameDay(eventTime.start, eventTime.end)) {
+function formatTime(event: CalEvent): string {
+  let eventTimes = event.dates;
+
+  if (isSameDay(eventTimes.start, eventTimes.end)) {
+    let padTwo = (num: number) => num.toString().padStart(2, '0');
     return (
-      eventTime.start.getHours().toString().padStart(2, '0') +
+      padTwo(eventTimes.start.getHours()) +
       ':' +
-      eventTime.start.getMinutes().toString().padStart(2, '0') +
+      padTwo(eventTimes.start.getMinutes()) +
       ' - ' +
-      eventTime.end.getHours().toString().padStart(2, '0') +
+      padTwo(eventTimes.end.getHours()) +
       ':' +
-      eventTime.end.getMinutes().toString().padStart(2, '0')
+      padTwo(eventTimes.end.getMinutes())
     );
   } else {
-    let options: Intl.DateTimeFormatOptions;
-    let locales = document.documentElement.lang as Intl.LocalesArgument;
-    let formattedTime = '';
+    let lang: Intl.LocalesArgument = document.documentElement.lang;
+    let options: Intl.DateTimeFormatOptions = { year: 'numeric', month: '2-digit', day: '2-digit' };
+    if (event.type !== 'allDay') options = { ...options, hour: '2-digit', minute: '2-digit' };
 
-    // only add time if not full day event
-    let isFulldayEvent =
-      eventTime.start.getHours() + eventTime.start.getTimezoneOffset() / 60 == 0 &&
-      eventTime.start.getMinutes() == 0 &&
-      eventTime.end.getHours() + eventTime.end.getTimezoneOffset() / 60 == 0 &&
-      eventTime.end.getMinutes() == 0;
-
-    if (!isFulldayEvent) options = { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' };
-    else options = { year: 'numeric', month: '2-digit', day: '2-digit' };
-    formattedTime = eventTime.start.toLocaleDateString(locales, options) + ' - ';
-
-    if (!isFulldayEvent) options = { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' };
-    else options = { year: 'numeric', month: '2-digit', day: '2-digit' };
-    formattedTime += eventTime.end.toLocaleDateString(locales, options);
-
-    return formattedTime;
+    return eventTimes.start.toLocaleDateString(lang, options) + ' - ' + eventTimes.end.toLocaleDateString(lang, options);
   }
 }
 

@@ -25,7 +25,7 @@ function createObserverCompleteHTMLBody() {
 
 var timer: NodeJS.Timeout;
 var lastTime: number = 0;
-function observerCalendarViewFunction () {
+function observerCalendarViewFunction() {
   // if lasttime is at least 100 ms ago, run worker, else wait until lasttime is at least 100 ms ago
   if (lastTime + 100 < Date.now()) {
     lastTime = Date.now();
@@ -37,7 +37,7 @@ function observerCalendarViewFunction () {
       startWorkerCalendarView();
     }, Date.now() - lastTime);
   }
-};
+}
 
 async function startWorkerCalendarView() {
   let settings = await loadSettings();
@@ -55,7 +55,7 @@ async function startWorkerCalendarView() {
   try {
     let calEventList: NodeListOf<HTMLElement> = document.querySelectorAll('div[role="button"][data-eventid]');
     // events that are >24h or "full day" have to be handled separately, because there HTML structure is different
-    let allOrMultiDayCalEventList: NodeListOf<HTMLElement> = document.querySelectorAll('.g3dbUc.jKgTF.QGRmIf:not(.PU9jSd)');
+    let allOrMultiDayCalEventList: NodeListOf<HTMLElement> = document.querySelectorAll('.KF4T6b.jKgTF:not(.PU9jSd)');
 
     for (let calEventHtmlElement of calEventList) {
       try {
@@ -64,12 +64,19 @@ async function startWorkerCalendarView() {
         if (!thisEvent) continue;
 
         thisEvent.parentElement = calEventHtmlElement;
-        thisEvent.timeElement = calEventHtmlElement.querySelector('.Jmftzc.gVNoLb.EiZ8Dd,.A6wOnd:not(.event-duration)') as HTMLElement;
+        thisEvent.timeElement = (
+          calEventHtmlElement.querySelector('div.lhydbb.gVNoLb.EiZ8Dd:not(.event-duration)') ||
+          calEventHtmlElement.querySelector('.EWOIrf:not(.event-duration)')
+        ) as HTMLElement;
         // very short events (>1h) have a diffenent HTML structure
-        if (thisEvent.timeElement.classList.contains('A6wOnd')) {
+        if(!thisEvent.timeElement) {
+          console.warn('GC Tools - event without timeElement: ', thisEvent, calEventHtmlElement);
+          return;
+        }
+        if (thisEvent.timeElement?.classList.contains('EWOIrf')) {
           thisEvent.type = 'short';
         }
-        thisEvent.dates = correctEventTime(thisEvent,eventId);
+        thisEvent.dates = correctEventTime(thisEvent, eventId);
 
         eventStorage.push(thisEvent);
       } catch (error) {
@@ -86,7 +93,7 @@ async function startWorkerCalendarView() {
         thisEvent.parentElement = calEventHtmlElement.parentElement!;
         thisEvent.timeElement = calEventHtmlElement;
 
-        thisEvent.dates = correctEventTime(thisEvent,eventId);
+        thisEvent.dates = correctEventTime(thisEvent, eventId);
 
         allOrMultiDayEventStorage.push(thisEvent);
         eventStorage.push(thisEvent);
@@ -118,7 +125,7 @@ async function startWorkerCalendarView() {
 async function startWorkerCompleteHTMLBody() {
   let settings = await loadSettings();
   observerCompleteHTMLBody.disconnect();
-  if (settings.betterAddMeeting_isActive) Tools.betterAddMeeting();
+  if (settings.removeGMeets_isActive) Tools.removeGMeets();
 
   createObserverCompleteHTMLBody();
 }

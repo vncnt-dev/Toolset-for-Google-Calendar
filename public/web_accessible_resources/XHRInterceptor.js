@@ -1,11 +1,15 @@
-xhook.after(function (req, res) {
+try {
+  xhook.after(function (req, res) {
     let response = {
-        responseURL: res.finalUrl,
-        responseText: res.text,
+      responseURL: res.finalUrl,
+      responseText: res.text,
     };
     try {
-        document.dispatchEvent(new CustomEvent('GCT_XMLHttpRequest', { detail: response }));
+      document.dispatchEvent(new CustomEvent('GCT_XMLHttpRequest', { detail: response }));
     } catch (error) {
-        console.warn(error);
+      console.warn(error);
     }
-});
+  });
+} catch (error) {
+  console.log(error);
+}

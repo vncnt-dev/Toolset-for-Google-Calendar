@@ -6,7 +6,7 @@ function injectDuration(calEvent: CalEvent) {
       let eventTimeElement = calEvent.timeElement!;
       let durationElement: HTMLElement;
       if (calEvent.type === 'allDay' || calEvent.type === 'nonAllDayMultiDay') {
-        durationElement = eventTimeElement.querySelector('.yzifAd')!.cloneNode(true) as HTMLElement;
+        durationElement = eventTimeElement.querySelector('.WBi6vc')!.cloneNode(true) as HTMLElement;
       } else {
         durationElement = eventTimeElement.cloneNode(true) as HTMLElement;
         durationElement.classList.remove('gVNoLb');
@@ -55,7 +55,7 @@ function injectDuration(calEvent: CalEvent) {
         durationElement.setAttribute('position', position);
         // insert durationElement after eventTimeElement
         if (calEvent.type == 'allDay' || calEvent.type == 'nonAllDayMultiDay') {
-          eventTimeElement.querySelector('.yzifAd')!.parentElement!.append(durationElement);
+          eventTimeElement.querySelector('.nHqeVd')!.parentElement!.append(durationElement);
         } else {
           eventTimeElement.after(durationElement);
         }

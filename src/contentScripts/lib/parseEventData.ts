@@ -12,24 +12,34 @@ function startXhrListener() {
   document.addEventListener('GCT_XMLHttpRequest', function (event: CustomEventInit) {
     try {
       let req = event.detail as XMLHttpRequest;
-      if (req.responseURL.includes('calendar.google.com/calendar/u/0/sync.prefetcheventrange')) {
+      if (req?.responseURL?.includes('calendar.google.com/calendar/u/0/sync.prefetcheventrange')) {
+        console.log('GC Tools - xhr event - sync.prefetcheventrange', req);
         try {
           // this is called when the calendar is initially loaded
-          let data = JSON.parse(escapeJsonString(req.responseText.slice(6)))[0][2][1];
+          let data = JSON.parse(escapeJsonString(req.responseText.slice(6)).trim())[0][2][1];
           updateXhrEventData(data);
         } catch (error) {
-          console.warn('GCT_XMLHttpRequest-init', error, JSON.parse(escapeJsonString(req.responseText.slice(6))) || req.responseText);
+          console.warn('GCT_XMLHttpRequest-init', error);
         }
-      } else if (req.responseURL.includes('calendar.google.com/calendar/u/0/sync.sync')) {
+      } else if (req?.responseURL?.includes('calendar.google.com/calendar/u/0/sync.sync')) {
         try {
+          console.log('GC Tools - xhr event - sync.sync', req);
           // this is called when an event is added or edited
-          let responseAsJson = JSON.parse(escapeJsonString(req.responseText.slice(6)));
+          let responseAsJson = JSON.parse(escapeJsonString(req.responseText.slice(6)).trim());
+
           // if no events are in the response, return (this is the case when an event is deleted
-          let data = responseAsJson[0][2][3][0][1][0][3];
-          let initDataStrcucture = [['', [data]]];
+          let data;
+          try {
+            data = responseAsJson[0][2][3][0][1][0][3];
+          } catch (error) {
+            return;
+          }
+
+          if (!data) return;
+          let initDataStrcucture = [['', [data]]]; // mock structure to match the structure of the initial data
           updateXhrEventData(initDataStrcucture);
         } catch (error) {
-          /* console.warn('GCT_XMLHttpRequest-update', error, JSON.parse(escapeJsonString(req.responseText.slice(6))) || req.responseText); */
+          console.warn('GCT_XMLHttpRequest-update', error);
         }
       }
     } catch (error) {
@@ -68,6 +78,7 @@ async function updateXhrEventData(XhrData: Array<any>) {
     console.log('GC Tools - updateEventData: ', XhrData);
     XhrData.forEach((calender: any) => {
       // every calender has an array of events
+      if (!calender[1]) return;
       const newEventData = calender[1].reduce((acc: any, event: any) => {
         let eventTimeArray: Date[] = getEventTimeArray(event) as Date[];
         if (!eventTimeArray) return acc;

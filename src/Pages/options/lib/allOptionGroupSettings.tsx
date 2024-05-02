@@ -69,34 +69,18 @@ export const getAllOptionGroupSettings = (): OptionGroupSettings[] => {
       pictureURLs: ['./images/hoverOverInformation_1.jpg', './images/hoverOverInformation_2.jpg'],
     },
     {
-      id: 'betterAddMeeting',
-      titel: 'Better Add Meeting Buttons',
+      id: 'removeGMeets',
+      titel: 'Remove GMeeting Buttons',
       text: (
         <div>
           <p>
-            This places all (supported) add meeting buttons in one line and shortens the text. <br></br>
-            You will still need to install the extension of the respective vendor to add the buttons in the first place. <br></br>
-            currently supported:
+            Removes the Google Meet™ buttons from the event details page and the quick add dialog. This is useful if you don't use Google Meet™.
           </p>
-          <ul className="list-disc ml-5">
-            <li>Google Meet</li>
-            <li>
-              Jitsi with the{' '}
-              <a className="font-bold" href="https://chrome.google.com/webstore/detail/jitsi-meetings/kglhbbefdnlheedjiejgomgmfplipfeb">
-                Jitsi Meetings extension
-              </a>
-            </li>
-            <li>
-              Zoom with the{' '}
-              <a className="font-bold" href="https://chrome.google.com/webstore/detail/zoom-scheduler/kgjfgplpablkjnlkjmjdecgdpfankdle">
-                Zoom Scheduler extension
-              </a>
-            </li>
-          </ul>
+
         </div>
       ),
-      toggleSettings: 'betterAddMeeting_isActive',
-      pictureURLs: ['./images/betterAddMeeting_1.jpg'],
+      toggleSettings: 'removeGMeets_isActive',
+      pictureURLs: [],
     },
     {
       id: 'indicateAllDayEvents',

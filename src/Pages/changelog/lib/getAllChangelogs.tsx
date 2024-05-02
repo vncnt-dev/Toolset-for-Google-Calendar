@@ -27,7 +27,15 @@ export const getAllChangelogs = (): Changelog[] => {
           The indicator should now start and end at the correct time.
         </div>
       ),
-    },
+    },{
+      version: '1.4.0',
+      titel: 'v1.4.0 - Fixes functionality ',
+      text: (
+        <div>
+          This update restores the functionality for most Features after a Google Calender Update broke the extension.
+        </div>
+      ),
+    }
   ];
 
   return allChangelogs;

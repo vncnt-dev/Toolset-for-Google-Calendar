@@ -51,7 +51,7 @@ function correctEventTime(event: CalEvent, HtmlEventId: string): EventDates {
     startDate = event.dates.start;
   }
 
-  console.log(startDate, userInfo.gmtOffset, startDate.getTimezoneOffset());
+  // console.log(startDate, userInfo.gmtOffset, startDate.getTimezoneOffset());
   if (event.type === 'allDay') {
     startDate.setHours(0, 0);
     endDate = new Date(startDate.getTime() + (duration * 60 - 1) * 1000); // -1 because allDay should end at 23:59:59 not 00:00:00 the next day

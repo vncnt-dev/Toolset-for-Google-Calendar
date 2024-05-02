@@ -6,7 +6,7 @@ var defaultSettings: Settings = {
   calcDuration_minimumDurationMinutes: 30,
   calcDuration_durationFormat: 'hourMinutes',
   hoverInformation_isActive: true,
-  betterAddMeeting_isActive: true,
+  removeGMeets_isActive: true,
   indicateAllDayEvents_isActive: true,
   indicateAllDayEvents_maxTransparency: 0.9,
   indicateAllDayEvents_minTransparency: 0.5,

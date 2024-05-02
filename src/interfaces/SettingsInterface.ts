@@ -2,7 +2,7 @@
 export interface SettingsIsActive {
   calcDuration_isActive: boolean;
   hoverInformation_isActive: boolean;
-  betterAddMeeting_isActive: boolean;
+  removeGMeets_isActive: boolean;
   indicateAllDayEvents_isActive: boolean;
   exportAsIcs_isActive: boolean;
   showChangeLog_isActive: boolean;

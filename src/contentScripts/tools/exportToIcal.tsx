@@ -3,7 +3,10 @@ import { getItemFromCache } from '../lib/cache';
 import { CalEvent } from '../../interfaces/eventInterface';
 import { JsxElementToHtmlElement, downloadStringAsFile } from '../lib/miscellaneous';
 
+const popupView = document.getElementById('xDetDlg');
+
 const exportToIcalPrepare = () => {
+  if (!popupView) return;
   const menuItem = Array.from(document.querySelectorAll('ul.VfPpkd-StrnGf-rymPhb.DMZ54e')).filter((ulElement) => {
     return (ulElement.parentNode as HTMLElement).hasAttribute('data-eventid');
   })[0];
@@ -25,9 +28,8 @@ const exportToIcalPrepare = () => {
 };
 
 const exportToIcal = () => {
-  const popupView = document.getElementById('xDetDlg');
+  console.log('exportToIcal')
   if (!popupView) return;
-
   const activeEventId = popupView.getAttribute('data-eventid');
   if (!activeEventId) return;
 

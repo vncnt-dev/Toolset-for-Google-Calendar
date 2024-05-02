@@ -11,11 +11,11 @@ var indicateAllDayEvents = async (eventStorageMultiDay: CalEvent[]) => {
   let settings = await loadSettings();
   if (eventStorageMultiDay.length === 0) return;
   // heigt of 1h based on sidebar timeline elements
-  setItemInCache('baseHeight', (document.querySelector('.s4ZaLd')! as HTMLElement).offsetHeight);
+  setItemInCache('baseHeight', (document.querySelector('.XsRa1c')! as HTMLElement).offsetHeight);
   setItemInCache('maxTransparency', settings.indicateAllDayEvents_maxTransparency);
   setItemInCache('minTransparency', settings.indicateAllDayEvents_minTransparency);
 
-  const dateColumnElements = Array.from(document.querySelectorAll('.YvjgZe'));
+  const dateColumnElements = Array.from(document.querySelectorAll('.BiKU4b'));
   try {
     for (const changedEvent of eventStorageMultiDay) {
       const id = generateID(changedEvent);
@@ -34,7 +34,7 @@ var indicateAllDayEvents = async (eventStorageMultiDay: CalEvent[]) => {
           indicatorElement.style.height = `${calculateHeight(changedEvent, DateOfDateColumnElement)}px`;
           calculateWidthAndPos(changedEvent, eventStorageMultiDay, DateOfDateColumnElement, indicatorElement, settings);
 
-          const eventContainer = DateColumnElement.querySelector('div.WJVfWe.A3o4Oe');
+          const eventContainer = DateColumnElement.querySelector('div.feMFof.A3o4Oe');
           if (eventContainer) {
             eventContainer.appendChild(indicatorElement);
           }

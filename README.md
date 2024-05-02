@@ -21,11 +21,10 @@ Calculates and displays the event durations on the "by day", "by week" and "by m
 
 Show information on hover "by day", "by week" and "by month" view.
 
-## Better Add Meeting Buttons:
+## Remove Google Meets Buttons:
 
-This places all (supported) add meeting buttons in one line and shortens the text.
-You will still need to install the extension of the respective vendor to add the buttons in the first place.
-<img src="./dokumentation/Screenshot-4.jpg" width="50%"></img>
+Removes the Google Meet™ buttons from the event details page and the quick add dialog. This is useful if you don't use Google Meet™.
+
 ## Indicate All-Day and Multi-Day Events:
 
 Displays all-day and multi-day events in the day and week views by adding the event to the background of the main calendar.
@@ -33,4 +32,5 @@ Displays all-day and multi-day events in the day and week views by adding the ev
 <img src="./dokumentation/Screenshot-3.jpg" width="50%"></img>
 
 ## Configurable Settings:
+
 <img src="./dokumentation/Screenshot-2.jpg" width="50%"></img>

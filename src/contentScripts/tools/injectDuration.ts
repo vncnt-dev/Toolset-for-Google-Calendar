@@ -6,7 +6,7 @@ function injectDuration(calEvent: CalEvent) {
       let eventTimeElement = calEvent.timeElement!;
       let durationElement: HTMLElement;
       if (calEvent.type === 'allDay' || calEvent.type === 'nonAllDayMultiDay') {
-        durationElement = eventTimeElement.querySelector('.WBi6vc')!.cloneNode(true) as HTMLElement;
+        durationElement = eventTimeElement.querySelector('.nHqeVd')!.cloneNode(true) as HTMLElement;
       } else {
         durationElement = eventTimeElement.cloneNode(true) as HTMLElement;
         durationElement.classList.remove('gVNoLb');

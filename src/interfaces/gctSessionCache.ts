@@ -1,7 +1,7 @@
 import { UserInfo } from './userInfo';
 import { CalEvent } from './eventInterface';
 
-export interface GctCache {
+export interface GctSessionCache {
   userInfo?: UserInfo | null;
   eventStorage?: CalEvent[];
   allOrMultiDayEvents?: CalEvent[];

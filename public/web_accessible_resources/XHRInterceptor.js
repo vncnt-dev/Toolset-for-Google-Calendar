@@ -1,3 +1,4 @@
+import xhook from './xhook.min.js';
 try {
   xhook.after(function (req, res) {
     let response = {

@@ -1,6 +1,6 @@
 import ReactDOMServer from 'react-dom/server';
 import { CalEvent, EventDates } from '../../interfaces/eventInterface';
-import { getItemFromCache, setItemInCache } from '../lib/cache';
+import { getItemFromCache, setItemInCache } from './sessionCache';
 import { UserInfo } from '../../interfaces/userInfo';
 
 /* based on https://stackoverflow.com/a/46428456 */
@@ -9,8 +9,17 @@ function decodeDataEventId(dataEventId: string): string {
   return decoded.slice(0, decoded.indexOf(' '));
 }
 
+async function calculateHashSha256(text: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(text);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  const hashHex = hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
+  return hashHex;
+}
+
 /* 
-<div id="xUserInfo" aria-hidden="true" style="display:none"><div id="xUserEmail">pelz.vincent@gmail.com</div><div id="xUserName"></div><div id="xTimezone">Europe/Berlin</div><div id="xGmtOffset">7200000</div><div id="xUserLocale">de</div></div> */
+<div id="xUserInfo" aria-hidden="true" style="display:none"><div id="xUserEmail">xyz@gmail.com</div><div id="xUserName"></div><div id="xTimezone">Europe/Berlin</div><div id="xGmtOffset">7200000</div><div id="xUserLocale">de</div></div> */
 function getUserInfo(): UserInfo | null {
   let userInfoElement = document.getElementById('xUserInfo');
   if (!userInfoElement) return null;
@@ -31,14 +40,14 @@ function getUserInfo(): UserInfo | null {
   return userInfo;
 }
 
-function correctEventTime(event: CalEvent, HtmlEventId: string): EventDates {
+function correctEventTime(event: CalEvent): EventDates | undefined {
   if (event.dates.areCorrectedTimes) return event.dates;
   const userInfo = getItemFromCache('userInfo')!;
   const duration = event.duration;
   let startDate: Date;
   let endDate: Date;
 
-  let datekey = HtmlEventId.split('_')[1];
+  let datekey = event.id.split('_')[1];
   if (datekey) {
     let dateString = datekey.slice(0, 4) + '-' + datekey.slice(4, 6) + '-' + datekey.slice(6, 8);
     if (datekey.includes('Z')) {
@@ -51,7 +60,8 @@ function correctEventTime(event: CalEvent, HtmlEventId: string): EventDates {
     startDate = event.dates.start;
   }
 
-  // console.log(startDate, userInfo.gmtOffset, startDate.getTimezoneOffset());
+  if (!startDate) return;
+
   if (event.type === 'allDay') {
     startDate.setHours(0, 0);
     endDate = new Date(startDate.getTime() + (duration * 60 - 1) * 1000); // -1 because allDay should end at 23:59:59 not 00:00:00 the next day
@@ -133,6 +143,7 @@ function htmlStringToHtmlElement(html: string): HTMLElement {
 export {
   correctEventTime,
   decodeDataEventId,
+  calculateHashSha256,
   downloadStringAsFile,
   escapeHtml,
   getDateFromDateKey,

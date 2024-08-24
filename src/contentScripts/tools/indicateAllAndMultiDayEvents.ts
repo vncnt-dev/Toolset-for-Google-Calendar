@@ -1,8 +1,10 @@
-import { getDateFromDateKey, isBetweenDateTimes, isBetweenDays, isSameDay } from '../lib/miscellaneous';
+import { calculateHashSha256, getDateFromDateKey, isBetweenDateTimes, isBetweenDays, isSameDay } from '../lib/miscellaneous';
 import { CalEvent } from '../../interfaces/eventInterface';
 import { Settings } from '../../interfaces/SettingsInterface';
 import { loadSettings } from '../lib/SettingsHandler';
-import { getItemFromCache, setItemInCache } from '../lib/cache';
+import { getItemFromCache, setItemInCache } from '../lib/sessionCache';
+
+import './indicateAllAndMultiDayEvents.css';
 
 const daysMaxTransparency = 30;
 const daysMinTransparency = 1;
@@ -18,8 +20,10 @@ var indicateAllDayEvents = async (eventStorageMultiDay: CalEvent[]) => {
   const dateColumnElements = Array.from(document.querySelectorAll('.BiKU4b'));
   try {
     for (const changedEvent of eventStorageMultiDay) {
-      const id = generateID(changedEvent);
+      const id = await generateID(changedEvent);
       if (document.querySelector(`[gcaltoolsid="${id}"]`) !== null) continue; // indicator element already exists
+      console.log('indicateAllDayEvents: id',changedEvent.id,' sha: ',id, ' event: ',JSON.stringify([changedEvent.dates, changedEvent.timeElement!.style.backgroundColor, changedEvent.name]));
+
       for (const DateColumnElement of dateColumnElements) {
         const DateOfDateColumnElement = getDateFromDateKey(parseInt(DateColumnElement.getAttribute('data-datekey')!));
         // if event is on current calDate, proceed
@@ -29,7 +33,6 @@ var indicateAllDayEvents = async (eventStorageMultiDay: CalEvent[]) => {
           indicatorElement.classList.add('allDayEventIndicator', 'EfQccc');
           indicatorElement.style.backgroundColor = `${changedEvent.timeElement!.style.backgroundColor}`;
           indicatorElement.style.opacity = `${calculateOpacity(changedEvent)}`;
-          indicatorElement.style.zIndex = `3`; // above calendar lines below other events
           indicatorElement.style.top = `${calculateTop(changedEvent, DateOfDateColumnElement)}px`;
           indicatorElement.style.height = `${calculateHeight(changedEvent, DateOfDateColumnElement)}px`;
           calculateWidthAndPos(changedEvent, eventStorageMultiDay, DateOfDateColumnElement, indicatorElement, settings);
@@ -47,10 +50,9 @@ var indicateAllDayEvents = async (eventStorageMultiDay: CalEvent[]) => {
 };
 
 /** generates ID for indicator element */
-var generateID = function (event: CalEvent) {
-  let rawID = JSON.stringify([event.dates, event.timeElement!.style.backgroundColor, event.name]);
-  // prevent problems with whitespaces etc. in ID
-  return 'ID' + encodeURIComponent(rawID).replace(/%/g, '_');
+var generateID = async function (event: CalEvent) {
+  const rawID = JSON.stringify([event.dates, event.timeElement!.style.backgroundColor, event.name]);
+  return 'ID_' + (await calculateHashSha256(rawID));
 };
 
 /** generate opacity for event, based on duration */

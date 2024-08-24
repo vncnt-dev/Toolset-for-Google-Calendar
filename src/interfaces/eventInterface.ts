@@ -1,6 +1,7 @@
 export interface CalEvent {
   id: string;
   name: string;
+  dataEntryCreatedAt: Date;
   /**
    * **allDay:** starts at 00:00 and ends at 23:59, can be multiple days long; marked as "allDay" within google calendar
    *

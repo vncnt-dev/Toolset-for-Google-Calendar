@@ -35,6 +35,14 @@ export const getAllChangelogs = (): Changelog[] => {
           This update restores the functionality for most Features after a Google Calender Update broke the extension.
         </div>
       ),
+    },{
+      version: '1.5.0',
+      titel: 'v1.5.0 - Improves stability and fixes functionality ',
+      text: (
+        <div>
+          This update improves the stability and fixes bugs introduced by some smaller changes in the Google Calendar™ code.
+        </div>
+      ),
     }
   ];
 

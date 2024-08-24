@@ -1,5 +1,5 @@
 import React from 'react';
-import { getItemFromCache } from '../lib/cache';
+import { getItemFromCache } from '../lib/sessionCache';
 import { CalEvent } from '../../interfaces/eventInterface';
 import { JsxElementToHtmlElement, downloadStringAsFile } from '../lib/miscellaneous';
 

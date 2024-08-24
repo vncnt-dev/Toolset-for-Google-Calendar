@@ -1,13 +1,10 @@
 import { CalEvent, EventDates } from '../../interfaces/eventInterface';
 import { loadSettings } from '../lib/SettingsHandler';
 import { observerCalendarViewFunction } from '../tools/MutationObserverHandler';
-
-var xhrEventData: Record<string, CalEvent> = {};
+import * as xhrEventDataCache from './xhrEventDataCache';
 
 function startXhrListener() {
-  insertScriptToPage('xhook.min.js');
-  insertScriptToPage('XHRInterceptor.js');
-
+  insertScriptToPage('XHRInterceptor',true); // intercepts all XHR requests and dispatches them as a custom event
   // Event listener
   document.addEventListener('GCT_XMLHttpRequest', function (event: CustomEventInit) {
     try {
@@ -60,16 +57,13 @@ function getEventXhrDataById(HtmlEventId: string): CalEvent | undefined {
   to get the correct event from xhrEventData, we have to check for "eventid_currentDate" first because there might be an exception for this Date,
   and only if there is no exception, we need to check for "eventid"
   */
-  let event: CalEvent = xhrEventData[HtmlEventId]; // check for "eventid_currentDate"
-  if (!event) {
-    event = xhrEventData[HtmlEventId.split('_')[0]]; // check for "eventid"
-  }
+  let event: CalEvent | undefined = xhrEventDataCache.getItemFromCache(HtmlEventId) || xhrEventDataCache.getItemFromCache(HtmlEventId.split('_')[0]); // check for "eventid_currentDate" or "eventid"
   if (!event) {
     console.log('GC Tools - warning: event not found in xhrEventData: ', HtmlEventId);
     return;
   }
 
-  return structuredClone(event);
+  return event;
 }
 async function updateXhrEventData(XhrData: Array<any>) {
   let settings = await loadSettings();
@@ -79,21 +73,22 @@ async function updateXhrEventData(XhrData: Array<any>) {
     XhrData.forEach((calender: any) => {
       // every calender has an array of events
       if (!calender[1]) return;
-      const newEventData = calender[1].reduce((acc: any, event: any) => {
-        let eventTimeArray: Date[] = getEventTimeArray(event) as Date[];
-        if (!eventTimeArray) return acc;
+      const newEventData: CalEvent[] = calender[1].forEach((xhrEventEntry: Array<any>) => {
+        let eventTimeArray: Date[] = getEventTimeArray(xhrEventEntry) as Date[];
+        if (!eventTimeArray) return;
         let eventDuration = calculateDurationInMinutes(eventTimeArray);
-        let recurrenceRuleString = JSON.parse(`"${event[12]?.[0] ?? ''}"`);
+        let recurrenceRuleString = JSON.parse(`"${xhrEventEntry[12]?.[0] ?? ''}"`);
 
         let newEvent: CalEvent = {
-          id: event[0],
+          id: xhrEventEntry[0],
+          dataEntryCreatedAt: new Date(),
           dates: { start: eventTimeArray[0], end: eventTimeArray[1], areCorrectedTimes: false },
           duration: eventDuration,
-          location: event[7]?.trim(),
+          location: xhrEventEntry[7]?.trim(),
           durationFormated: formatDuration(eventDuration, settings.calcDuration_durationFormat, settings.calcDuration_minimumDurationMinutes),
-          name: event[5]?.trim(),
-          description: event[64]?.[1]?.trim(),
-          calendar: getEventCalendar(event),
+          name: xhrEventEntry[5]?.trim(),
+          description: xhrEventEntry[64]?.[1]?.trim(),
+          calendar: getEventCalendar(xhrEventEntry),
           recurrenceRule: recurrenceRuleString?.slice(recurrenceRuleString.indexOf(':') + 1),
         };
 
@@ -105,10 +100,8 @@ async function updateXhrEventData(XhrData: Array<any>) {
             newEvent.type = 'nonAllDayMultiDay';
           }
         }
-
-        return { ...acc, [newEvent.id]: newEvent };
-      }, {});
-      xhrEventData = { ...xhrEventData, ...newEventData };
+        xhrEventDataCache.setItemInCache(newEvent.id, newEvent);
+      });
     });
     // call observerCalendarViewFunction to make sure, that the displayed info is up to date
     observerCalendarViewFunction();
@@ -117,13 +110,11 @@ async function updateXhrEventData(XhrData: Array<any>) {
   }
 }
 
-function insertScriptToPage(file: string) {
+function insertScriptToPage(file: string, isModule: boolean = false) {
   var s = document.createElement('script');
-  s.src = chrome.runtime.getURL('/web_accessible_resources/' + file);
+  s.src = chrome.runtime.getURL('/web_accessible_resources/' + file + '.js');
+  s.type = isModule ? 'module' : 'text/javascript';
   (document.head || document.documentElement).appendChild(s);
-  s.onload = function () {
-    s.remove();
-  };
 }
 
 function getEventTimeArray(event: Array<any>): Array<Date> | null {

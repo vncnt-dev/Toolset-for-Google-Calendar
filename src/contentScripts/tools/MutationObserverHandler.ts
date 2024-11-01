@@ -3,7 +3,7 @@ import { loadSettings } from '../lib/SettingsHandler';
 import * as Tools from './tools';
 
 import { getEventXhrDataById } from '../lib/parseEventData';
-import { correctEventTime, decodeDataEventId, getUserInfo } from '../lib/miscellaneous';
+import { decodeDataEventId, getUserInfo } from '../lib/miscellaneous';
 import { resetCache, setItemInCache } from '../lib/sessionCache';
 import * as XhrEventDataCache from '../lib/xhrEventDataCache';
 
@@ -91,14 +91,9 @@ async function startWorkerCalendarView() {
         if (thisEvent.timeElement?.classList.contains('EWOIrf')) {
           thisEvent.type = 'short';
         }
-        let datesTmp = correctEventTime(thisEvent);
-        if (!datesTmp) {
-          console.log(thisEvent, XhrEventDataCache.getCachedEvents());
-          continue;
-        }
-        thisEvent.dates = datesTmp;
+        if (!thisEvent.dates.start || !thisEvent.dates.end) continue;
 
-        eventStorage.push({ ...thisEvent});
+        eventStorage.push({ ...thisEvent });
       } catch (error) {
         console.error('GC Tools - error while parsing event: ', error);
       }
@@ -112,13 +107,17 @@ async function startWorkerCalendarView() {
 
         thisEvent.parentElement = calEventHtmlElement.parentElement!;
         thisEvent.timeElement = calEventHtmlElement;
+        if (!thisEvent.dates.start || !thisEvent.dates.end) continue;
 
-        let datesTmp = correctEventTime(thisEvent);
-        if (!datesTmp) continue;
-        thisEvent.dates = datesTmp;
+        if (thisEvent.type === 'allDay') {
+          // allDay events start at 00:00 in every timezone
+          thisEvent.dates.start.setHours(0, 0);
+          // allDay events end at 23:59 in every timezone
+          thisEvent.dates.end = new Date(thisEvent.dates.start.getTime() + (thisEvent.durationInMinutes - 1) * 60 * 1000);
+        }
 
         allOrMultiDayEventStorage.push(thisEvent);
-        eventStorage.push({ ...thisEvent});
+        eventStorage.push({ ...thisEvent });
       } catch (error) {
         console.error('GC Tools - error while parsing allOrMultiDay event: ', error);
       }

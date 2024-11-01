@@ -27,23 +27,22 @@ export const getAllChangelogs = (): Changelog[] => {
           The indicator should now start and end at the correct time.
         </div>
       ),
-    },{
+    },
+    {
       version: '1.4.0',
       titel: 'v1.4.0 - Fixes functionality ',
-      text: (
-        <div>
-          This update restores the functionality for most Features after a Google Calender Update broke the extension.
-        </div>
-      ),
-    },{
+      text: <div>This update restores the functionality for most Features after a Google Calender Update broke the extension.</div>,
+    },
+    {
       version: '1.5.0',
       titel: 'v1.5.0 - Improves stability and fixes functionality ',
-      text: (
-        <div>
-          This update improves the stability and fixes bugs introduced by some smaller changes in the Google Calendar™ code.
-        </div>
-      ),
-    }
+      text: <div>This update improves the stability and fixes bugs introduced by some smaller changes in the Google Calendar™ code.</div>,
+    },
+    {
+      version: '1.5.1',
+      titel: 'v1.5.1 - fixes "Information On Hover" functionality ',
+      text: <div>The "Information On Hover" had a bug that caused the hover information to be one hour off. This update should fix this issue.</div>,
+    },
   ];
 
   return allChangelogs;

@@ -57,7 +57,7 @@ var generateID = async function (event: CalEvent) {
 
 /** generate opacity for event, based on duration */
 var calculateOpacity = function (event: CalEvent) {
-  const durationInDays = event.duration / 60 / 24;
+  const durationInDays = event.durationInMinutes / 60 / 24;
   const maxTransparency: number = getItemFromCache('maxTransparency')!;
   const minTransparency: number = getItemFromCache('minTransparency')!;
 

@@ -42,15 +42,4 @@ const setItemInCache = (key: string, value: CalEvent) => {
   xhrEventDataCache.set(key, value);
 };
 
-/* const delteOldEntries = (oldestDate: Date) => {
-  let foudOldEntries = false;
-  xhrEventDataCache.forEach((event, key) => {
-    if (!event.dataEntryCreatedAt || event.dataEntryCreatedAt < oldestDate || Object.keys(event.dataEntryCreatedAt).length === 0) {
-      xhrEventDataCache.delete(key);
-      foudOldEntries = true;
-    }
-  });
-  if (foudOldEntries) saveXhrEventDataCache();
-}; */
-
 export { getCachedEvents, resetCache, getItemFromCache, setItemInCache };

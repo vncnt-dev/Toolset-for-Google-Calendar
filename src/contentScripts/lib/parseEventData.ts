@@ -81,9 +81,8 @@ async function updateXhrEventData(XhrData: Array<any>) {
 
         let newEvent: CalEvent = {
           id: xhrEventEntry[0],
-          dataEntryCreatedAt: new Date(),
-          dates: { start: eventTimeArray[0], end: eventTimeArray[1], areCorrectedTimes: false },
-          duration: eventDuration,
+          dates: { start: eventTimeArray[0], end: eventTimeArray[1]},
+          durationInMinutes: eventDuration,
           location: xhrEventEntry[7]?.trim(),
           durationFormated: formatDuration(eventDuration, settings.calcDuration_durationFormat, settings.calcDuration_minimumDurationMinutes),
           name: xhrEventEntry[5]?.trim(),

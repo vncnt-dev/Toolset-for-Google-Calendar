@@ -40,41 +40,6 @@ function getUserInfo(): UserInfo | null {
   return userInfo;
 }
 
-function correctEventTime(event: CalEvent): EventDates | undefined {
-  if (event.dates.areCorrectedTimes) return event.dates;
-  const userInfo = getItemFromCache('userInfo')!;
-  const duration = event.duration;
-  let startDate: Date;
-  let endDate: Date;
-
-  let datekey = event.id.split('_')[1];
-  if (datekey) {
-    let dateString = datekey.slice(0, 4) + '-' + datekey.slice(4, 6) + '-' + datekey.slice(6, 8);
-    if (datekey.includes('Z')) {
-      // 20310617T230000Z
-      dateString += 'T' + datekey.slice(9, 11) + ':' + datekey.slice(11, 13) + ':' + datekey.slice(13, 15) + 'Z';
-    }
-    startDate = new Date(dateString);
-    if (isNaN(startDate.getTime())) startDate = event.dates.start;
-  } else {
-    startDate = event.dates.start;
-  }
-
-  if (!startDate) return;
-
-  if (event.type === 'allDay') {
-    startDate.setHours(0, 0);
-    endDate = new Date(startDate.getTime() + (duration * 60 - 1) * 1000); // -1 because allDay should end at 23:59:59 not 00:00:00 the next day
-  } else {
-    if (userInfo.gmtOffset && startDate.getTimezoneOffset() != userInfo.gmtOffset) {
-      startDate.setTime(startDate.getTime() + (startDate.getTimezoneOffset() - userInfo.gmtOffset) * 60 * 1000);
-    }
-    endDate = new Date(startDate.getTime() + duration * 60 * 1000);
-  }
-
-  return { start: startDate, end: endDate, areCorrectedTimes: true };
-}
-
 /* escape html */
 function escapeHtml(unsafe: string): string {
   return unsafe.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
@@ -141,7 +106,7 @@ function htmlStringToHtmlElement(html: string): HTMLElement {
 }
 
 export {
-  correctEventTime,
+  /*   correctEventTime, */
   decodeDataEventId,
   calculateHashSha256,
   downloadStringAsFile,

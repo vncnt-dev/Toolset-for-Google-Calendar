@@ -43,6 +43,27 @@ export const getAllChangelogs = (): Changelog[] => {
       titel: 'v1.5.1 - fixes "Information On Hover" functionality ',
       text: <div>The "Information On Hover" had a bug that caused the hover information to be one hour off. This update should fix this issue.</div>,
     },
+    {
+      version: '1.6.0',
+      titel: 'v1.6.0 - Adds event descriptions in "Information On Hover", bugfixes to "Indicate All- and Multi-Day Events" and more',
+      text: (
+        <div>
+          This add the following features:
+          <ul className="list-disc list-inside">
+            <li>Show descriptions of events in the "Information On Hover" functionality</li>
+          </ul>
+          Additionally, it fixes these bugs and improves the stability of the extension.
+          <ul className="list-disc list-inside">
+            <li>
+              The "Indicate All- and Multi-Day Events" functionality sometimes had problems displaying the indicators correctly, this is now fixed.
+            </li>
+            <li>Users that use multiple accounts can now use this extension for all accounts</li>
+            <li>Unicode characters in event names and descriptions are now correctly displayed</li>
+            <li>The support for the Google Calendar™ dark mode has been improved</li>
+          </ul>
+        </div>
+      ),
+    },
   ];
 
   return allChangelogs;

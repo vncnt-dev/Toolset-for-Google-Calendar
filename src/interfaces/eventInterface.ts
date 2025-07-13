@@ -1,3 +1,5 @@
+import { CustomDateHandler } from "../contentScripts/lib/customDateHandler";
+
 export interface CalEvent {
   id: string;
   name: string;
@@ -26,6 +28,6 @@ export interface CalEvent {
 }
 
 export interface EventDates {
-  start: Date;
-  end: Date;
+  start: CustomDateHandler;
+  end: CustomDateHandler;
 }

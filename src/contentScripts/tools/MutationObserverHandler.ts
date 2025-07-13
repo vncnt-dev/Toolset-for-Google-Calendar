@@ -6,6 +6,7 @@ import { getEventXhrDataById } from '../lib/parseEventData';
 import { decodeDataEventId, getUserInfo } from '../lib/miscellaneous';
 import { resetCache, setItemInCache } from '../lib/sessionCache';
 import * as XhrEventDataCache from '../lib/xhrEventDataCache';
+import { CustomDateHandler } from '../lib/customDateHandler';
 
 MutationObserver = window.MutationObserver;
 const observerCalendarView = new MutationObserver((mutationsList, observer) => {
@@ -75,27 +76,40 @@ async function startWorkerCalendarView() {
     let allOrMultiDayCalEventList: NodeListOf<HTMLElement> = document.querySelectorAll('.KF4T6b.jKgTF:not(.PU9jSd)');
 
     for (let calEventHtmlElement of calEventList) {
+      let eventId = '';
       try {
-        let eventId = decodeDataEventId(calEventHtmlElement.getAttribute('data-eventid')!);
-        let thisEvent: CalEvent = getEventXhrDataById(eventId)!;
+        eventId = decodeDataEventId(calEventHtmlElement.getAttribute('data-eventid')!);
+        const thisEvent: CalEvent = getEventXhrDataById(eventId)!;
         if (!thisEvent) continue;
 
         thisEvent.parentElement = calEventHtmlElement;
         thisEvent.timeElement = (calEventHtmlElement.querySelector('div.lhydbb.gVNoLb.EiZ8Dd:not(.event-duration)') ||
           calEventHtmlElement.querySelector('.EWOIrf:not(.event-duration)')) as HTMLElement;
-        // very short events (>1h) have a diffenent HTML structure
+
         if (!thisEvent.timeElement) {
           console.warn('GC Tools - event without timeElement: ', thisEvent, calEventHtmlElement);
           return;
         }
+        // very short events (>1h) have a diffenent HTML structure
         if (thisEvent.timeElement?.classList.contains('EWOIrf')) {
           thisEvent.type = 'short';
         }
         if (!thisEvent.dates.start || !thisEvent.dates.end) continue;
 
+        eventStorage = eventStorage.filter((event) => event.parentElement !== thisEvent.parentElement);
         eventStorage.push({ ...thisEvent });
       } catch (error) {
-        console.error('GC Tools - error while parsing event: ', error);
+        let errorMessage = '';
+        if (error instanceof Error) {
+          errorMessage = error.message;
+        } else if (error instanceof Object) {
+          errorMessage = JSON.stringify(error);
+        } else {
+          errorMessage = error as string;
+        }
+
+        String(error);
+        console.error('GC Tools - error while parsing event: ', eventId, errorMessage);
       }
     }
 
@@ -109,13 +123,7 @@ async function startWorkerCalendarView() {
         thisEvent.timeElement = calEventHtmlElement;
         if (!thisEvent.dates.start || !thisEvent.dates.end) continue;
 
-        if (thisEvent.type === 'allDay') {
-          // allDay events start at 00:00 in every timezone
-          thisEvent.dates.start.setHours(0, 0);
-          // allDay events end at 23:59 in every timezone
-          thisEvent.dates.end = new Date(thisEvent.dates.start.getTime() + (thisEvent.durationInMinutes - 1) * 60 * 1000);
-        }
-
+        allOrMultiDayEventStorage = allOrMultiDayEventStorage.filter((event) => event.parentElement !== thisEvent.parentElement);
         allOrMultiDayEventStorage.push(thisEvent);
         eventStorage.push({ ...thisEvent });
       } catch (error) {

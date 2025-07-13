@@ -1,7 +1,7 @@
 .GCToolsModalOpen {
   margin: 0px 25px;
   text-align: center;
-  background: transparent;
+  background-color: transparent;
   border: 0;
 }
 .GCToolsModalOpen div.hint {

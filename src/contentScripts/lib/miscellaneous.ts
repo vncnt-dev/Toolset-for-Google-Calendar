@@ -2,6 +2,7 @@ import ReactDOMServer from 'react-dom/server';
 import { CalEvent, EventDates } from '../../interfaces/eventInterface';
 import { getItemFromCache, setItemInCache } from './sessionCache';
 import { UserInfo } from '../../interfaces/userInfo';
+import { CustomDateHandler } from './customDateHandler';
 
 /* based on https://stackoverflow.com/a/46428456 */
 function decodeDataEventId(dataEventId: string): string {
@@ -64,9 +65,13 @@ function getDateFromDateKey(dateKey: number): Date {
   return new Date(year + 1970, month, day, 0, 0, 0, 0);
 }
 
-function isBetweenDays(startDate: Date, endDate: Date, testDate: Date): boolean {
-  const startTime = new Date(startDate).setHours(0, 0, 0, 0);
-  const endTime = new Date(endDate).setHours(23, 59, 59, 999);
+function isBetweenDays(startDate: Date | CustomDateHandler, endDate: Date | CustomDateHandler, testDate: Date | CustomDateHandler): boolean {
+  if (startDate instanceof CustomDateHandler) startDate = startDate.getJsDateObject();
+  if (endDate instanceof CustomDateHandler) endDate = endDate.getJsDateObject();
+  if (testDate instanceof CustomDateHandler) testDate = testDate.getJsDateObject();
+
+  const startTime = startDate.setHours(0, 0, 0, 0);
+  const endTime = endDate.setHours(23, 59, 59, 999);
   const testTime = testDate.getTime();
   return startTime <= testTime && testTime <= endTime;
 }
@@ -74,14 +79,19 @@ function isBetweenDays(startDate: Date, endDate: Date, testDate: Date): boolean 
 /**
  * is testDateDate in [startDate, endDate)
  */
-function isBetweenDateTimes(startDate: Date, endDate: Date, date: Date): boolean {
+function isBetweenDateTimes(startDate: Date | CustomDateHandler, endDate: Date | CustomDateHandler, date: Date | CustomDateHandler): boolean {
+  if (startDate instanceof CustomDateHandler) startDate = startDate.getJsDateObject();
+  if (endDate instanceof CustomDateHandler) endDate = endDate.getJsDateObject();
+  if (date instanceof CustomDateHandler) date = date.getJsDateObject();
   const start = startDate.getTime();
   const end = endDate.getTime();
   const d = date.getTime();
   return start <= d && d < end;
 }
 
-function isSameDay(date1: Date, date2: Date): boolean {
+function isSameDay(date1: Date | CustomDateHandler, date2: Date | CustomDateHandler): boolean {
+  if (date1 instanceof CustomDateHandler) date1 = date1.getJsDateObject();
+  if (date2 instanceof CustomDateHandler) date2 = date2.getJsDateObject();
   return date1.getFullYear() === date2.getFullYear() && date1.getMonth() === date2.getMonth() && date1.getDate() === date2.getDate();
 }
 
@@ -106,7 +116,6 @@ function htmlStringToHtmlElement(html: string): HTMLElement {
 }
 
 export {
-  /*   correctEventTime, */
   decodeDataEventId,
   calculateHashSha256,
   downloadStringAsFile,

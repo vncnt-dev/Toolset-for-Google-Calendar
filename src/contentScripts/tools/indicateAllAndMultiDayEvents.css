@@ -1,4 +1,5 @@
 .allDayEventIndicator {
   display: inline-block;
+  position: absolute;
   z-index: 3;
 }

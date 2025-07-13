@@ -9,6 +9,7 @@ function addHoverOverInformation(event: CalEvent) {
   if (event.durationFormated) innerText += ` (${event.durationFormated})`;
   if (event.name) innerText += `\n${event.name}`;
   if (event.location) innerText += `\n${event.location}`;
+  if (event.description) innerText += `\n\n${event.description}`;
 
   // set position and content of hoverInformationElement
   event.parentElement!.addEventListener('mousemove', (event) =>
@@ -47,8 +48,8 @@ function formatTime(event: CalEvent): string {
       minute: '2-digit',
     });
 
-    const startTime = timeFormatter.format(eventTimes.start);
-    const endTime = timeFormatter.format(eventTimes.end);
+    const startTime = timeFormatter.format(eventTimes.start.getJsDateObject());
+    const endTime = timeFormatter.format(eventTimes.end.getJsDateObject());
 
     return `${startTime} - ${endTime}`;
   } else {
@@ -56,7 +57,11 @@ function formatTime(event: CalEvent): string {
     let options: Intl.DateTimeFormatOptions = {timeZone: timeZone,year: 'numeric', month: '2-digit', day: '2-digit' };
     if (event.type !== 'allDay') options = { ...options, hour: '2-digit', minute: '2-digit' };
 
-    return eventTimes.start.toLocaleDateString(lang, options) + ' - ' + eventTimes.end.toLocaleDateString(lang, options);
+    return (
+      eventTimes.start.getJsDateObject().toLocaleDateString(lang, options) +
+      ' - ' +
+      eventTimes.end.getJsDateObject().toLocaleDateString(lang, options)
+    );
   }
 }
 

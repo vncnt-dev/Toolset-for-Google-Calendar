@@ -28,7 +28,7 @@ const exportToIcalPrepare = () => {
 };
 
 const exportToIcal = () => {
-  console.log('exportToIcal')
+  console.log('exportToIcal');
   if (!popupView) return;
   const activeEventId = popupView.getAttribute('data-eventid');
   if (!activeEventId) return;
@@ -61,8 +61,8 @@ END:VTIMEZONE\r
 BEGIN:VEVENT\r
 UID:${activeEvent.id}@google.com\r
 DTSTAMP;TZID=UTC:${formatDateToIcal(new Date())}\r
-DTSTART;TZID=UTC:${formatDateToIcal(adjustDateTzDiff(activeEvent.dates.start))}\r
-DTEND;TZID=UTC:${formatDateToIcal(adjustDateTzDiff(activeEvent.dates.end))}\r
+DTSTART;TZID=UTC:${formatDateToIcal(activeEvent.dates.start.getOriginalJsDateObject())}\r
+DTEND;TZID=UTC:${formatDateToIcal(activeEvent.dates.end.getOriginalJsDateObject())}\r
 DESCRIPTION:${activeEvent.description ?? ''}\r
 LOCATION:${activeEvent.location ?? ''}\r
 ${activeEvent.recurrenceRule ? `RRULE:${activeEvent.recurrenceRule}\r` : ''}\
@@ -75,14 +75,6 @@ END:VCALENDAR`;
 
 function formatDateToIcal(date: Date) {
   return date.toISOString().replace(/[-:.]/g, '').slice(0, -4);
-}
-
-function adjustDateTzDiff(date: Date) {
-  const userInfo = getItemFromCache('userInfo')!;
-  if (userInfo.gmtOffset && date.getTimezoneOffset() != userInfo.gmtOffset) {
-    date.setTime(date.getTime() + (userInfo.gmtOffset - date.getTimezoneOffset()) * 60 * 1000);
-  }
-  return date;
 }
 
 export { exportToIcalPrepare };

@@ -18,8 +18,8 @@ If applicable,  provide an example Event (From-To)
 If applicable, add screenshots to help explain your problem.
 
 **Further Information:**
- - Language: the Calender-Language
- - Browser [e.g. Chrome, Firefox, Edge]
+ - Language: the Calender-Language f.e. english, german, etc.
+ - Browser [e.g. Chrome, Edge]
  - Extension-Version [e.g. 1.0.0]
 
 **Additional context**

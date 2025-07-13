@@ -1,29 +1,31 @@
 import { CalEvent, EventDates } from '../../interfaces/eventInterface';
 import { loadSettings } from '../lib/SettingsHandler';
 import { observerCalendarViewFunction } from '../tools/MutationObserverHandler';
+import { CustomDateHandler } from './customDateHandler';
 import * as xhrEventDataCache from './xhrEventDataCache';
 
 function startXhrListener() {
-  insertScriptToPage('XHRInterceptor',true); // intercepts all XHR requests and dispatches them as a custom event
+  insertScriptToPage('XHRInterceptor', true); // intercepts all XHR requests and dispatches them as a custom event
   // Event listener
   document.addEventListener('GCT_XMLHttpRequest', function (event: CustomEventInit) {
     try {
       let req = event.detail as XMLHttpRequest;
-      if (req?.responseURL?.includes('calendar.google.com/calendar/u/0/sync.prefetcheventrange')) {
+      const url = req?.responseURL?.toString() || '';
+      if (!url.includes('calendar.google.com')) return;
+      if (url.includes('/sync.prefetcheventrange')) {
         console.log('GC Tools - xhr event - sync.prefetcheventrange', req);
         try {
           // this is called when the calendar is initially loaded
-          let data = JSON.parse(escapeJsonString(req.responseText.slice(6)).trim())[0][2][1];
+          let data = JSON.parse(escapeJsonString(req.responseText))[0][2][1];
           updateXhrEventData(data);
         } catch (error) {
           console.warn('GCT_XMLHttpRequest-init', error);
         }
-      } else if (req?.responseURL?.includes('calendar.google.com/calendar/u/0/sync.sync')) {
+      } else if (url.includes('/sync.sync')) {
+        // this is called when an event is added or edited
         try {
           console.log('GC Tools - xhr event - sync.sync', req);
-          // this is called when an event is added or edited
-          let responseAsJson = JSON.parse(escapeJsonString(req.responseText.slice(6)).trim());
-
+          let responseAsJson = JSON.parse(escapeJsonString(req.responseText));
           // if no events are in the response, return (this is the case when an event is deleted
           let data;
           try {
@@ -81,12 +83,12 @@ async function updateXhrEventData(XhrData: Array<any>) {
 
         let newEvent: CalEvent = {
           id: xhrEventEntry[0],
-          dates: { start: eventTimeArray[0], end: eventTimeArray[1]},
+          dates: { start: new CustomDateHandler(eventTimeArray[0]), end: new CustomDateHandler(eventTimeArray[1]) },
           durationInMinutes: eventDuration,
           location: xhrEventEntry[7]?.trim(),
           durationFormated: formatDuration(eventDuration, settings.calcDuration_durationFormat, settings.calcDuration_minimumDurationMinutes),
-          name: xhrEventEntry[5]?.trim(),
-          description: xhrEventEntry[64]?.[1]?.trim(),
+          name: stripHtmlTags(decodeUnicodeString(xhrEventEntry[5]?.trim())),
+          description: stripHtmlTags(decodeUnicodeString(xhrEventEntry[64]?.[1]?.trim())),
           calendar: getEventCalendar(xhrEventEntry),
           recurrenceRule: recurrenceRuleString?.slice(recurrenceRuleString.indexOf(':') + 1),
         };
@@ -176,11 +178,13 @@ function formatDuration(diff: number, format: string, minDurationMinutes: number
 }
 
 function isAllDayEvent(eventTime: EventDates): boolean {
+  let startDate = eventTime.start.getJsDateObject();
+  let endDate = eventTime.end.getJsDateObject();
   return (
-    eventTime.start.getHours() + eventTime.start.getTimezoneOffset() / 60 == 0 &&
-    eventTime.start.getMinutes() == 0 &&
-    eventTime.end.getHours() + eventTime.end.getTimezoneOffset() / 60 == 0 &&
-    eventTime.end.getMinutes() == 0
+    startDate.getHours() + startDate.getTimezoneOffset() / 60 == 0 &&
+    startDate.getMinutes() == 0 &&
+    endDate.getHours() + endDate.getTimezoneOffset() / 60 == 0 &&
+    endDate.getMinutes() == 0
   );
 }
 
@@ -189,8 +193,12 @@ function getEventCalendar(event: Array<any>): { id: string; name: string } {
   return { id, name: name ?? id };
 }
 
-var escapeJsonString = function (str: String) {
+/**
+ * The rest-reponse of the Google Calendar is not valid JSON, so we have to escape it before we can parse it
+ */
+function escapeJsonString(str: String) {
   return str
+    .slice(6)
     .replace(/[\\]/g, '\\\\')
     .replace(/[\/]/g, '\\/')
     .replace(/[\b]/g, '\\b')
@@ -201,7 +209,38 @@ var escapeJsonString = function (str: String) {
     .replace(/[^,\[](")[^,\]]/g, function (match) {
       // replace all " that are within a string
       return match.replace(/"/g, "'");
-    });
-};
+    })
+    .trim();
+}
+
+/** replace all \uXXXX unicode characters with the corresponding character */
+function decodeUnicodeString(input: string): string {
+  if (!input) return '';
+
+  try {
+    const decoded = input.replace(/\\u[\dA-Fa-f]{4}/g, (match) => String.fromCharCode(parseInt(match.replace('\\u', ''), 16)));
+    return decoded;
+  } catch (e) {
+    console.warn('decodeUnicodeString: error', e, input);
+    return input;
+  }
+}
+
+/**
+ * this is mainly used to get rid of <a> tags that google calendar creates for links in the description
+ * @param html
+ * @returns
+ */
+function stripHtmlTags(html: string): string {
+  if (!html) return '';
+  try {
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = html;
+    return tempDiv.textContent || '';
+  } catch (e) {
+    console.warn('stripHtmlTags: error', e, html);
+    return html;
+  }
+}
 
 export { startXhrListener, getEventXhrDataById };

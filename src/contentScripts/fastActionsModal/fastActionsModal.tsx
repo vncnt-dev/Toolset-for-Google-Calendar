@@ -122,7 +122,7 @@ export const FastActionsModal = () => {
           <div className="grid grid-cols-2">
             <FastSettingsToggle feature="calcDuration_isActive" name="Display Event-Duration" />
             <FastSettingsToggle feature="hoverInformation_isActive" name="Information On Hover" />
-            <FastSettingsToggle feature="removeGMeets_isActive" name="Better Add Meeting Buttons" />
+            <FastSettingsToggle feature="removeGMeets_isActive" name="Remove GMeeting Buttons" />
             <FastSettingsToggle feature="indicateAllDayEvents_isActive" name="Indicate Full and Multi-Day Events" />
           </div>
         </div>

@@ -1,19 +1,37 @@
-import { get } from 'http';
 import { getItemFromCache } from './sessionCache';
 import { UserInfo } from '../../interfaces/userInfo';
 
 export class CustomDateHandler {
   private date: Date;
   private parts: { [key: string]: string } = {};
+  private disableTzCorrection: boolean = false;
 
   constructor(date: Date) {
     this.date = date;
     this.deconstructDate();
+    return this;
+  }
+
+  setDisableTzCorrection(disableTzCorrection: boolean) {
+    this.disableTzCorrection = disableTzCorrection;
+    return this;
+  }
+
+  setDate(date: Date) {
+    this.date = date;
+    this.deconstructDate();
+    return this;
   }
 
   deconstructDate() {
     let userData = getItemFromCache('userInfo') as UserInfo;
-    let timeZone = userData.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+    let timeZone;
+    if (this.disableTzCorrection || !userData || !userData.timezone) {
+      timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    } else {
+      timeZone = userData.timezone;
+    }
 
     const formatter = new Intl.DateTimeFormat('en-GB', {
       timeZone,

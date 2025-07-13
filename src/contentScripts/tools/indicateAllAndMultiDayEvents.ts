@@ -1,7 +1,7 @@
 import { calculateHashSha256, getDateFromDateKey, isBetweenDateTimes, isBetweenDays, isSameDay } from '../lib/miscellaneous';
 import { CalEvent } from '../../interfaces/eventInterface';
 import { Settings } from '../../interfaces/SettingsInterface';
-import { loadSettings } from '../lib/SettingsHandler';
+import { loadSettings } from '../lib/settingsHandler';
 import { getItemFromCache, setItemInCache } from '../lib/sessionCache';
 
 import './indicateAllAndMultiDayEvents.css';

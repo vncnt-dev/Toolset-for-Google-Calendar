@@ -44,8 +44,8 @@ export const getAllChangelogs = (): Changelog[] => {
       text: <div>The "Information On Hover" had a bug that caused the hover information to be one hour off. This update should fix this issue.</div>,
     },
     {
-      version: '1.6.0',
-      titel: 'v1.6.0 - Adds event descriptions in "Information On Hover", bugfixes to "Indicate All- and Multi-Day Events" and more',
+      version: '1.6.2',
+      titel: 'v1.6.2 - Adds event descriptions in "Information On Hover", bugfixes to "Indicate All- and Multi-Day Events" and more',
       text: (
         <div>
           This add the following features:

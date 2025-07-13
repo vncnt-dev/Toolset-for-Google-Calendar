@@ -1,7 +1,7 @@
 import { get } from 'http';
 import { CalEvent, EventDates } from '../../interfaces/eventInterface';
 import { isSameDay } from '../lib/miscellaneous';
-import { loadSettings } from '../lib/SettingsHandler';
+import { loadSettings } from '../lib/settingsHandler';
 import { getItemFromCache } from '../lib/sessionCache';
 
 function addHoverOverInformation(event: CalEvent) {
@@ -39,22 +39,24 @@ function addHoverOverInformation(event: CalEvent) {
 
 function formatTime(event: CalEvent): string {
   let eventTimes = event.dates;
-  let timeZone = getItemFromCache('userInfo')?.timezone ?? new Intl.DateTimeFormat().resolvedOptions().timeZone;
+  let lang: Intl.LocalesArgument = document.documentElement.lang;
 
   if (isSameDay(eventTimes.start, eventTimes.end)) {
+    if (event.type === 'allDay') {
+      let options: Intl.DateTimeFormatOptions = { year: 'numeric', month: '2-digit', day: '2-digit' };
+      return eventTimes.start.getJsDateObject().toLocaleDateString(lang, options);
+    }
+
     const timeFormatter = new Intl.DateTimeFormat('default', {
-      timeZone: timeZone,
       hour: '2-digit',
       minute: '2-digit',
     });
-
     const startTime = timeFormatter.format(eventTimes.start.getJsDateObject());
     const endTime = timeFormatter.format(eventTimes.end.getJsDateObject());
 
     return `${startTime} - ${endTime}`;
   } else {
-    let lang: Intl.LocalesArgument = document.documentElement.lang;
-    let options: Intl.DateTimeFormatOptions = {timeZone: timeZone,year: 'numeric', month: '2-digit', day: '2-digit' };
+    let options: Intl.DateTimeFormatOptions = { year: 'numeric', month: '2-digit', day: '2-digit' };
     if (event.type !== 'allDay') options = { ...options, hour: '2-digit', minute: '2-digit' };
 
     return (

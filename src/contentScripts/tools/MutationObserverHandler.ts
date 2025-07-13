@@ -1,5 +1,5 @@
 import { CalEvent } from '../../interfaces/eventInterface';
-import { loadSettings } from '../lib/SettingsHandler';
+import { loadSettings } from '../lib/settingsHandler';
 import * as Tools from './tools';
 
 import { getEventXhrDataById } from '../lib/parseEventData';
@@ -122,7 +122,12 @@ async function startWorkerCalendarView() {
         thisEvent.parentElement = calEventHtmlElement.parentElement!;
         thisEvent.timeElement = calEventHtmlElement;
         if (!thisEvent.dates.start || !thisEvent.dates.end) continue;
-
+        if (thisEvent.type === 'allDay') {
+          const startDate = thisEvent.dates.start.getOriginalJsDateObject().setHours(0, 0, 0, 0);
+          const endDate = new Date(startDate + (thisEvent.durationInMinutes - 1) * 60 * 1000);
+          thisEvent.dates.start.setDisableTzCorrection(true).setDate(new Date(startDate));
+          thisEvent.dates.end.setDisableTzCorrection(true).setDate(new Date(endDate));
+        }
         allOrMultiDayEventStorage = allOrMultiDayEventStorage.filter((event) => event.parentElement !== thisEvent.parentElement);
         allOrMultiDayEventStorage.push(thisEvent);
         eventStorage.push({ ...thisEvent });

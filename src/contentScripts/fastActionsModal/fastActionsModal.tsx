@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { Settings, SettingsIsActive } from '../../interfaces/SettingsInterface';
-import { loadSettings, saveSettings } from '../lib/SettingsHandler';
+import { loadSettings, saveSettings } from '../lib/settingsHandler';
 import { downloadStringAsFile } from '../lib/miscellaneous';
 
 export const FastActionsModal = () => {

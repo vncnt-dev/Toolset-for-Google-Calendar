@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { loadSettings, saveSettings, defaultSettings } from '../../../contentScripts/lib/SettingsHandler';
+import { loadSettings, saveSettings, defaultSettings } from '../../../contentScripts/lib/settingsHandler';
 import { Id as ToastId, ToastOptions, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 

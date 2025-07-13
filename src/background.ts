@@ -1,4 +1,4 @@
-import { defaultSettings, loadSettings, saveSettings } from './contentScripts/lib/SettingsHandler';
+import { defaultSettings, loadSettings, saveSettings } from './contentScripts/lib/settingsHandler';
 
 function openSettings() {
   chrome.runtime.openOptionsPage();

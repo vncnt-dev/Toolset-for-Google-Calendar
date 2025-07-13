@@ -1,5 +1,5 @@
 import { CalEvent, EventDates } from '../../interfaces/eventInterface';
-import { loadSettings } from '../lib/SettingsHandler';
+import { loadSettings } from './settingsHandler';
 import { observerCalendarViewFunction } from '../tools/MutationObserverHandler';
 import { CustomDateHandler } from './customDateHandler';
 import * as xhrEventDataCache from './xhrEventDataCache';
@@ -178,8 +178,8 @@ function formatDuration(diff: number, format: string, minDurationMinutes: number
 }
 
 function isAllDayEvent(eventTime: EventDates): boolean {
-  let startDate = eventTime.start.getJsDateObject();
-  let endDate = eventTime.end.getJsDateObject();
+  let startDate = eventTime.start.getOriginalJsDateObject();
+  let endDate = eventTime.end.getOriginalJsDateObject();
   return (
     startDate.getHours() + startDate.getTimezoneOffset() / 60 == 0 &&
     startDate.getMinutes() == 0 &&

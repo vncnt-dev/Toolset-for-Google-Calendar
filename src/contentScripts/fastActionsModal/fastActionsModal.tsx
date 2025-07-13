@@ -71,7 +71,15 @@ export const FastActionsModal = () => {
   };
 
   return (
-    <div className="modal-content" id="GCToolsMenueBody" style={{ borderRadius: '10px' }}>
+    <div
+      className="modal-content"
+      id="GCToolsMenueBody"
+      style={{
+        borderRadius: '10px',
+        backgroundColor: 'var(--gm3-sys-color-surface-container-high)',
+        color: 'var(--gm3-sys-color-on-surface-variant)',
+      }}
+    >
       <span className="close" style={{ position: 'relative', top: '-13px' }} onClick={closeModal}>
         &times;
       </span>
@@ -80,8 +88,21 @@ export const FastActionsModal = () => {
       <p>
         This combines multiple .ics (iCal) files into one, that then can be imported into Google Calendar™ using the native import functionallity.
       </p>
-      <div className="container" style={{ display: 'flex', flexDirection: 'row', width: '100%' }}>
-        <div className="Trypk" tabIndex={0} role="button" aria-label="Datei von meinem Computer auswählen" style={{ width: '50%' }}>
+      <div
+        className="container"
+        style={{
+          display: 'flex',
+          flexDirection: 'row',
+          width: '100%',
+        }}
+      >
+        <div
+          className="Trypk"
+          tabIndex={0}
+          role="button"
+          aria-label="Datei von meinem Computer auswählen"
+          style={{ width: '50%', border: '1px solid var(--gm-hairlinebutton-outline-color,rgb(218,220,224))' }}
+        >
           <label className="IZXV0b">
             <i className="google-material-icons meh4fc hggPq CJ947" aria-hidden="true">
               file_upload

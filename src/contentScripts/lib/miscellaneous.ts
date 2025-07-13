@@ -2,6 +2,7 @@ import ReactDOMServer from 'react-dom/server';
 import { CalEvent, EventDates } from '../../interfaces/eventInterface';
 import { getItemFromCache, setItemInCache } from './sessionCache';
 import { UserInfo } from '../../interfaces/userInfo';
+import { CustomDateHandler } from './customDateHandler';
 
 /* based on https://stackoverflow.com/a/46428456 */
 function decodeDataEventId(dataEventId: string): string {
@@ -40,41 +41,6 @@ function getUserInfo(): UserInfo | null {
   return userInfo;
 }
 
-function correctEventTime(event: CalEvent): EventDates | undefined {
-  if (event.dates.areCorrectedTimes) return event.dates;
-  const userInfo = getItemFromCache('userInfo')!;
-  const duration = event.duration;
-  let startDate: Date;
-  let endDate: Date;
-
-  let datekey = event.id.split('_')[1];
-  if (datekey) {
-    let dateString = datekey.slice(0, 4) + '-' + datekey.slice(4, 6) + '-' + datekey.slice(6, 8);
-    if (datekey.includes('Z')) {
-      // 20310617T230000Z
-      dateString += 'T' + datekey.slice(9, 11) + ':' + datekey.slice(11, 13) + ':' + datekey.slice(13, 15) + 'Z';
-    }
-    startDate = new Date(dateString);
-    if (isNaN(startDate.getTime())) startDate = event.dates.start;
-  } else {
-    startDate = event.dates.start;
-  }
-
-  if (!startDate) return;
-
-  if (event.type === 'allDay') {
-    startDate.setHours(0, 0);
-    endDate = new Date(startDate.getTime() + (duration * 60 - 1) * 1000); // -1 because allDay should end at 23:59:59 not 00:00:00 the next day
-  } else {
-    if (userInfo.gmtOffset && startDate.getTimezoneOffset() != userInfo.gmtOffset) {
-      startDate.setTime(startDate.getTime() + (startDate.getTimezoneOffset() - userInfo.gmtOffset) * 60 * 1000);
-    }
-    endDate = new Date(startDate.getTime() + duration * 60 * 1000);
-  }
-
-  return { start: startDate, end: endDate, areCorrectedTimes: true };
-}
-
 /* escape html */
 function escapeHtml(unsafe: string): string {
   return unsafe.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
@@ -99,9 +65,13 @@ function getDateFromDateKey(dateKey: number): Date {
   return new Date(year + 1970, month, day, 0, 0, 0, 0);
 }
 
-function isBetweenDays(startDate: Date, endDate: Date, testDate: Date): boolean {
-  const startTime = new Date(startDate).setHours(0, 0, 0, 0);
-  const endTime = new Date(endDate).setHours(23, 59, 59, 999);
+function isBetweenDays(startDate: Date | CustomDateHandler, endDate: Date | CustomDateHandler, testDate: Date | CustomDateHandler): boolean {
+  if (startDate instanceof CustomDateHandler) startDate = startDate.getJsDateObject();
+  if (endDate instanceof CustomDateHandler) endDate = endDate.getJsDateObject();
+  if (testDate instanceof CustomDateHandler) testDate = testDate.getJsDateObject();
+
+  const startTime = startDate.setHours(0, 0, 0, 0);
+  const endTime = endDate.setHours(23, 59, 59, 999);
   const testTime = testDate.getTime();
   return startTime <= testTime && testTime <= endTime;
 }
@@ -109,14 +79,19 @@ function isBetweenDays(startDate: Date, endDate: Date, testDate: Date): boolean 
 /**
  * is testDateDate in [startDate, endDate)
  */
-function isBetweenDateTimes(startDate: Date, endDate: Date, date: Date): boolean {
+function isBetweenDateTimes(startDate: Date | CustomDateHandler, endDate: Date | CustomDateHandler, date: Date | CustomDateHandler): boolean {
+  if (startDate instanceof CustomDateHandler) startDate = startDate.getJsDateObject();
+  if (endDate instanceof CustomDateHandler) endDate = endDate.getJsDateObject();
+  if (date instanceof CustomDateHandler) date = date.getJsDateObject();
   const start = startDate.getTime();
   const end = endDate.getTime();
   const d = date.getTime();
   return start <= d && d < end;
 }
 
-function isSameDay(date1: Date, date2: Date): boolean {
+function isSameDay(date1: Date | CustomDateHandler, date2: Date | CustomDateHandler): boolean {
+  if (date1 instanceof CustomDateHandler) date1 = date1.getJsDateObject();
+  if (date2 instanceof CustomDateHandler) date2 = date2.getJsDateObject();
   return date1.getFullYear() === date2.getFullYear() && date1.getMonth() === date2.getMonth() && date1.getDate() === date2.getDate();
 }
 
@@ -141,7 +116,6 @@ function htmlStringToHtmlElement(html: string): HTMLElement {
 }
 
 export {
-  correctEventTime,
   decodeDataEventId,
   calculateHashSha256,
   downloadStringAsFile,

@@ -3,9 +3,10 @@ import { loadSettings } from '../lib/SettingsHandler';
 import * as Tools from './tools';
 
 import { getEventXhrDataById } from '../lib/parseEventData';
-import { correctEventTime, decodeDataEventId, getUserInfo } from '../lib/miscellaneous';
+import { decodeDataEventId, getUserInfo } from '../lib/miscellaneous';
 import { resetCache, setItemInCache } from '../lib/sessionCache';
 import * as XhrEventDataCache from '../lib/xhrEventDataCache';
+import { CustomDateHandler } from '../lib/customDateHandler';
 
 MutationObserver = window.MutationObserver;
 const observerCalendarView = new MutationObserver((mutationsList, observer) => {
@@ -93,19 +94,13 @@ async function startWorkerCalendarView() {
         if (thisEvent.timeElement?.classList.contains('EWOIrf')) {
           thisEvent.type = 'short';
         }
-        let datesTmp = correctEventTime(thisEvent);
-        if (!datesTmp) {
-          console.warn('GC Tools - no Date found on: ', thisEvent, XhrEventDataCache.getCachedEvents());
-          continue;
-        }
-        thisEvent.dates = datesTmp;
 
         eventStorage = eventStorage.filter((event) => event.parentElement !== thisEvent.parentElement);
         eventStorage.push({ ...thisEvent });
       } catch (error) {
         let errorMessage = '';
         if (error instanceof Error) {
-          errorMessage = error.message;    
+          errorMessage = error.message;
         } else if (error instanceof Object) {
           errorMessage = JSON.stringify(error);
         } else {
@@ -125,11 +120,6 @@ async function startWorkerCalendarView() {
 
         thisEvent.parentElement = calEventHtmlElement.parentElement!;
         thisEvent.timeElement = calEventHtmlElement;
-
-        let datesTmp = correctEventTime(thisEvent);
-        if (!datesTmp) continue;
-        thisEvent.dates = datesTmp;
-
         allOrMultiDayEventStorage = allOrMultiDayEventStorage.filter((event) => event.parentElement !== thisEvent.parentElement);
         allOrMultiDayEventStorage.push(thisEvent);
         eventStorage.push({ ...thisEvent });

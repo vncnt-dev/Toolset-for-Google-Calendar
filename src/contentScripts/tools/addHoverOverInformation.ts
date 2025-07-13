@@ -54,7 +54,11 @@ function formatTime(event: CalEvent): string {
     let options: Intl.DateTimeFormatOptions = { year: 'numeric', month: '2-digit', day: '2-digit' };
     if (event.type !== 'allDay') options = { ...options, hour: '2-digit', minute: '2-digit' };
 
-    return eventTimes.start.toLocaleDateString(lang, options) + ' - ' + eventTimes.end.toLocaleDateString(lang, options);
+    return (
+      eventTimes.start.getJsDateObject().toLocaleDateString(lang, options) +
+      ' - ' +
+      eventTimes.end.getJsDateObject().toLocaleDateString(lang, options)
+    );
   }
 }
 

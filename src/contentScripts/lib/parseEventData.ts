@@ -1,6 +1,7 @@
 import { CalEvent, EventDates } from '../../interfaces/eventInterface';
 import { loadSettings } from '../lib/SettingsHandler';
 import { observerCalendarViewFunction } from '../tools/MutationObserverHandler';
+import { CustomDateHandler } from './customDateHandler';
 import * as xhrEventDataCache from './xhrEventDataCache';
 
 function startXhrListener() {
@@ -83,7 +84,7 @@ async function updateXhrEventData(XhrData: Array<any>) {
         let newEvent: CalEvent = {
           id: xhrEventEntry[0],
           dataEntryCreatedAt: new Date(),
-          dates: { start: eventTimeArray[0], end: eventTimeArray[1], areCorrectedTimes: false },
+          dates: { start: new CustomDateHandler(eventTimeArray[0]), end: new CustomDateHandler(eventTimeArray[1]) },
           duration: eventDuration,
           location: xhrEventEntry[7]?.trim(),
           durationFormated: formatDuration(eventDuration, settings.calcDuration_durationFormat, settings.calcDuration_minimumDurationMinutes),
@@ -178,11 +179,13 @@ function formatDuration(diff: number, format: string, minDurationMinutes: number
 }
 
 function isAllDayEvent(eventTime: EventDates): boolean {
+  let startDate = eventTime.start.getJsDateObject();
+  let endDate = eventTime.end.getJsDateObject();
   return (
-    eventTime.start.getHours() + eventTime.start.getTimezoneOffset() / 60 == 0 &&
-    eventTime.start.getMinutes() == 0 &&
-    eventTime.end.getHours() + eventTime.end.getTimezoneOffset() / 60 == 0 &&
-    eventTime.end.getMinutes() == 0
+    startDate.getHours() + startDate.getTimezoneOffset() / 60 == 0 &&
+    startDate.getMinutes() == 0 &&
+    endDate.getHours() + endDate.getTimezoneOffset() / 60 == 0 &&
+    endDate.getMinutes() == 0
   );
 }
 

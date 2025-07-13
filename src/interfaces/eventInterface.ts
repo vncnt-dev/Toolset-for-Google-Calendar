@@ -1,3 +1,5 @@
+import { CustomDateHandler } from "../contentScripts/lib/customDateHandler";
+
 export interface CalEvent {
   id: string;
   name: string;
@@ -27,10 +29,6 @@ export interface CalEvent {
 }
 
 export interface EventDates {
-  start: Date;
-  end: Date;
-  /**
-   * corrected for timezone and daylight saving time
-   */
-  areCorrectedTimes: Boolean;
+  start: CustomDateHandler;
+  end: CustomDateHandler;
 }

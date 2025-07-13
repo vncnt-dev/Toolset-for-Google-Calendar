@@ -27,23 +27,38 @@ export const getAllChangelogs = (): Changelog[] => {
           The indicator should now start and end at the correct time.
         </div>
       ),
-    },{
+    },
+    {
       version: '1.4.0',
       titel: 'v1.4.0 - Fixes functionality ',
-      text: (
-        <div>
-          This update restores the functionality for most Features after a Google Calender Update broke the extension.
-        </div>
-      ),
-    },{
+      text: <div>This update restores the functionality for most Features after a Google Calender Update broke the extension.</div>,
+    },
+    {
       version: '1.5.0',
       titel: 'v1.5.0 - Improves stability and fixes functionality ',
+      text: <div>This update improves the stability and fixes bugs introduced by some smaller changes in the Google Calendar™ code.</div>,
+    },
+    {
+      version: '1.6.0',
+      titel: 'v1.6.0 - Adds event descriptions in "Information On Hover", bugfixes to "Indicate All- and Multi-Day Events" and more',
       text: (
         <div>
-          This update improves the stability and fixes bugs introduced by some smaller changes in the Google Calendar™ code.
+          This add the following features:
+          <ul className="list-disc list-inside">
+            <li>Show descriptions of events in the "Information On Hover" functionality</li>
+          </ul>
+          Additionally, it fixes these bugs and improves the stability of the extension.
+          <ul className="list-disc list-inside">
+            <li>
+              The "Indicate All- and Multi-Day Events" functionality sometimes had problems displaying the indicators correctly, this is now fixed.
+            </li>
+            <li>Users that use multiple accounts can now use this extension for all accounts</li>
+            <li>Unicode characters in event names and descriptions are now correctly displayed</li>
+            <li>The support for the Google Calendar™ dark mode has been improved</li>
+          </ul>
         </div>
       ),
-    }
+    },
   ];
 
   return allChangelogs;

@@ -83,22 +83,24 @@ async function startWorkerCalendarView() {
         thisEvent.parentElement = calEventHtmlElement;
         thisEvent.timeElement = (calEventHtmlElement.querySelector('div.lhydbb.gVNoLb.EiZ8Dd:not(.event-duration)') ||
           calEventHtmlElement.querySelector('.EWOIrf:not(.event-duration)')) as HTMLElement;
-        // very short events (>1h) have a diffenent HTML structure
+
         if (!thisEvent.timeElement) {
           console.warn('GC Tools - event without timeElement: ', thisEvent, calEventHtmlElement);
           return;
         }
+        // very short events (>1h) have a diffenent HTML structure
         if (thisEvent.timeElement?.classList.contains('EWOIrf')) {
           thisEvent.type = 'short';
         }
         let datesTmp = correctEventTime(thisEvent);
         if (!datesTmp) {
-          console.log(thisEvent, XhrEventDataCache.getCachedEvents());
+          console.warn('GC Tools - no Date found on: ', thisEvent, XhrEventDataCache.getCachedEvents());
           continue;
         }
         thisEvent.dates = datesTmp;
 
-        eventStorage.push({ ...thisEvent});
+        eventStorage = eventStorage.filter((event) => event.parentElement !== thisEvent.parentElement);
+        eventStorage.push({ ...thisEvent });
       } catch (error) {
         console.error('GC Tools - error while parsing event: ', error);
       }
@@ -117,8 +119,9 @@ async function startWorkerCalendarView() {
         if (!datesTmp) continue;
         thisEvent.dates = datesTmp;
 
+        allOrMultiDayEventStorage = allOrMultiDayEventStorage.filter((event) => event.parentElement !== thisEvent.parentElement);
         allOrMultiDayEventStorage.push(thisEvent);
-        eventStorage.push({ ...thisEvent});
+        eventStorage.push({ ...thisEvent });
       } catch (error) {
         console.error('GC Tools - error while parsing allOrMultiDay event: ', error);
       }

@@ -7,6 +7,7 @@ function addHoverOverInformation(event: CalEvent) {
   if (event.durationFormated) innerText += ` (${event.durationFormated})`;
   if (event.name) innerText += `\n${event.name}`;
   if (event.location) innerText += `\n${event.location}`;
+  if (event.description) innerText += `\n\n${event.description}`;
 
   // set position and content of hoverInformationElement
   event.parentElement!.addEventListener('mousemove', (event) =>

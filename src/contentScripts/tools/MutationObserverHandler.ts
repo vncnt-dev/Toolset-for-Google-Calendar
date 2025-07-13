@@ -75,9 +75,10 @@ async function startWorkerCalendarView() {
     let allOrMultiDayCalEventList: NodeListOf<HTMLElement> = document.querySelectorAll('.KF4T6b.jKgTF:not(.PU9jSd)');
 
     for (let calEventHtmlElement of calEventList) {
+      let eventId = '';
       try {
-        let eventId = decodeDataEventId(calEventHtmlElement.getAttribute('data-eventid')!);
-        let thisEvent: CalEvent = getEventXhrDataById(eventId)!;
+        eventId = decodeDataEventId(calEventHtmlElement.getAttribute('data-eventid')!);
+        const thisEvent: CalEvent = getEventXhrDataById(eventId)!;
         if (!thisEvent) continue;
 
         thisEvent.parentElement = calEventHtmlElement;
@@ -102,7 +103,17 @@ async function startWorkerCalendarView() {
         eventStorage = eventStorage.filter((event) => event.parentElement !== thisEvent.parentElement);
         eventStorage.push({ ...thisEvent });
       } catch (error) {
-        console.error('GC Tools - error while parsing event: ', error);
+        let errorMessage = '';
+        if (error instanceof Error) {
+          errorMessage = error.message;    
+        } else if (error instanceof Object) {
+          errorMessage = JSON.stringify(error);
+        } else {
+          errorMessage = error as string;
+        }
+
+        String(error);
+        console.error('GC Tools - error while parsing event: ', eventId, errorMessage);
       }
     }
 

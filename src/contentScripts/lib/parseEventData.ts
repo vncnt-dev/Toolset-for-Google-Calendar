@@ -4,12 +4,14 @@ import { observerCalendarViewFunction } from '../tools/MutationObserverHandler';
 import * as xhrEventDataCache from './xhrEventDataCache';
 
 function startXhrListener() {
-  insertScriptToPage('XHRInterceptor',true); // intercepts all XHR requests and dispatches them as a custom event
+  insertScriptToPage('XHRInterceptor', true); // intercepts all XHR requests and dispatches them as a custom event
   // Event listener
   document.addEventListener('GCT_XMLHttpRequest', function (event: CustomEventInit) {
     try {
       let req = event.detail as XMLHttpRequest;
-      if (req?.responseURL?.includes('calendar.google.com/calendar/u/0/sync.prefetcheventrange')) {
+      const url = req?.responseURL?.toString() || '';
+      if (!url.includes('calendar.google.com')) return;
+      if (url.includes('/sync.prefetcheventrange')) {
         console.log('GC Tools - xhr event - sync.prefetcheventrange', req);
         try {
           // this is called when the calendar is initially loaded
@@ -18,12 +20,11 @@ function startXhrListener() {
         } catch (error) {
           console.warn('GCT_XMLHttpRequest-init', error);
         }
-      } else if (req?.responseURL?.includes('calendar.google.com/calendar/u/0/sync.sync')) {
+      } else if (url.includes('/sync.sync')) {
+        // this is called when an event is added or edited
         try {
           console.log('GC Tools - xhr event - sync.sync', req);
-          // this is called when an event is added or edited
           let responseAsJson = JSON.parse(escapeJsonString(req.responseText.slice(6)).trim());
-
           // if no events are in the response, return (this is the case when an event is deleted
           let data;
           try {

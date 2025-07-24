@@ -64,6 +64,16 @@ export const getAllChangelogs = (): Changelog[] => {
         </div>
       ),
     },
+    {
+      version: '1.6.3',
+      titel: 'v1.6.3 -  Added Logging functionality for better debugging',
+      text: (
+        <div>
+          This update adds an optional logging functionality to the extension, which helps to debug issues more easily. <br />
+          The logging can be enabled in the extension settings and is off by default.
+        </div>
+      ),
+    },
   ];
 
   return allChangelogs;

@@ -28,7 +28,6 @@ const exportToIcalPrepare = () => {
 };
 
 const exportToIcal = () => {
-  console.log('exportToIcal');
   if (!popupView) return;
   const activeEventId = popupView.getAttribute('data-eventid');
   if (!activeEventId) return;

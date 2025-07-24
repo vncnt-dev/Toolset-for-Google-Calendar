@@ -1,10 +1,11 @@
-import { calculateHashSha256, getDateFromDateKey, isBetweenDateTimes, isBetweenDays, isSameDay } from '../lib/miscellaneous';
+import { calculateHashSha256, getDateFromDateKey, isBetweenDateTimes, isBetweenDays, isSameDay, logging } from '../lib/miscellaneous';
 import { CalEvent } from '../../interfaces/eventInterface';
 import { Settings } from '../../interfaces/SettingsInterface';
 import { loadSettings } from '../lib/settingsHandler';
 import { getItemFromCache, setItemInCache } from '../lib/sessionCache';
 
 import './indicateAllAndMultiDayEvents.css';
+import { log } from 'console';
 
 const daysMaxTransparency = 30;
 const daysMinTransparency = 1;
@@ -22,7 +23,7 @@ var indicateAllDayEvents = async (eventStorageMultiDay: CalEvent[]) => {
     for (const changedEvent of eventStorageMultiDay) {
       const id = await generateID(changedEvent);
       if (document.querySelector(`[gcaltoolsid="${id}"]`) !== null) continue; // indicator element already exists
-      console.log('indicateAllDayEvents: id',changedEvent.id,' sha: ',id, ' event: ',JSON.stringify([changedEvent.dates, changedEvent.timeElement!.style.backgroundColor, changedEvent.name]));
+      logging('info', 'indicateAllDayEvents: eventId', changedEvent.id, ' sha: ', id, ' event: ', JSON.stringify([changedEvent.dates,  changedEvent.name]));
 
       for (const DateColumnElement of dateColumnElements) {
         const DateOfDateColumnElement = getDateFromDateKey(parseInt(DateColumnElement.getAttribute('data-datekey')!));
@@ -45,7 +46,7 @@ var indicateAllDayEvents = async (eventStorageMultiDay: CalEvent[]) => {
       }
     }
   } catch (error) {
-    console.error('indicateAllDayEvents: ', error);
+    logging('error', 'indicateAllDayEvents error: ', error);
   }
 };
 

@@ -1,4 +1,5 @@
 import { CalEvent } from '../../interfaces/eventInterface';
+import { logging } from '../lib/miscellaneous';
 
 function injectDuration(calEvent: CalEvent) {
   if (calEvent.durationFormated) {
@@ -26,6 +27,7 @@ function injectDuration(calEvent: CalEvent) {
         // durationelement next to time
         const durationText = `(${calEvent.durationFormated})`;
         if (!oldDurationElement) {
+          logging('info', 'injectDuration-T1: adding duration: ', calEvent.id, calEvent.name, ' duration: ', calEvent.durationFormated);
           if (calEvent.type !== 'allDay' && calEvent.type !== 'nonAllDayMultiDay') {
             eventTimeElement.style.display = 'inline-block';
           }
@@ -35,6 +37,14 @@ function injectDuration(calEvent: CalEvent) {
         } else {
           if ((oldDurationElement as HTMLElement).innerText !== durationText) {
             // update duration
+            logging(
+              'info',
+              ' injectDuration-T1: updating duration: ',
+              calEvent.id,
+              calEvent.name,
+              ' duration: ',
+              calEvent.durationFormated,
+            );
             (oldDurationElement as HTMLElement).innerText = durationText;
           }
         }
@@ -42,10 +52,12 @@ function injectDuration(calEvent: CalEvent) {
       } else {
         // durationelement below time
         if (!oldDurationElement) {
+          logging('info', 'injectDuration-T2: adding duration: ', calEvent.id, calEvent.name, ' duration: ', calEvent.durationFormated);
           eventTimeElement.style.display = 'block';
           durationElement.innerText = calEvent.durationFormated;
         } else if ((oldDurationElement as HTMLElement).innerText != calEvent.durationFormated) {
           // update duration
+          logging('info', 'injectDuration-T2: updating duration: ', calEvent.id, calEvent.name, ' duration: ', calEvent.durationFormated);
           (oldDurationElement as HTMLElement).innerText = calEvent.durationFormated;
         }
       }
@@ -62,11 +74,9 @@ function injectDuration(calEvent: CalEvent) {
       }
 
       // adjust styling
-      if (calEvent.parentElement!.style.whiteSpace !== 'nowrap') {
-        calEvent.parentElement!.style.whiteSpace = 'nowrap';
-      }
+      if (calEvent.parentElement!.style.whiteSpace !== 'nowrap') calEvent.parentElement!.style.whiteSpace = 'nowrap';
     } catch (error) {
-      console.warn('GC Tools - injectDurration: ', error);
+      logging('error', 'injectDurration: ', error);
       return;
     }
   }

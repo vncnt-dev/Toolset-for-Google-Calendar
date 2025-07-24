@@ -12,8 +12,10 @@ module.exports = merge(common, {
                 parallel: true,
                 terserOptions: {
                     compress: {
-                        drop_console: true,
+                        drop_console: false, // Keep console logs for debugging
                         dead_code: true,
+                        unused: true,
+                        passes: 2, // Optimize the code more aggressively
                     },
                 },
             }),

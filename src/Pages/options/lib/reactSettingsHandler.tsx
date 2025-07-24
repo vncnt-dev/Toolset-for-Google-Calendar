@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { loadSettings, saveSettings, defaultSettings } from '../../../contentScripts/lib/settingsHandler';
 import { Id as ToastId, ToastOptions, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { log } from 'console';
+import { logging } from '../../../contentScripts/lib/miscellaneous';
 
 export const useShareableState = () => {
   const toastConfig: ToastOptions<{}> = {
@@ -23,7 +25,7 @@ export const useShareableState = () => {
         setSharedSettings(settings);
       })
       .catch((error) => {
-        console.warn(error);
+        logging('error', 'useShareableState: Error loading settings', error);
       });
   }, []);
 
@@ -90,7 +92,7 @@ export const useShareableState = () => {
   };
 
   const restoreDefaultSharedSettings = () => {
-    console.log('restoreDefaultSharedSettings');
+    logging('info', 'restoreDefaultSharedSettings');
     setSharedSettings(defaultSettings);
     saveSettings(defaultSettings);
     

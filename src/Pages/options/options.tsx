@@ -19,6 +19,9 @@ const Options = () => {
         <a href="mailto:contact@vncnt.dev?subject=GCT%20Feedback%20or%20Question" aria-label="E-mail to the developer">
           <img className="w-10 h-10 float-right mr-4" src="../sharedImages/E-mail.svg" alt="Github Logo" />
         </a>
+        <a href="/changelog/changelog.html" aria-label="Changelog" className='w-10 h-10 float-right mr-8 text-base flex items-center justify-center'>
+          <span>Changelog</span>
+        </a>
       </h1>
       <div className="divider"></div>
       <div className="flex flex-wrap ">

@@ -200,6 +200,21 @@ export const getAllOptionGroupSettings = (): OptionGroupSettings[] => {
       ),
       toggleSettings: 'showChangeLog_isActive'
     },
+    {
+      id: 'logging',
+      titel: 'Enable Logging',
+      text: (
+        <div>
+          <p>
+            Enables logging of the extension. This is useful for debugging and development purposes.
+          </p>
+          <p className="mt-2">
+            The logs are stored in the browser console and can be accessed by pressing F12 or Ctrl+Shift+I.
+          </p>
+        </div>
+      ),
+      toggleSettings: 'isLoggingEnabled'
+    },
   ];
 
   return allOptionGroupSettings;

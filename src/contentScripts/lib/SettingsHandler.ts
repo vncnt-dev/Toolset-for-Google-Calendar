@@ -1,5 +1,6 @@
 import { Settings } from '../../interfaces/SettingsInterface';
 import { storage } from '@extend-chrome/storage';
+import { logging } from './miscellaneous';
 
 var defaultSettings: Settings = {
   calcDuration_isActive: true,
@@ -13,6 +14,7 @@ var defaultSettings: Settings = {
   indicateAllDayEvents_maxWidth: 100,
   exportAsIcs_isActive: true,
   showChangeLog_isActive: true,
+  isLoggingEnabled: false,
 };
 
 var settings: Settings;
@@ -23,7 +25,7 @@ function loadSettings(force = false) {
       settings = Object.assign(structuredClone(defaultSettings), e.settings);
 
       // migration
-      // v1.2 -> v1.3
+      // v1.2 -> v1.3: settings name changed
       // @ts-expect-error
       if (settings.indicateFullDayEvents_isActive !== undefined) {
         // @ts-expect-error
@@ -42,6 +44,12 @@ function loadSettings(force = false) {
         delete settings.indicateFullDayEvents_minTransparency;
         // @ts-expect-error
         delete settings.indicateFullDayEvents_maxWidth;
+        saveSettings(settings);
+      }
+      // v1.6.2 -> v1.6.3
+      // add isLoggingEnabled setting
+      if (settings.isLoggingEnabled === undefined) {
+        settings.isLoggingEnabled = false;
         saveSettings(settings);
       }
 
@@ -67,7 +75,7 @@ function saveSettings(newSettings: Partial<Settings>): Promise<boolean> {
       return true;
     })
     .catch((error) => {
-      console.warn('GC Tools - settings save error: ', error);
+      logging('error', 'settings save error: ', error);
       return false;
     });
 }

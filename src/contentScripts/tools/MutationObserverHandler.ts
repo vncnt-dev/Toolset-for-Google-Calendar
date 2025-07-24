@@ -3,10 +3,8 @@ import { loadSettings } from '../lib/settingsHandler';
 import * as Tools from './tools';
 
 import { getEventXhrDataById } from '../lib/parseEventData';
-import { decodeDataEventId, getUserInfo } from '../lib/miscellaneous';
+import { decodeDataEventId, getUserInfo, logging } from '../lib/miscellaneous';
 import { resetCache, setItemInCache } from '../lib/sessionCache';
-import * as XhrEventDataCache from '../lib/xhrEventDataCache';
-import { CustomDateHandler } from '../lib/customDateHandler';
 
 MutationObserver = window.MutationObserver;
 const observerCalendarView = new MutationObserver((mutationsList, observer) => {
@@ -57,7 +55,7 @@ function observerCalendarViewFunction(mutationsList: MutationRecord[] = []) {
 }
 
 async function startWorkerCalendarView() {
-  console.log('GC Tools - startWorkerCalendarView');
+  logging('info', 'startWorkerCalendarView');
   let settings = await loadSettings();
   resetCache();
   setItemInCache('userInfo', getUserInfo());
@@ -87,29 +85,22 @@ async function startWorkerCalendarView() {
           calEventHtmlElement.querySelector('.EWOIrf:not(.event-duration)')) as HTMLElement;
 
         if (!thisEvent.timeElement) {
-          console.warn('GC Tools - event without timeElement: ', thisEvent, calEventHtmlElement);
+          logging('warn', 'event without timeElement, will be skipped: ', thisEvent, calEventHtmlElement);
           return;
         }
         // very short events (>1h) have a diffenent HTML structure
-        if (thisEvent.timeElement?.classList.contains('EWOIrf')) {
-          thisEvent.type = 'short';
-        }
+        if (thisEvent.timeElement?.classList.contains('EWOIrf')) thisEvent.type = 'short';
+
         if (!thisEvent.dates.start || !thisEvent.dates.end) continue;
 
         eventStorage = eventStorage.filter((event) => event.parentElement !== thisEvent.parentElement);
         eventStorage.push({ ...thisEvent });
       } catch (error) {
         let errorMessage = '';
-        if (error instanceof Error) {
-          errorMessage = error.message;
-        } else if (error instanceof Object) {
-          errorMessage = JSON.stringify(error);
-        } else {
-          errorMessage = error as string;
-        }
-
-        String(error);
-        console.error('GC Tools - error while parsing event: ', eventId, errorMessage);
+        if (error instanceof Error) errorMessage = error.message;
+        else if (error instanceof Object) errorMessage = JSON.stringify(error);
+        else errorMessage = error as string;
+        logging('error', 'error while parsing event: ', eventId, errorMessage, calEventHtmlElement);
       }
     }
 
@@ -132,7 +123,7 @@ async function startWorkerCalendarView() {
         allOrMultiDayEventStorage.push(thisEvent);
         eventStorage.push({ ...thisEvent });
       } catch (error) {
-        console.error('GC Tools - error while parsing allOrMultiDay event: ', error);
+        logging('error', 'error while parsing allOrMultiDay event: ', error, calEventHtmlElement);
       }
     }
 
@@ -145,19 +136,19 @@ async function startWorkerCalendarView() {
     if (settings.indicateAllDayEvents_isActive) Tools.indicateAllDayEvents(allOrMultiDayEventStorage);
     if (settings.exportAsIcs_isActive) Tools.exportToIcalPrepare();
 
-    console.log('GC Tools - eventStorage: ', eventStorage);
-    console.log('GC Tools - allOrMultiDayEvents: ', allOrMultiDayEventStorage);
+    logging('info', 'events number: ', eventStorage.length, ' storage: ', eventStorage);
+    logging('info', 'allOrMultiDayEvents number: ', allOrMultiDayEventStorage.length, ' storage: ', allOrMultiDayEventStorage);
     setItemInCache('eventStorage', eventStorage);
     setItemInCache('allOrMultiDayEvents', allOrMultiDayEventStorage);
   } catch (error) {
-    console.error('GC Tools - error: ', error);
+    logging('error', 'error: ', error);
   } finally {
     createObserver();
   }
 }
 
 async function startWorkerCompleteHTMLBody(mutationsList: MutationRecord[] = []) {
-  let settings = await loadSettings();
+  const settings = await loadSettings();
   disconnectObserver();
   if (settings.removeGMeets_isActive) Tools.removeGMeets();
 

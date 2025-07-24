@@ -4,9 +4,11 @@ import ReactDOMServer from 'react-dom/server';
 import { BtnGCToolsModalOpen } from './btnModalOpen';
 import { FastActionsModal } from './fastActionsModal';
 import './fastActionsModal.css';
-import { JsxElementToHtmlElement } from '../lib/miscellaneous';
+import { JsxElementToHtmlElement, logging } from '../lib/miscellaneous';
+import { log } from 'console';
 
 export function fastActionsModalInit() {
+  logging('info', 'fastActionsModalInit');
   try {
     /*** init hoverover element in Google Calendar™ style ***/
     // this element is used to display the hover information
@@ -54,6 +56,6 @@ export function fastActionsModalInit() {
       </React.StrictMode>,
     );
   } catch (e) {
-    console.log('GCTools: Error while trying to append btnGCToolsModalOpen', e);
+    logging('error', 'Error while trying to append btnGCToolsModalOpen', e);
   }
 }

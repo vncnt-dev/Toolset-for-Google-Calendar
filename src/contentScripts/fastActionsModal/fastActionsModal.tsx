@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { Settings, SettingsIsActive } from '../../interfaces/SettingsInterface';
 import { loadSettings, saveSettings } from '../lib/settingsHandler';
-import { downloadStringAsFile } from '../lib/miscellaneous';
+import { downloadStringAsFile, logging } from '../lib/miscellaneous';
 
 export const FastActionsModal = () => {
   const closeModal = () => {
@@ -34,7 +34,7 @@ export const FastActionsModal = () => {
           nextIndexOf(fileContents[i], new RegExp('\n|\r'), fileContents[i].indexOf('TZID:') + 5),
         );
         if (timeZones.indexOf(timeZoneId) === -1) {
-          console.log('new timezone: ' + timeZoneId, timeZones);
+          logging('info', 'new timezone: ', timeZoneId, timeZones);
           timeZones.push(timeZoneId);
           if (combinedIcs.indexOf('END:VTIMEZONE') === -1) {
             combinedIcs =
@@ -146,8 +146,7 @@ const FastSettingsToggle = (props: { feature: keyof SettingsIsActive; name: stri
   }, [settings]);
 
   const toggleFeature = (feature: keyof SettingsIsActive) => {
-    console.log(settings);
-    console.log('toggleFeature', feature, settings[feature]);
+    logging('info', 'toggleFeature', feature, settings[feature]);
     setSettings({ ...settings, [feature]: !settings[feature] });
   };
 

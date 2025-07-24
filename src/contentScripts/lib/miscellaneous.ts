@@ -1,8 +1,7 @@
 import ReactDOMServer from 'react-dom/server';
-import { CalEvent, EventDates } from '../../interfaces/eventInterface';
-import { getItemFromCache, setItemInCache } from './sessionCache';
 import { UserInfo } from '../../interfaces/userInfo';
 import { CustomDateHandler } from './customDateHandler';
+import { loadSettings } from './settingsHandler';
 
 /* based on https://stackoverflow.com/a/46428456 */
 function decodeDataEventId(dataEventId: string): string {
@@ -115,6 +114,19 @@ function htmlStringToHtmlElement(html: string): HTMLElement {
   return (template.content.firstChild as HTMLElement) ?? document.createElement('div');
 }
 
+async function logging(Level: 'debug' | 'info' | 'warn' | 'error' | 'log', ...args: any[]) {
+  const settings = await loadSettings();
+  if (settings.isLoggingEnabled) {
+    if (Level === 'warn') console.log('%cGC Tools - Warning:', 'color: orange; font-weight: bold;', ...args);
+    else if (Level === 'error') console.error('%cGC Tools - Error:', 'color: #ff416d; font-weight: bold;', ...args);
+    else if (Level === 'info') console.info('%cGC Tools - Info:', 'color: #4b99d2; font-weight: bold;', ...args);
+    else if (Level === 'debug') console.debug('%cGC Tools - Debug:', 'color: #55b080; font-weight: bold;', ...args);
+    else {
+      console.log('%cGC Tools - Log:', 'color: black;', ...args);
+    }
+  }
+}
+
 export {
   decodeDataEventId,
   calculateHashSha256,
@@ -128,4 +140,5 @@ export {
   isSameDay,
   JsxElementToHtmlElement,
   trimArray,
+  logging,
 };

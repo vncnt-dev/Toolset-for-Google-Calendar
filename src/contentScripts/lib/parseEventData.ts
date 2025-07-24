@@ -3,6 +3,7 @@ import { loadSettings } from './settingsHandler';
 import { observerCalendarViewFunction } from '../tools/MutationObserverHandler';
 import { CustomDateHandler } from './customDateHandler';
 import * as xhrEventDataCache from './xhrEventDataCache';
+import { logging } from './miscellaneous';
 
 function startXhrListener() {
   insertScriptToPage('XHRInterceptor', true); // intercepts all XHR requests and dispatches them as a custom event
@@ -11,20 +12,19 @@ function startXhrListener() {
     try {
       let req = event.detail as XMLHttpRequest;
       const url = req?.responseURL?.toString() || '';
-      if (!url.includes('calendar.google.com')) return;
       if (url.includes('/sync.prefetcheventrange')) {
-        console.log('GC Tools - xhr event - sync.prefetcheventrange', req);
+        logging('info', 'xhr event - sync.prefetcheventrange', req);
         try {
           // this is called when the calendar is initially loaded
           let data = JSON.parse(escapeJsonString(req.responseText))[0][2][1];
           updateXhrEventData(data);
         } catch (error) {
-          console.warn('GCT_XMLHttpRequest-init', error);
+          logging('error', 'XMLHttpRequest - init', error);
         }
       } else if (url.includes('/sync.sync')) {
         // this is called when an event is added or edited
         try {
-          console.log('GC Tools - xhr event - sync.sync', req);
+          logging('info', 'xhr event - sync.sync', req);
           let responseAsJson = JSON.parse(escapeJsonString(req.responseText));
           // if no events are in the response, return (this is the case when an event is deleted
           let data;
@@ -38,11 +38,11 @@ function startXhrListener() {
           let initDataStrcucture = [['', [data]]]; // mock structure to match the structure of the initial data
           updateXhrEventData(initDataStrcucture);
         } catch (error) {
-          console.warn('GCT_XMLHttpRequest-update', error);
+          logging('error', 'GCT_XMLHttpRequest-update', error);
         }
       }
     } catch (error) {
-      console.warn('GCT_XMLHttpRequest', error, event);
+      logging('error', 'GCT_XMLHttpRequest', error, event);
     }
   });
 }
@@ -61,7 +61,7 @@ function getEventXhrDataById(HtmlEventId: string): CalEvent | undefined {
   */
   let event: CalEvent | undefined = xhrEventDataCache.getItemFromCache(HtmlEventId) || xhrEventDataCache.getItemFromCache(HtmlEventId.split('_')[0]); // check for "eventid_currentDate" or "eventid"
   if (!event) {
-    console.log('GC Tools - warning: event not found in xhrEventData: ', HtmlEventId);
+    logging('warn', 'warning: event not found in xhrEventData: ', HtmlEventId);
     return;
   }
 
@@ -69,9 +69,9 @@ function getEventXhrDataById(HtmlEventId: string): CalEvent | undefined {
 }
 async function updateXhrEventData(XhrData: Array<any>) {
   let settings = await loadSettings();
-  /* console.log('GC Tools - updateEventData', XhrData); */
+  /* console.log(' updateEventData', XhrData); */
   try {
-    console.log('GC Tools - updateEventData: ', XhrData);
+    logging('info', 'updateEventData: ', XhrData);
     XhrData.forEach((calender: any) => {
       // every calender has an array of events
       if (!calender[1]) return;
@@ -107,11 +107,12 @@ async function updateXhrEventData(XhrData: Array<any>) {
     // call observerCalendarViewFunction to make sure, that the displayed info is up to date
     observerCalendarViewFunction();
   } catch (error) {
-    console.log('GC Tools - updateEventData: ', error);
+    logging('error', 'updateEventData: ', error, XhrData);
   }
 }
 
 function insertScriptToPage(file: string, isModule: boolean = false) {
+  logging('info', 'insertScriptToPage', file, isModule);
   var s = document.createElement('script');
   s.src = chrome.runtime.getURL('/web_accessible_resources/' + file + '.js');
   s.type = isModule ? 'module' : 'text/javascript';
@@ -133,7 +134,7 @@ function calculateDurationInMinutes(startEndDateTime: Date[]): number {
   try {
     return (startEndDateTime[1].getTime() - startEndDateTime[0].getTime()) / 1000 / 60;
   } catch (e) {
-    console.warn('calculateDuration: error', e, startEndDateTime);
+    logging('error', 'calculateDurationInMinutes error', e, startEndDateTime);
     return 0;
   }
 }
@@ -221,7 +222,7 @@ function decodeUnicodeString(input: string): string {
     const decoded = input.replace(/\\u[\dA-Fa-f]{4}/g, (match) => String.fromCharCode(parseInt(match.replace('\\u', ''), 16)));
     return decoded;
   } catch (e) {
-    console.warn('decodeUnicodeString: error', e, input);
+    logging('error', 'decodeUnicodeString: error', e, input);
     return input;
   }
 }
@@ -238,7 +239,7 @@ function stripHtmlTags(html: string): string {
     tempDiv.innerHTML = html;
     return tempDiv.textContent || '';
   } catch (e) {
-    console.warn('stripHtmlTags: error', e, html);
+    logging('error', 'stripHtmlTags: error', e, html);
     return html;
   }
 }

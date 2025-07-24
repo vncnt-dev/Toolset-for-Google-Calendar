@@ -1,20 +1,19 @@
 {
   "manifest_version": 3,
   "name": "Toolset for Google Calendar™",
-  "version": "1.6.2",
+  "version": "1.6.3",
   "description": "This extension provides multiple small tools for the Google Calendar™.",
-
   "action": {
     "default_icon": {
-      "128": "icons/icon128.png",
+      "16": "icons/icon16.png",
       "48": "icons/icon48.png",
-      "16": "icons/icon16.png"
+      "128": "icons/icon128.png"
     }
   },
   "icons": {
-    "128": "icons/icon128.png",
     "16": "icons/icon16.png",
-    "48": "icons/icon48.png"
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
   },
   "options_page": "options/options.html",
   "background": {
@@ -22,21 +21,37 @@
   },
   "content_scripts": [
     {
-      "js": ["js/content_script.js"],
-      "css": ["styles/content_script.css"],
-      "matches": ["https://calendar.google.com/*"],
+      "js": [
+        "js/content_script.js"
+      ],
+      "css": [
+        "styles/content_script.css"
+      ],
+      "matches": [
+        "https://calendar.google.com/*"
+      ],
       "run_at": "document_end"
     }
   ],
   "web_accessible_resources": [
     {
-      "resources": ["web_accessible_resources/xhook.min.js"],
-      "matches": ["<all_urls>"]
+      "resources": [
+        "web_accessible_resources/xhook.min.js"
+      ],
+      "matches": [
+        "<all_urls>"
+      ]
     },
     {
-      "resources": ["web_accessible_resources/XHRInterceptor.js"],
-      "matches": ["<all_urls>"]
+      "resources": [
+        "web_accessible_resources/XHRInterceptor.js"
+      ],
+      "matches": [
+        "<all_urls>"
+      ]
     }
   ],
-  "permissions": ["storage"]
+  "permissions": [
+    "storage"
+  ]
 }

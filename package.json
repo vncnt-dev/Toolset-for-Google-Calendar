@@ -1,12 +1,12 @@
 {
   "name": "gcalendar-tools",
-  "version": "1.6.2",
+  "version": "1.6.3",
   "description": "",
   "main": "index.js",
   "scripts": {
     "watch": "npm run clean && webpack --config webpack/webpack.dev.js --watch",
     "build": "npm run clean && webpack --config webpack/webpack.prod.js",
-    "pack": "npm run build && npm-build-zip --src dist --name gcalendar-tools",
+    "pack": "node setVersion.js && npm run build && npm-build-zip --src dist --name gcalendar-tools",
     "clean": "rimraf dist"
   },
   "author": "",

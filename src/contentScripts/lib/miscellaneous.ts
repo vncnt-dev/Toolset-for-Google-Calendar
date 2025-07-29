@@ -22,7 +22,10 @@ async function calculateHashSha256(text: string): Promise<string> {
 <div id="xUserInfo" aria-hidden="true" style="display:none"><div id="xUserEmail">xyz@gmail.com</div><div id="xUserName"></div><div id="xTimezone">Europe/Berlin</div><div id="xGmtOffset">7200000</div><div id="xUserLocale">de</div></div> */
 function getUserInfo(): UserInfo | null {
   let userInfoElement = document.getElementById('xUserInfo');
-  if (!userInfoElement) return null;
+  if (!userInfoElement) {
+    logging('error', 'getUserInfo: userInfoElement not found');
+    return null;
+  }
 
   let queryUserInfoElement = (selector: string) => userInfoElement!.querySelector(selector)?.textContent ?? null;
   let gmtOffset: string | number | null = queryUserInfoElement('#xGmtOffset');
@@ -114,9 +117,10 @@ function htmlStringToHtmlElement(html: string): HTMLElement {
   return (template.content.firstChild as HTMLElement) ?? document.createElement('div');
 }
 
-async function logging(Level: 'debug' | 'info' | 'warn' | 'error' | 'log', ...args: any[]) {
-  const settings = await loadSettings();
-  if (settings.isLoggingEnabled) {
+function logging(Level: 'debug' | 'info' | 'warn' | 'error' | 'log', ...args: any[]) {
+  const fullStack = new Error().stack;
+  loadSettings().then((settings) => {
+    if (!settings.isLoggingEnabled) return;
     if (Level === 'warn') console.log('%cGC Tools - Warning:', 'color: orange; font-weight: bold;', ...args);
     else if (Level === 'error') console.error('%cGC Tools - Error:', 'color: #ff416d; font-weight: bold;', ...args);
     else if (Level === 'info') console.info('%cGC Tools - Info:', 'color: #4b99d2; font-weight: bold;', ...args);
@@ -124,7 +128,8 @@ async function logging(Level: 'debug' | 'info' | 'warn' | 'error' | 'log', ...ar
     else {
       console.log('%cGC Tools - Log:', 'color: black;', ...args);
     }
-  }
+    console.debug(fullStack);
+  });
 }
 
 export {

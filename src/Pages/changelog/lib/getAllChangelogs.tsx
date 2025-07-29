@@ -73,7 +73,15 @@ export const getAllChangelogs = (): Changelog[] => {
           The logging can be enabled in the extension settings and is off by default.
         </div>
       ),
-    },
+    }, {
+      version: '1.6.4',
+      titel: 'v1.6.4 - Fix event duration',
+      text: (
+        <div>
+          For some users, the event duration was not displayed correctly. This update should fix this issue.
+        </div>
+      ),
+    }
   ];
 
   return allChangelogs;

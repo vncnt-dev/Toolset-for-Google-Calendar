@@ -34,7 +34,7 @@ export const FastActionsModal = () => {
           nextIndexOf(fileContents[i], new RegExp('\n|\r'), fileContents[i].indexOf('TZID:') + 5),
         );
         if (timeZones.indexOf(timeZoneId) === -1) {
-          logging('info', 'new timezone: ', timeZoneId, timeZones);
+          logging('info', 'new timezone: ', timeZoneId, timeZones)
           timeZones.push(timeZoneId);
           if (combinedIcs.indexOf('END:VTIMEZONE') === -1) {
             combinedIcs =

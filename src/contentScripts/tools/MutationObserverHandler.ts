@@ -76,7 +76,12 @@ async function startWorkerCalendarView() {
     for (let calEventHtmlElement of calEventList) {
       let eventId = '';
       try {
-        eventId = decodeDataEventId(calEventHtmlElement.getAttribute('data-eventid')!);
+        const dataEventId = calEventHtmlElement.getAttribute('data-eventid')!;
+        if (dataEventId.startsWith('tasks_')) {
+          logging('debug', 'skipping tasks event: ', dataEventId);
+          continue;
+        }
+        eventId = decodeDataEventId(dataEventId);
         const thisEvent: CalEvent = getEventXhrDataById(eventId)!;
         if (!thisEvent) continue;
 
@@ -105,8 +110,19 @@ async function startWorkerCalendarView() {
     }
 
     for (let calEventHtmlElement of allOrMultiDayCalEventList) {
+      let eventId = '';
       try {
-        let eventId = decodeDataEventId(calEventHtmlElement.parentElement!.getAttribute('data-eventid')!);
+        const dataEventId = calEventHtmlElement.parentElement!.getAttribute('data-eventid');
+        if (!dataEventId) {
+          logging('warn', 'no data-eventid found in allOrMultiDay event: ', calEventHtmlElement);
+          continue;
+        }
+        if (dataEventId.startsWith('tasks_')) {
+          logging('debug', 'skipping tasks event: ', dataEventId);
+          continue;
+        }
+        eventId = decodeDataEventId(dataEventId);
+
         let thisEvent: CalEvent = getEventXhrDataById(eventId)!;
         if (!thisEvent) continue;
 
@@ -123,7 +139,7 @@ async function startWorkerCalendarView() {
         allOrMultiDayEventStorage.push(thisEvent);
         eventStorage.push({ ...thisEvent });
       } catch (error) {
-        logging('error', 'error while parsing allOrMultiDay event: ', error, calEventHtmlElement);
+        logging('error', 'error while parsing allOrMultiDay event: ', eventId, error, calEventHtmlElement);
       }
     }
 

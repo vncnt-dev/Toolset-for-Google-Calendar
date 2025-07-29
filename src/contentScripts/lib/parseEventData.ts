@@ -14,27 +14,34 @@ function startXhrListener() {
       const url = req?.responseURL?.toString() || '';
       if (url.includes('/sync.prefetcheventrange')) {
         logging('info', 'xhr event - sync.prefetcheventrange', req);
+        let data = [];
+        const responseText = req.responseText;
         try {
           // this is called when the calendar is initially loaded
-          let data = JSON.parse(escapeJsonString(req.responseText))[0][2][1];
-          updateXhrEventData(data);
+          const escapedJsonString = escapeJsonString(responseText);
+          data = JSON.parse(escapedJsonString)[0][2][1];
         } catch (error) {
-          logging('error', 'XMLHttpRequest - init', error);
+          logging('error', 'XMLHttpRequest - json', responseText, error);
         }
+        updateXhrEventData(data);
       } else if (url.includes('/sync.sync')) {
         // this is called when an event is added or edited
         try {
           logging('info', 'xhr event - sync.sync', req);
-          let responseAsJson = JSON.parse(escapeJsonString(req.responseText));
+          const escapedJsonString = escapeJsonString(req.responseText);
+          const responseAsJson = JSON.parse(escapedJsonString);
           // if no events are in the response, return (this is the case when an event is deleted
           let data;
           try {
             data = responseAsJson[0][2][3][0][1][0][3];
           } catch (error) {
+            logging('error', 'XMLHttpRequest - sync.sync', JSON.stringify(responseAsJson), error);
             return;
           }
-
-          if (!data) return;
+          if (!data) {
+            logging('error', 'no data found in xhr event - sync.sync', JSON.stringify(responseAsJson));
+            return;
+          }
           let initDataStrcucture = [['', [data]]]; // mock structure to match the structure of the initial data
           updateXhrEventData(initDataStrcucture);
         } catch (error) {
@@ -74,10 +81,18 @@ async function updateXhrEventData(XhrData: Array<any>) {
     logging('info', 'updateEventData: ', XhrData);
     XhrData.forEach((calender: any) => {
       // every calender has an array of events
-      if (!calender[1]) return;
-      const newEventData: CalEvent[] = calender[1].forEach((xhrEventEntry: Array<any>) => {
+      logging('info', 'parsing calender: ', calender[0], ' events: ', calender[1]?.length);
+      if (!calender[1]) {
+        logging('warn', 'warning: no events found in calender: ');
+        return;
+      }
+
+      calender[1].forEach((xhrEventEntry: Array<any>) => {
         let eventTimeArray: Date[] = getEventTimeArray(xhrEventEntry) as Date[];
-        if (!eventTimeArray) return;
+        if (!eventTimeArray)  {
+          logging('warn', 'warning: no event time found in xhrEventEntry: ', xhrEventEntry);
+          return;
+        }
         let eventDuration = calculateDurationInMinutes(eventTimeArray);
         let recurrenceRuleString = JSON.parse(`"${xhrEventEntry[12]?.[0] ?? ''}"`);
 
@@ -101,6 +116,7 @@ async function updateXhrEventData(XhrData: Array<any>) {
             newEvent.type = 'nonAllDayMultiDay';
           }
         }
+        logging('info', 'new/updating event: ', newEvent.id);
         xhrEventDataCache.setItemInCache(newEvent.id, newEvent);
       });
     });
@@ -198,20 +214,7 @@ function getEventCalendar(event: Array<any>): { id: string; name: string } {
  * The rest-reponse of the Google Calendar is not valid JSON, so we have to escape it before we can parse it
  */
 function escapeJsonString(str: String) {
-  return str
-    .slice(6)
-    .replace(/[\\]/g, '\\\\')
-    .replace(/[\/]/g, '\\/')
-    .replace(/[\b]/g, '\\b')
-    .replace(/[\f]/g, '\\f')
-    .replace(/[\n]/g, '\\n')
-    .replace(/[\r]/g, '\\r')
-    .replace(/[\t]/g, '\\t')
-    .replace(/[^,\[](")[^,\]]/g, function (match) {
-      // replace all " that are within a string
-      return match.replace(/"/g, "'");
-    })
-    .trim();
+  return str.slice(6).trim();
 }
 
 /** replace all \uXXXX unicode characters with the corresponding character */

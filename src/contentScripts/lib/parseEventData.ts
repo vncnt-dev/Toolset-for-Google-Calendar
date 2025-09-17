@@ -33,7 +33,7 @@ function startXhrListener() {
           // if no events are in the response, return (this is the case when an event is deleted
           let data;
           try {
-            data = responseAsJson[0][2][3][0][1][0][3];
+            data = responseAsJson[0][2][3][0][1][0][3] || responseAsJson[0][2][3][1][1][0][3]; // at least on Workplace accounts the second structure is used (not sure if allways or only in certain cases)
           } catch (error) {
             logging('error', 'XMLHttpRequest - sync.sync', JSON.stringify(responseAsJson), error);
             return;
@@ -89,7 +89,7 @@ async function updateXhrEventData(XhrData: Array<any>) {
 
       calender[1].forEach((xhrEventEntry: Array<any>) => {
         let eventTimeArray: Date[] = getEventTimeArray(xhrEventEntry) as Date[];
-        if (!eventTimeArray)  {
+        if (!eventTimeArray) {
           logging('warn', 'warning: no event time found in xhrEventEntry: ', xhrEventEntry);
           return;
         }

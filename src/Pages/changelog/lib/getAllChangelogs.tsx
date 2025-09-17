@@ -73,15 +73,25 @@ export const getAllChangelogs = (): Changelog[] => {
           The logging can be enabled in the extension settings and is off by default.
         </div>
       ),
-    }, {
+    },
+    {
       version: '1.6.4',
       titel: 'v1.6.4 - Fix event duration',
+      text: <div>For some users, the event duration was not displayed correctly. This update should fix this issue.</div>,
+    },
+    {
+      version: '1.6.5',
+      titel: 'v1.6.5 - Fixes multiple bugs that existed for GSuite/Workplace accounts',
       text: (
         <div>
-          For some users, the event duration was not displayed correctly. This update should fix this issue.
+          This update fixes multiple bugs that existed for GSuite/Workplace accounts, including:
+          <ul className="list-disc list-inside">
+            <li>Event duration need full reload to show up for new events</li>
+            <li> Event duration does not work for days with "Out of Office" events</li>
+          </ul>
         </div>
       ),
-    }
+    },
   ];
 
   return allChangelogs;

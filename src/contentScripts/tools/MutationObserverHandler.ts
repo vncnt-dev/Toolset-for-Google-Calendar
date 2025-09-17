@@ -91,7 +91,7 @@ async function startWorkerCalendarView() {
 
         if (!thisEvent.timeElement) {
           logging('warn', 'event without timeElement, will be skipped: ', thisEvent, calEventHtmlElement);
-          return;
+          continue;
         }
         // very short events (>1h) have a diffenent HTML structure
         if (thisEvent.timeElement?.classList.contains('EWOIrf')) thisEvent.type = 'short';

@@ -39,11 +39,13 @@ export const useShareableState = () => {
   const [lastSavedIdWarn, setLastSavedIdWarn] = useState<ToastId | null>(null);
   const [lastSavedDateError, setLastSavedDateError] = useState(new Date());
   const [lastSavedIdError, setLastSavedIdError] = useState<ToastId | null>(null);
+  const hasLoadedSettings = React.useRef(false);
 
   useEffect(() => {
     loadSettings()
       .then((settings) => {
         setSharedSettings(settings);
+        hasLoadedSettings.current = true;
       })
       .catch((error) => {
         logging('error', 'useShareableState: Error loading settings', error);
@@ -51,7 +53,15 @@ export const useShareableState = () => {
   }, []);
 
   useEffect(() => {
-    saveSharedSettings();
+    if (!hasLoadedSettings.current) return;
+
+    const timeoutId = window.setTimeout(() => {
+      void saveSharedSettings();
+    }, 150);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
   }, [sharedSettings]);
 
   const updateSharedSettings = (newSettings: any) => {

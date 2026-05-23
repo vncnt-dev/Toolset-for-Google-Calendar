@@ -1,4 +1,5 @@
 import { CalEvent } from '../../interfaces/eventInterface';
+import type { Settings } from '../../interfaces/SettingsInterface';
 import { loadSettings } from '../lib/SettingsHandler';
 import * as Tools from './tools';
 
@@ -54,9 +55,9 @@ function observerCalendarViewFunction(mutationsList: MutationRecord[] = []) {
   }
 }
 
-async function startWorkerCalendarView() {
+async function startWorkerCalendarView(settingsOverride?: Settings) {
   logging('info', 'startWorkerCalendarView');
-  let settings = await loadSettings();
+  let settings = settingsOverride ?? (await loadSettings());
   resetCache();
   setItemInCache('userInfo', getUserInfo());
   /**
@@ -98,7 +99,6 @@ async function startWorkerCalendarView() {
 
         if (!thisEvent.dates.start || !thisEvent.dates.end) continue;
 
-        eventStorage = eventStorage.filter((event) => event.parentElement !== thisEvent.parentElement);
         eventStorage.push({ ...thisEvent });
       } catch (error) {
         let errorMessage = '';
@@ -135,7 +135,6 @@ async function startWorkerCalendarView() {
           thisEvent.dates.start.setDisableTzCorrection(true).setDate(new Date(startDate));
           thisEvent.dates.end.setDisableTzCorrection(true).setDate(new Date(endDate));
         }
-        allOrMultiDayEventStorage = allOrMultiDayEventStorage.filter((event) => event.parentElement !== thisEvent.parentElement);
         allOrMultiDayEventStorage.push(thisEvent);
         eventStorage.push({ ...thisEvent });
       } catch (error) {
@@ -149,7 +148,7 @@ async function startWorkerCalendarView() {
       if (settings.calcDuration_isActive) Tools.injectDuration(thisEvent);
     }
 
-    if (settings.indicateAllDayEvents_isActive) Tools.indicateAllDayEvents(allOrMultiDayEventStorage);
+    if (settings.indicateAllDayEvents_isActive) Tools.indicateAllDayEvents(allOrMultiDayEventStorage, settings);
     if (settings.exportAsIcs_isActive) Tools.exportToIcalPrepare();
 
     logging('info', 'events number: ', eventStorage.length, ' storage: ', eventStorage);
@@ -163,8 +162,8 @@ async function startWorkerCalendarView() {
   }
 }
 
-async function startWorkerCompleteHTMLBody(mutationsList: MutationRecord[] = []) {
-  const settings = await loadSettings();
+async function startWorkerCompleteHTMLBody(mutationsList: MutationRecord[] = [], settingsOverride?: Settings) {
+  const settings = settingsOverride ?? (await loadSettings());
   disconnectObserver();
   if (settings.removeGMeets_isActive) Tools.removeGMeets();
 

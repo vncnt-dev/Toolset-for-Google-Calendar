@@ -4,7 +4,7 @@ import ICAL from 'ical.js';
 import type { CalEvent } from '../../interfaces/eventInterface';
 import { UserInfo } from '../../interfaces/userInfo';
 import { CustomDateHandler } from './customDateHandler';
-import { loadSettings } from './SettingsHandler';
+import { getSettingsSnapshot } from './SettingsHandler';
 
 /* based on https://stackoverflow.com/a/46428456 */
 function decodeDataEventId(dataEventId: string): string {
@@ -167,18 +167,17 @@ function htmlStringToHtmlElement(html: string): HTMLElement {
 }
 
 function logging(Level: 'debug' | 'info' | 'warn' | 'error' | 'log', ...args: any[]) {
+  if (!getSettingsSnapshot().isLoggingEnabled) return;
+
   const fullStack = new Error().stack;
-  loadSettings().then((settings) => {
-    if (!settings.isLoggingEnabled) return;
-    if (Level === 'warn') console.log('%cGC Tools - Warning:', 'color: orange; font-weight: bold;', ...args);
-    else if (Level === 'error') console.error('%cGC Tools - Error:', 'color: #ff416d; font-weight: bold;', ...args);
-    else if (Level === 'info') console.info('%cGC Tools - Info:', 'color: #4b99d2; font-weight: bold;', ...args);
-    else if (Level === 'debug') console.debug('%cGC Tools - Debug:', 'color: #55b080; font-weight: bold;', ...args);
-    else {
-      console.log('%cGC Tools - Log:', 'color: black;', ...args);
-    }
-    console.debug(fullStack);
-  });
+  if (Level === 'warn') console.log('%cGC Tools - Warning:', 'color: orange; font-weight: bold;', ...args);
+  else if (Level === 'error') console.error('%cGC Tools - Error:', 'color: #ff416d; font-weight: bold;', ...args);
+  else if (Level === 'info') console.info('%cGC Tools - Info:', 'color: #4b99d2; font-weight: bold;', ...args);
+  else if (Level === 'debug') console.debug('%cGC Tools - Debug:', 'color: #55b080; font-weight: bold;', ...args);
+  else {
+    console.log('%cGC Tools - Log:', 'color: black;', ...args);
+  }
+  console.debug(fullStack);
 }
 
 export {

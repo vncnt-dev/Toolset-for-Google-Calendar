@@ -1,7 +1,7 @@
 import { calculateHashSha256, getDateFromDateKey, isBetweenDateTimes, isBetweenDays, isSameDay, logging } from '../lib/miscellaneous';
 import { CalEvent } from '../../interfaces/eventInterface';
 import { Settings } from '../../interfaces/SettingsInterface';
-import { loadSettings } from '../lib/SettingsHandler';
+import { getSettingsSnapshot } from '../lib/SettingsHandler';
 import { getItemFromCache, setItemInCache } from '../lib/sessionCache';
 
 import './indicateAllAndMultiDayEvents.css';
@@ -10,8 +10,7 @@ import { log } from 'console';
 const daysMaxTransparency = 30;
 const daysMinTransparency = 1;
 
-var indicateAllDayEvents = async (eventStorageMultiDay: CalEvent[]) => {
-  let settings = await loadSettings();
+var indicateAllDayEvents = async (eventStorageMultiDay: CalEvent[], settings: Settings = getSettingsSnapshot()) => {
   if (eventStorageMultiDay.length === 0) return;
   // heigt of 1h based on sidebar timeline elements
   setItemInCache('baseHeight', (document.querySelector('.XsRa1c')! as HTMLElement).offsetHeight);
@@ -20,28 +19,27 @@ var indicateAllDayEvents = async (eventStorageMultiDay: CalEvent[]) => {
 
   const dateColumnElements = Array.from(document.querySelectorAll('.BiKU4b'));
   try {
-    for (const changedEvent of eventStorageMultiDay) {
-      const id = await generateID(changedEvent);
-      if (document.querySelector(`[gcaltoolsid="${id}"]`) !== null) continue; // indicator element already exists
-      logging('info', 'indicateAllDayEvents: eventId', changedEvent.id, ' sha: ', id, ' event: ', JSON.stringify([changedEvent.dates,  changedEvent.name]));
+    for (const DateColumnElement of dateColumnElements) {
+      const DateOfDateColumnElement = getDateFromDateKey(parseInt(DateColumnElement.getAttribute('data-datekey')!));
+      const eventsForDay = eventStorageMultiDay.filter((event) => isBetweenDays(event, DateOfDateColumnElement));
 
-      for (const DateColumnElement of dateColumnElements) {
-        const DateOfDateColumnElement = getDateFromDateKey(parseInt(DateColumnElement.getAttribute('data-datekey')!));
-        // if event is on current calDate, proceed
-        if (isBetweenDays(changedEvent, DateOfDateColumnElement)) {
-          const indicatorElement = document.createElement('div');
-          indicatorElement.setAttribute('gcaltoolsid', id);
-          indicatorElement.classList.add('allDayEventIndicator', 'EfQccc');
-          indicatorElement.style.backgroundColor = `${changedEvent.timeElement!.style.backgroundColor}`;
-          indicatorElement.style.opacity = `${calculateOpacity(changedEvent)}`;
-          indicatorElement.style.top = `${calculateTop(changedEvent, DateOfDateColumnElement)}px`;
-          indicatorElement.style.height = `${calculateHeight(changedEvent, DateOfDateColumnElement)}px`;
-          calculateWidthAndPos(changedEvent, eventStorageMultiDay, DateOfDateColumnElement, indicatorElement, settings);
+      for (const changedEvent of eventsForDay) {
+        const id = await generateID(changedEvent);
+        if (document.querySelector(`[gcaltoolsid="${id}"]`) !== null) continue; // indicator element already exists
+        logging('info', 'indicateAllDayEvents: eventId', changedEvent.id, ' sha: ', id, ' event: ', JSON.stringify([changedEvent.dates, changedEvent.name]));
 
-          const eventContainer = DateColumnElement.querySelector('div.feMFof.A3o4Oe');
-          if (eventContainer) {
-            eventContainer.appendChild(indicatorElement);
-          }
+        const indicatorElement = document.createElement('div');
+        indicatorElement.setAttribute('gcaltoolsid', id);
+        indicatorElement.classList.add('allDayEventIndicator', 'EfQccc');
+        indicatorElement.style.backgroundColor = `${changedEvent.timeElement!.style.backgroundColor}`;
+        indicatorElement.style.opacity = `${calculateOpacity(changedEvent)}`;
+        indicatorElement.style.top = `${calculateTop(changedEvent, DateOfDateColumnElement)}px`;
+        indicatorElement.style.height = `${calculateHeight(changedEvent, DateOfDateColumnElement)}px`;
+        calculateWidthAndPos(changedEvent, eventsForDay, DateOfDateColumnElement, indicatorElement, settings);
+
+        const eventContainer = DateColumnElement.querySelector('div.feMFof.A3o4Oe');
+        if (eventContainer) {
+          eventContainer.appendChild(indicatorElement);
         }
       }
     }
@@ -106,13 +104,11 @@ var calculateWidthAndPos = function (
   settings: Settings,
 ): HTMLDivElement {
   // get count of parrallel multi-day/all-day events
-  let parrallelEvents = eventStorageMultiDay.filter((eventInStorage) => {
-    if (
-      isBetweenDays(eventInStorage, DateOfDateColumnElement) && // event is on current Date
-      (isBetweenDateTimes(eventInStorage.dates.start, eventInStorage.dates.end, event.dates.start) || // current event starts during eventInStorage
-        isBetweenDateTimes(event.dates.start, event.dates.end, eventInStorage.dates.start)) // eventInStorage starts during current event
-    )
-      return eventInStorage;
+  const parrallelEvents = eventStorageMultiDay.filter((eventInStorage) => {
+    return (
+      isBetweenDateTimes(eventInStorage.dates.start, eventInStorage.dates.end, event.dates.start) || // current event starts during eventInStorage
+      isBetweenDateTimes(event.dates.start, event.dates.end, eventInStorage.dates.start) // eventInStorage starts during current event
+    );
   });
 
   let indexOfCurrentEvent = parrallelEvents.findIndex((eventInStorage) => {

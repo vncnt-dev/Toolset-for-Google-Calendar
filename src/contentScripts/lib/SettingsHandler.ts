@@ -17,66 +17,96 @@ var defaultSettings: Settings = {
   isLoggingEnabled: false,
 };
 
-var settings: Settings;
+let settings: Settings | undefined;
+let settingsLoadPromise: Promise<Settings> | undefined;
+
+function cloneDefaultSettings(): Settings {
+  return structuredClone(defaultSettings);
+}
+
+function normalizeSettings(rawSettings: Partial<Settings> | undefined): Settings {
+  const normalizedSettings = Object.assign(cloneDefaultSettings(), rawSettings);
+
+  // migration
+  // v1.2 -> v1.3: settings name changed
+  // @ts-expect-error
+  if (normalizedSettings.indicateFullDayEvents_isActive !== undefined) {
+    // @ts-expect-error
+    normalizedSettings.indicateAllDayEvents_isActive = normalizedSettings.indicateFullDayEvents_isActive;
+    // @ts-expect-error
+    normalizedSettings.indicateAllDayEvents_maxTransparency = normalizedSettings.indicateFullDayEvents_maxTransparency;
+    // @ts-expect-error
+    normalizedSettings.indicateAllDayEvents_minTransparency = normalizedSettings.indicateFullDayEvents_minTransparency;
+    // @ts-expect-error
+    normalizedSettings.indicateAllDayEvents_maxWidth = normalizedSettings.indicateFullDayEvents_maxWidth;
+    // @ts-expect-error
+    delete normalizedSettings.indicateFullDayEvents_isActive;
+    // @ts-expect-error
+    delete normalizedSettings.indicateFullDayEvents_maxTransparency;
+    // @ts-expect-error
+    delete normalizedSettings.indicateFullDayEvents_minTransparency;
+    // @ts-expect-error
+    delete normalizedSettings.indicateFullDayEvents_maxWidth;
+  }
+
+  // v1.6.2 -> v1.6.3
+  // add isLoggingEnabled setting
+  if (normalizedSettings.isLoggingEnabled === undefined) {
+    normalizedSettings.isLoggingEnabled = false;
+  }
+
+  return normalizedSettings;
+}
+
+function areSettingsEqual(left: Settings, right: Settings): boolean {
+  return Object.keys(right).every((key) => left[key as keyof Settings] === right[key as keyof Settings]);
+}
+
+if (typeof chrome !== 'undefined' && chrome.storage?.onChanged) {
+  chrome.storage.onChanged.addListener((changes, areaName) => {
+    if (areaName !== 'sync' || !changes.settings) return;
+    settings = normalizeSettings(changes.settings.newValue as Partial<Settings> | undefined);
+  });
+}
 
 function loadSettings(force = false) {
-  if (force || !settings) {
-    return storage.sync.get('settings').then((e) => {
-      settings = Object.assign(structuredClone(defaultSettings), e.settings);
+  if (!force && settings) {
+    return Promise.resolve(settings);
+  }
 
-      // migration
-      // v1.2 -> v1.3: settings name changed
-      // @ts-expect-error
-      if (settings.indicateFullDayEvents_isActive !== undefined) {
-        // @ts-expect-error
-        settings.indicateAllDayEvents_isActive = settings.indicateFullDayEvents_isActive;
-        // @ts-expect-error
-        settings.indicateAllDayEvents_maxTransparency = settings.indicateFullDayEvents_maxTransparency;
-        // @ts-expect-error
-        settings.indicateAllDayEvents_minTransparency = settings.indicateFullDayEvents_minTransparency;
-        // @ts-expect-error
-        settings.indicateAllDayEvents_maxWidth = settings.indicateFullDayEvents_maxWidth;
-        // @ts-expect-error
-        delete settings.indicateFullDayEvents_isActive;
-        // @ts-expect-error
-        delete settings.indicateFullDayEvents_maxTransparency;
-        // @ts-expect-error
-        delete settings.indicateFullDayEvents_minTransparency;
-        // @ts-expect-error
-        delete settings.indicateFullDayEvents_maxWidth;
-        saveSettings(settings);
-      }
-      // v1.6.2 -> v1.6.3
-      // add isLoggingEnabled setting
-      if (settings.isLoggingEnabled === undefined) {
-        settings.isLoggingEnabled = false;
-        saveSettings(settings);
-      }
-
-      return settings;
-    });
-  } else {
-    return new Promise<Settings>((resolve) => {
-      resolve(settings);
+  if (!settingsLoadPromise || force) {
+    settingsLoadPromise = storage.sync.get('settings').then((storedSettings) => {
+      const loadedSettings = normalizeSettings(storedSettings.settings);
+      settings = loadedSettings;
+      return loadedSettings;
     });
   }
+
+  return settingsLoadPromise;
+}
+
+function getSettingsSnapshot(): Settings {
+  return settings ?? defaultSettings;
 }
 
 // allow subset of settings
-function saveSettings(newSettings: Partial<Settings>): Promise<boolean> {
+async function saveSettings(newSettings: Partial<Settings>): Promise<boolean> {
   // delete undefined values
   (Object.keys(newSettings) as Array<keyof Settings>).forEach((key) => newSettings[key] === undefined && delete newSettings[key]);
-  if (!settings || Object.keys(newSettings).length === 0) return Promise.resolve(true);
+  if (Object.keys(newSettings).length === 0) return true;
 
-  settings = Object.assign(structuredClone(settings), newSettings);
-  return storage.sync
-    .set({ settings: settings })
-    .then((e) => {
-      return true;
-    })
-    .catch((error) => {
-      logging('error', 'settings save error: ', error);
-      return false;
-    });
+  const currentSettings = settings ?? (await loadSettings());
+  const nextSettings = normalizeSettings({ ...currentSettings, ...newSettings });
+  if (areSettingsEqual(currentSettings, nextSettings)) return true;
+
+  settings = nextSettings;
+
+  try {
+    await storage.sync.set({ settings: nextSettings });
+    return true;
+  } catch (error) {
+    logging('error', 'settings save error: ', error);
+    return false;
+  }
 }
-export { loadSettings, saveSettings, defaultSettings };
+export { loadSettings, saveSettings, defaultSettings, getSettingsSnapshot };

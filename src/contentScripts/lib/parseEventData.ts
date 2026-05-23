@@ -1,11 +1,10 @@
 import { CalEvent, EventDates } from '../../interfaces/eventInterface';
 import { loadSettings } from './SettingsHandler';
-import { observerCalendarViewFunction } from '../tools/MutationObserverHandler';
 import { CustomDateHandler } from './customDateHandler';
 import * as xhrEventDataCache from './xhrEventDataCache';
 import { logging } from './miscellaneous';
 
-function startXhrListener() {
+function startXhrListener(onEventDataUpdated: () => void = () => {}) {
   insertScriptToPage('XHRInterceptor', true); // intercepts all XHR requests and dispatches them as a custom event
   // Event listener
   document.addEventListener('GCT_XMLHttpRequest', function (event: CustomEventInit) {
@@ -23,7 +22,7 @@ function startXhrListener() {
         } catch (error) {
           logging('error', 'XMLHttpRequest - json', responseText, error);
         }
-        updateXhrEventData(data);
+        updateXhrEventData(data, onEventDataUpdated);
       } else if (url.includes('/sync.sync')) {
         // this is called when an event is added or edited
         try {
@@ -43,7 +42,7 @@ function startXhrListener() {
             return;
           }
           let initDataStrcucture = [['', [data]]]; // mock structure to match the structure of the initial data
-          updateXhrEventData(initDataStrcucture);
+          updateXhrEventData(initDataStrcucture, onEventDataUpdated);
         } catch (error) {
           logging('error', 'GCT_XMLHttpRequest-update', error);
         }
@@ -74,7 +73,7 @@ function getEventXhrDataById(HtmlEventId: string): CalEvent | undefined {
 
   return event;
 }
-async function updateXhrEventData(XhrData: Array<any>) {
+async function updateXhrEventData(XhrData: Array<any>, onEventDataUpdated: () => void) {
   let settings = await loadSettings();
   /* console.log(' updateEventData', XhrData); */
   try {
@@ -120,8 +119,8 @@ async function updateXhrEventData(XhrData: Array<any>) {
         xhrEventDataCache.setItemInCache(newEvent.id, newEvent);
       });
     });
-    // call observerCalendarViewFunction to make sure, that the displayed info is up to date
-    observerCalendarViewFunction();
+    // notify the caller to refresh the visible calendar state
+    onEventDataUpdated();
   } catch (error) {
     logging('error', 'updateEventData: ', error, XhrData);
   }

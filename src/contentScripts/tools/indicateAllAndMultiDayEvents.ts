@@ -12,6 +12,12 @@ const daysMinTransparency = 1;
 
 var indicateAllDayEvents = async (eventStorageMultiDay: CalEvent[], settings: Settings = getSettingsSnapshot()) => {
   if (eventStorageMultiDay.length === 0) return;
+
+  // Deduplicate events by ID so we don't process multiple HTML chunks for the same event
+  eventStorageMultiDay = eventStorageMultiDay.filter((event, index, self) =>
+    index === self.findIndex((e) => e.id === event.id)
+  );
+
   // heigt of 1h based on sidebar timeline elements
   setItemInCache('baseHeight', (document.querySelector('.XsRa1c')! as HTMLElement).offsetHeight);
   setItemInCache('maxTransparency', settings.indicateAllDayEvents_maxTransparency);
@@ -24,7 +30,7 @@ var indicateAllDayEvents = async (eventStorageMultiDay: CalEvent[], settings: Se
       const eventsForDay = eventStorageMultiDay.filter((event) => isBetweenDays(event, DateOfDateColumnElement));
 
       for (const changedEvent of eventsForDay) {
-        const id = await generateID(changedEvent);
+        const id = await generateID(changedEvent, DateOfDateColumnElement);
         if (document.querySelector(`[gcaltoolsid="${id}"]`) !== null) continue; // indicator element already exists
         logging('info', 'indicateAllDayEvents: eventId', changedEvent.id, ' sha: ', id, ' event: ', JSON.stringify([changedEvent.dates, changedEvent.name]));
 
@@ -49,8 +55,8 @@ var indicateAllDayEvents = async (eventStorageMultiDay: CalEvent[], settings: Se
 };
 
 /** generates ID for indicator element */
-var generateID = async function (event: CalEvent) {
-  const rawID = JSON.stringify([event.dates, event.timeElement!.style.backgroundColor, event.name]);
+var generateID = async function (event: CalEvent, columnDate: Date) {
+  const rawID = JSON.stringify([event.dates, event.timeElement!.style.backgroundColor, event.name, columnDate.toISOString()]);
   return 'ID_' + (await calculateHashSha256(rawID));
 };
 

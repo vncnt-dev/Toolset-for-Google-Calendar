@@ -6,7 +6,7 @@ export const OptionsFormActions = () => {
 
   return (
     <div id="actions" style={{ height: '75px' }}>
-      <button className="btn btn-error mr-2 mt-3" onClick={restoreDefaultSharedSettings}>
+      <button className="btn btn-error text-white mr-2 mt-3" onClick={restoreDefaultSharedSettings}>
         Restore default
       </button>
     </div>

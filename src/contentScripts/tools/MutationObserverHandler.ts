@@ -5,6 +5,7 @@ import * as Tools from './tools';
 
 import { getEventXhrDataById } from '../lib/parseEventData';
 import { decodeDataEventId, getUserInfo, logging } from '../lib/miscellaneous';
+import { CustomDateHandler } from '../lib/customDateHandler';
 import { resetCache, setItemInCache } from '../lib/sessionCache';
 
 MutationObserver = window.MutationObserver;
@@ -83,8 +84,16 @@ async function startWorkerCalendarView(settingsOverride?: Settings) {
           continue;
         }
         eventId = decodeDataEventId(dataEventId);
-        const thisEvent: CalEvent = getEventXhrDataById(eventId)!;
-        if (!thisEvent) continue;
+        const originalEvent: CalEvent = getEventXhrDataById(eventId)!;
+        if (!originalEvent) continue;
+
+        const thisEvent: CalEvent = { ...originalEvent };
+        if (originalEvent.dates) {
+          thisEvent.dates = {
+            start: originalEvent.dates.start ? new CustomDateHandler(new Date(originalEvent.dates.start.getOriginalJsDateObject().getTime())) : originalEvent.dates.start,
+            end: originalEvent.dates.end ? new CustomDateHandler(new Date(originalEvent.dates.end.getOriginalJsDateObject().getTime())) : originalEvent.dates.end,
+          };
+        }
 
         thisEvent.parentElement = calEventHtmlElement;
         thisEvent.timeElement = (calEventHtmlElement.querySelector('div.lhydbb.gVNoLb.EiZ8Dd:not(.event-duration)') ||
@@ -123,8 +132,16 @@ async function startWorkerCalendarView(settingsOverride?: Settings) {
         }
         eventId = decodeDataEventId(dataEventId);
 
-        let thisEvent: CalEvent = getEventXhrDataById(eventId)!;
-        if (!thisEvent) continue;
+        let originalEvent: CalEvent = getEventXhrDataById(eventId)!;
+        if (!originalEvent) continue;
+
+        let thisEvent: CalEvent = { ...originalEvent };
+        if (originalEvent.dates) {
+          thisEvent.dates = {
+            start: originalEvent.dates.start ? new CustomDateHandler(new Date(originalEvent.dates.start.getOriginalJsDateObject().getTime())) : originalEvent.dates.start,
+            end: originalEvent.dates.end ? new CustomDateHandler(new Date(originalEvent.dates.end.getOriginalJsDateObject().getTime())) : originalEvent.dates.end,
+          };
+        }
 
         thisEvent.parentElement = calEventHtmlElement.parentElement!;
         thisEvent.timeElement = calEventHtmlElement;

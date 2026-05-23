@@ -1,39 +1,46 @@
 import { get } from 'http';
 import { CalEvent, EventDates } from '../../interfaces/eventInterface';
 import { isSameDay } from '../lib/miscellaneous';
-import { loadSettings } from '../lib/settingsHandler';
-import { getItemFromCache } from '../lib/sessionCache';
+import { getSettingsSnapshot } from '../lib/SettingsHandler';
 
 function addHoverOverInformation(event: CalEvent) {
+  if (!event.parentElement) return;
+
+  if (event.parentElement.dataset.gctHoverBound === 'true') return;
+  event.parentElement.dataset.gctHoverBound = 'true';
+
   let innerText = formatTime(event);
   if (event.durationFormated) innerText += ` (${event.durationFormated})`;
   if (event.name) innerText += `\n${event.name}`;
   if (event.location) innerText += `\n${event.location}`;
   if (event.description) innerText += `\n\n${event.description}`;
 
+  const hoverInformationElement = document.getElementById('hoverInformationElement');
+  const hoverInformationElementText = document.getElementById('hoverInformationElementText');
+  if (!hoverInformationElement || !hoverInformationElementText) return;
+
   // set position and content of hoverInformationElement
-  event.parentElement!.addEventListener('mousemove', (event) =>
-    (async (innerText) => {
-      let settings = await loadSettings();
-      if (settings.hoverInformation_isActive) {
-        document.getElementById('hoverInformationElementText')!.innerText = innerText;
-        let hoverInformationElement = document.getElementById('hoverInformationElement')!;
-        hoverInformationElement.style.visibility = 'visible';
-        // position hoverInformationElement under mouse pointer
-        // if mouse in near the buttom of the screen, move it up
-        if (event.clientY + hoverInformationElement.clientHeight > window.innerHeight) {
-          hoverInformationElement.style.top = `${event.clientY - hoverInformationElement.clientHeight + 10}px`;
-        } else {
-          hoverInformationElement.style.top = `${event.clientY - 10}px`;
-        }
-        hoverInformationElement.style.left = `${event.clientX}px`;
-      }
-    })(innerText),
-  );
+  event.parentElement.addEventListener('mousemove', (mouseEvent) => {
+    if (!getSettingsSnapshot().hoverInformation_isActive) {
+      hoverInformationElement.style.visibility = 'hidden';
+      return;
+    }
+
+    hoverInformationElementText.innerText = innerText;
+    hoverInformationElement.style.visibility = 'visible';
+    // position hoverInformationElement under mouse pointer
+    // if mouse in near the bottom of the screen, move it up
+    if (mouseEvent.clientY + hoverInformationElement.clientHeight > window.innerHeight) {
+      hoverInformationElement.style.top = `${mouseEvent.clientY - hoverInformationElement.clientHeight + 10}px`;
+    } else {
+      hoverInformationElement.style.top = `${mouseEvent.clientY - 10}px`;
+    }
+    hoverInformationElement.style.left = `${mouseEvent.clientX}px`;
+  });
 
   // hoverout eventlistener
-  event.parentElement!.addEventListener('mouseout', (event) => {
-    document.getElementById('hoverInformationElement')!.style.visibility = 'hidden';
+  event.parentElement.addEventListener('mouseout', () => {
+    hoverInformationElement.style.visibility = 'hidden';
   });
 }
 

@@ -1,9 +1,30 @@
-import { useEffect, useState } from 'react';
-import { loadSettings, saveSettings, defaultSettings } from '../../../contentScripts/lib/settingsHandler';
+import React from 'react';
+import { createContext, useContext, useEffect, useState } from 'react';
+import { loadSettings, saveSettings, defaultSettings } from '../../../contentScripts/lib/SettingsHandler';
 import { Id as ToastId, ToastOptions, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { log } from 'console';
 import { logging } from '../../../contentScripts/lib/miscellaneous';
+import type { ReactNode } from 'react';
+
+type ShareableStateValue = ReturnType<typeof useShareableState>;
+
+const ShareableStateContext = createContext<ShareableStateValue | null>(null);
+
+export const ShareableStateProvider = ({ children }: { children: ReactNode }) => {
+  const shareableState = useShareableState();
+
+  return <ShareableStateContext.Provider value={shareableState}>{children}</ShareableStateContext.Provider>;
+};
+
+export const useShareableStateContext = () => {
+  const shareableState = useContext(ShareableStateContext);
+
+  if (!shareableState) {
+    throw new Error('useShareableStateContext must be used within a ShareableStateProvider');
+  }
+
+  return shareableState;
+};
 
 export const useShareableState = () => {
   const toastConfig: ToastOptions<{}> = {
@@ -18,11 +39,14 @@ export const useShareableState = () => {
   const [lastSavedIdWarn, setLastSavedIdWarn] = useState<ToastId | null>(null);
   const [lastSavedDateError, setLastSavedDateError] = useState(new Date());
   const [lastSavedIdError, setLastSavedIdError] = useState<ToastId | null>(null);
+  const hasLoadedSettings = React.useRef(false);
+  const skipNextSave = React.useRef(true);
 
   useEffect(() => {
     loadSettings()
       .then((settings) => {
         setSharedSettings(settings);
+        hasLoadedSettings.current = true;
       })
       .catch((error) => {
         logging('error', 'useShareableState: Error loading settings', error);
@@ -30,7 +54,20 @@ export const useShareableState = () => {
   }, []);
 
   useEffect(() => {
-    saveSharedSettings();
+    if (!hasLoadedSettings.current) return;
+
+    if (skipNextSave.current) {
+      skipNextSave.current = false;
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      void saveSharedSettings();
+    }, 150);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
   }, [sharedSettings]);
 
   const updateSharedSettings = (newSettings: any) => {
@@ -41,7 +78,7 @@ export const useShareableState = () => {
     let now = new Date();
 
     if (sharedSettings.indicateAllDayEvents_minTransparency > sharedSettings.indicateAllDayEvents_maxTransparency) {
-      if (now.getTime() - lastSavedDateError.getTime() > 2900) {
+      if (lastSavedIdError === null || now.getTime() - lastSavedDateError.getTime() > 2900) {
         setLastSavedIdError(
           toast.error('The minimum transparency cannot be higher than the maximum transparency.', {
             position: 'bottom-right',
@@ -49,7 +86,7 @@ export const useShareableState = () => {
           }),
         );
       } else {
-        toast.update(lastSavedIdError!, {
+        toast.update(lastSavedIdError, {
           position: 'bottom-right',
           autoClose: 3_000,
           render: 'The minimum transparency cannot be higher than the maximum transparency.',
@@ -63,20 +100,20 @@ export const useShareableState = () => {
 
 
     if (await wasSaved) {
-      if (now.getTime() - lastSavedDateSuccess.getTime() > 2900) {
+      if (lastSavedIdSuccess === null || now.getTime() - lastSavedDateSuccess.getTime() > 2900) {
         setLastSavedIdSuccess(toast.success('Saved successfully', toastConfig));
       } else {
-        toast.update(lastSavedIdSuccess!, {
+        toast.update(lastSavedIdSuccess, {
           ...toastConfig,
           render: 'Saved successfully',
         });
       }
       setLastSavedDateSuccess(now);
     } else {
-      if (now.getTime() - lastSavedDateWarn.getTime() > 14900) {
+      if (lastSavedIdWarn === null || now.getTime() - lastSavedDateWarn.getTime() > 14900) {
         setLastSavedIdWarn(toast.warn('Error while saving!', toastConfig));
       } else {
-        toast.update(lastSavedIdWarn!, {
+        toast.update(lastSavedIdWarn, {
           ...toastConfig,
           render: 'Error while saving!',
         });
@@ -95,7 +132,7 @@ export const useShareableState = () => {
     logging('info', 'restoreDefaultSharedSettings');
     setSharedSettings(defaultSettings);
     saveSettings(defaultSettings);
-    
+
     setLastSavedIdSuccess(toast.success('Restored Default', toastConfig));
   };
 

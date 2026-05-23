@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { Settings, SettingsIsActive } from '../../interfaces/SettingsInterface';
-import { loadSettings, saveSettings } from '../lib/settingsHandler';
+import { loadSettings, saveSettings } from '../lib/SettingsHandler';
 import { downloadStringAsFile, logging } from '../lib/miscellaneous';
 
 export const FastActionsModal = () => {
@@ -141,13 +141,11 @@ const FastSettingsToggle = (props: { feature: keyof SettingsIsActive; name: stri
     });
   }, []);
 
-  useEffect(() => {
-    saveSettings({ [props.feature]: settings[props.feature] });
-  }, [settings]);
-
-  const toggleFeature = (feature: keyof SettingsIsActive) => {
+  const toggleFeature = async (feature: keyof SettingsIsActive) => {
     logging('info', 'toggleFeature', feature, settings[feature]);
-    setSettings({ ...settings, [feature]: !settings[feature] });
+    const nextSettings = { ...settings, [feature]: !settings[feature] };
+    setSettings(nextSettings);
+    await saveSettings({ [feature]: nextSettings[feature] });
   };
 
   return (

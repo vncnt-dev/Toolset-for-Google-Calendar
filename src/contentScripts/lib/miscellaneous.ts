@@ -1,10 +1,14 @@
 import ReactDOMServer from 'react-dom/server';
+import type { ReactNode } from 'react';
+import ICAL from 'ical.js';
+import type { CalEvent } from '../../interfaces/eventInterface';
 import { UserInfo } from '../../interfaces/userInfo';
 import { CustomDateHandler } from './customDateHandler';
-import { loadSettings } from './settingsHandler';
+import { getSettingsSnapshot } from './SettingsHandler';
 
 /* based on https://stackoverflow.com/a/46428456 */
 function decodeDataEventId(dataEventId: string): string {
+  if (dataEventId.includes('_')) dataEventId = dataEventId.split('_')[1]; // f.e. birthdays have an id like: bday_<encodedId></encodedId>, while normal events have just <encodedId>
   let decoded = atob(dataEventId); // n17t3dbrekq5om2hj91t4pjefk_20221013T210000Z mail@...  -->  >id_date e-mail<
   return decoded.slice(0, decoded.indexOf(' '));
 }
@@ -67,15 +71,61 @@ function getDateFromDateKey(dateKey: number): Date {
   return new Date(year + 1970, month, day, 0, 0, 0, 0);
 }
 
-function isBetweenDays(startDate: Date | CustomDateHandler, endDate: Date | CustomDateHandler, testDate: Date | CustomDateHandler): boolean {
-  if (startDate instanceof CustomDateHandler) startDate = startDate.getJsDateObject();
-  if (endDate instanceof CustomDateHandler) endDate = endDate.getJsDateObject();
-  if (testDate instanceof CustomDateHandler) testDate = testDate.getJsDateObject();
+function isBetweenDays(event: CalEvent, testDateInput: Date | CustomDateHandler): boolean {
+  const startDate = resolveDate(event.dates.start);
+  const endDate = resolveDate(event.dates.end);
+  const testDate = resolveDate(testDateInput);
 
-  const startTime = startDate.setHours(0, 0, 0, 0);
-  const endTime = endDate.setHours(23, 59, 59, 999);
+  if (!event.recurrenceRule) {
+    return isWithinDayRange(startDate, endDate, testDate);
+  }
+
+  return isWithinRecurringRange(startDate, endDate, testDate, event.recurrenceRule) || isWithinDayRange(startDate, endDate, testDate);
+}
+
+function resolveDate(date: Date | CustomDateHandler): Date {
+  return date instanceof CustomDateHandler ? date.getJsDateObject() : new Date(date.getTime());
+}
+
+function isWithinDayRange(startDate: Date, endDate: Date, testDate: Date): boolean {
+  const startTime = new Date(startDate.getTime());
+  startTime.setHours(0, 0, 0, 0);
+
+  const endTime = new Date(endDate.getTime());
+  endTime.setHours(23, 59, 59, 999);
+
   const testTime = testDate.getTime();
-  return startTime <= testTime && testTime <= endTime;
+  return startTime.getTime() <= testTime && testTime <= endTime.getTime();
+}
+
+function isWithinRecurringRange(startDate: Date, endDate: Date, testDate: Date, recurrenceRule: string): boolean {
+  try {
+    const recur = ICAL.Recur.fromString(recurrenceRule.startsWith('RRULE:') ? recurrenceRule.slice(6) : recurrenceRule);
+    const iterator = recur.iterator(ICAL.Time.fromJSDate(startDate));
+    const eventDuration = endDate.getTime() - startDate.getTime();
+    const testStart = new Date(testDate.getTime());
+    testStart.setHours(0, 0, 0, 0);
+    const testEnd = new Date(testDate.getTime());
+    testEnd.setHours(23, 59, 59, 999);
+
+    let nextOccurrence;
+    while ((nextOccurrence = iterator.next())) {
+      const occurrenceStart = nextOccurrence.toJSDate();
+      const occurrenceEnd = new Date(occurrenceStart.getTime() + eventDuration);
+
+      if (occurrenceStart.getTime() > testEnd.getTime()) {
+        return false;
+      }
+
+      if (occurrenceStart.getTime() <= testEnd.getTime() && occurrenceEnd.getTime() >= testStart.getTime()) {
+        return true;
+      }
+    }
+  } catch (error) {
+    logging('warn', 'isBetweenDays: failed to evaluate recurrence rule', recurrenceRule, error);
+  }
+
+  return false;
 }
 
 /**
@@ -106,7 +156,7 @@ function downloadStringAsFile(string: string, filename: string) {
   URL.revokeObjectURL(a.href);
 }
 
-function JsxElementToHtmlElement(jsxElement: JSX.Element): HTMLElement {
+function JsxElementToHtmlElement(jsxElement: ReactNode): HTMLElement {
   return htmlStringToHtmlElement(ReactDOMServer.renderToStaticMarkup(jsxElement));
 }
 
@@ -118,18 +168,17 @@ function htmlStringToHtmlElement(html: string): HTMLElement {
 }
 
 function logging(Level: 'debug' | 'info' | 'warn' | 'error' | 'log', ...args: any[]) {
+  if (!getSettingsSnapshot().isLoggingEnabled) return;
+
   const fullStack = new Error().stack;
-  loadSettings().then((settings) => {
-    if (!settings.isLoggingEnabled) return;
-    if (Level === 'warn') console.log('%cGC Tools - Warning:', 'color: orange; font-weight: bold;', ...args);
-    else if (Level === 'error') console.error('%cGC Tools - Error:', 'color: #ff416d; font-weight: bold;', ...args);
-    else if (Level === 'info') console.info('%cGC Tools - Info:', 'color: #4b99d2; font-weight: bold;', ...args);
-    else if (Level === 'debug') console.debug('%cGC Tools - Debug:', 'color: #55b080; font-weight: bold;', ...args);
-    else {
-      console.log('%cGC Tools - Log:', 'color: black;', ...args);
-    }
-    console.debug(fullStack);
-  });
+  if (Level === 'warn') console.log('%cGC Tools - Warning:', 'color: orange; font-weight: bold;', ...args);
+  else if (Level === 'error') console.error('%cGC Tools - Error:', 'color: #ff416d; font-weight: bold;', ...args);
+  else if (Level === 'info') console.info('%cGC Tools - Info:', 'color: #4b99d2; font-weight: bold;', ...args);
+  else if (Level === 'debug') console.debug('%cGC Tools - Debug:', 'color: #55b080; font-weight: bold;', ...args);
+  else {
+    console.log('%cGC Tools - Log:', 'color: black;', ...args);
+  }
+  console.debug(fullStack);
 }
 
 export {

@@ -1,6 +1,19 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+@plugin "daisyui";
+@plugin "daisyui/theme" {
+  name: "gctlight";
+  default: true;
+  color-scheme: "light";
+  --color-primary: #0d6efd;
+  --color-secondary: #6c757d;
+  --color-accent: #37CDBE;
+  --color-neutral: #3D4451;
+  --color-base-100: #f1f3f4;
+  --color-info: #3ABFF8;
+  --color-success: #36D399;
+  --color-warning: #FBBD23;
+  --color-error: #dc3545;
+}
 
 /* style scrollbar */
 ::-webkit-scrollbar {

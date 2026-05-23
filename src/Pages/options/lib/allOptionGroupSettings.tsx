@@ -1,10 +1,11 @@
 import React from 'react';
-import { useBetween } from 'use-between';
 import { OptionGroupSettings } from '../../../interfaces/optionGroupSettingsInterface';
-import { useShareableState } from './reactSettingsHandler';
+import type { useShareableState } from './reactSettingsHandler';
 
-export const getAllOptionGroupSettings = (): OptionGroupSettings[] => {
-  const { sharedSettings, updateSharedSettings } = useBetween(useShareableState);
+type SharedSettings = ReturnType<typeof useShareableState>['sharedSettings'];
+type UpdateSharedSettings = ReturnType<typeof useShareableState>['updateSharedSettings'];
+
+export const getAllOptionGroupSettings = (sharedSettings: SharedSettings, updateSharedSettings: UpdateSharedSettings): OptionGroupSettings[] => {
 
   let allOptionGroupSettings: OptionGroupSettings[] = [
     {
@@ -24,26 +25,28 @@ export const getAllOptionGroupSettings = (): OptionGroupSettings[] => {
       text: (
         <div>
           Calculates and displays the event durations on the "by day", "by week" and "by month" view.
-          <div className="form-control">
-            <label className="input-group mt-4">
-              <span className="w-1/5">Minimum duration</span>
-              <input
-                type="number"
-                min="0"
-                className="input input-bordered w-400 w-1/5"
-                value={sharedSettings.calcDuration_minimumDurationMinutes}
-                onChange={(e) => {
-                  updateSharedSettings({
-                    calcDuration_minimumDurationMinutes: e.target.value,
-                  });
-                }}
-              />
-              <span className="w-1/5">min.</span>
+          <div className="form-control gap-4 mt-4">
+            <label className="flex items-center gap-4">
+              <span className="w-40 font-medium">Minimum duration</span>
+              <div className="flex items-center gap-2">
+                <input
+                  type="number"
+                  min="0"
+                  className="input input-bordered w-24"
+                  value={sharedSettings.calcDuration_minimumDurationMinutes}
+                  onChange={(e) => {
+                    updateSharedSettings({
+                      calcDuration_minimumDurationMinutes: e.target.value,
+                    });
+                  }}
+                />
+                <span className="font-medium">min.</span>
+              </div>
             </label>
-            <label className="input-group mt-4">
-              <span className="w-1/5">Format</span>
+            <label className="flex items-center gap-4 mt-4">
+              <span className="w-40 font-medium">Format</span>
               <select
-                className="select select-bordered w-2/5"
+                className="select select-bordered w-48"
                 value={sharedSettings.calcDuration_durationFormat}
                 onChange={(e) => {
                   updateSharedSettings({
@@ -91,83 +94,77 @@ export const getAllOptionGroupSettings = (): OptionGroupSettings[] => {
           <p className="mt-2">
             The transparency of the indicator depends on the event duration. You can set a minimum (&gt;=30 days) and a maximum (1 day) transparency.
           </p>
-          <div className="flex mt-4">
-            <label className="input-group">
-              <span
-                className="w-2/5"
-                style={{
-                  backgroundColor: `rgb(25 115 230 /${sharedSettings.indicateAllDayEvents_minTransparency})`,
-                  color: `${sharedSettings.indicateAllDayEvents_minTransparency > 0.5 ? 'white' : 'black'}`,
-                }}
-              >
-                min. transparency
-              </span>
-              <input
-                type="range"
-                min="0"
-                max="100"
-                value={sharedSettings.indicateAllDayEvents_minTransparency * 100}
-                className="range range-lg rounded-none"
-                step="5"
-                onChange={(e) => {
-                  updateSharedSettings({
-                    indicateAllDayEvents_minTransparency: parseInt(e.target.value) / 100,
-                  });
-                }}
-              />
-            </label>
-            <span className="w-1/10 rounded text-center font-bold ml-2 w-14">
+          <div className="flex items-center gap-4 mt-4">
+            <span
+              className="w-48 px-3 py-2 rounded-lg text-center font-medium"
+              style={{
+                backgroundColor: `rgb(25 115 230 /${sharedSettings.indicateAllDayEvents_minTransparency})`,
+                color: `${sharedSettings.indicateAllDayEvents_minTransparency > 0.5 ? 'white' : 'black'}`,
+              }}
+            >
+              min. transparency
+            </span>
+            <input
+              type="range"
+              min="0"
+              max="100"
+              value={sharedSettings.indicateAllDayEvents_minTransparency * 100}
+              className="range range-lg flex-1"
+              step="5"
+              onChange={(e) => {
+                updateSharedSettings({
+                  indicateAllDayEvents_minTransparency: parseInt(e.target.value) / 100,
+                });
+              }}
+            />
+            <span className="w-12 rounded text-right font-bold">
               {Math.round(sharedSettings.indicateAllDayEvents_minTransparency * 100) + '%'}
             </span>
           </div>
-          <div className="flex mt-4">
-            <label className="input-group">
-              <span
-                className="w-2/5"
-                style={{
-                  backgroundColor: `rgb(25 115 230 /${sharedSettings.indicateAllDayEvents_maxTransparency})`,
-                  color: `${sharedSettings.indicateAllDayEvents_maxTransparency > 0.5 ? 'white' : 'black'}`,
-                }}
-              >
-                max. transparency
-              </span>
-              <input
-                type="range"
-                min="0"
-                max="100"
-                value={sharedSettings.indicateAllDayEvents_maxTransparency * 100}
-                className="range range-lg rounded-none"
-                step="5"
-                onChange={(e) => {
-                  updateSharedSettings({
-                    indicateAllDayEvents_maxTransparency: parseInt(e.target.value) / 100,
-                  });
-                }}
-              />
-            </label>
-            <span className="w-1/10 rounded text-center font-bold ml-2 w-14">
+          <div className="flex items-center gap-4 mt-4">
+            <span
+              className="w-48 px-3 py-2 rounded-lg text-center font-medium"
+              style={{
+                backgroundColor: `rgb(25 115 230 /${sharedSettings.indicateAllDayEvents_maxTransparency})`,
+                color: `${sharedSettings.indicateAllDayEvents_maxTransparency > 0.5 ? 'white' : 'black'}`,
+              }}
+            >
+              max. transparency
+            </span>
+            <input
+              type="range"
+              min="0"
+              max="100"
+              value={sharedSettings.indicateAllDayEvents_maxTransparency * 100}
+              className="range range-lg flex-1"
+              step="5"
+              onChange={(e) => {
+                updateSharedSettings({
+                  indicateAllDayEvents_maxTransparency: parseInt(e.target.value) / 100,
+                });
+              }}
+            />
+            <span className="w-12 rounded text-right font-bold">
               {Math.round(sharedSettings.indicateAllDayEvents_maxTransparency * 100) + '%'}
             </span>
           </div>
           <p className="mt-4">By default, the indicators span the entire width, but this can be changed here.</p>
-          <div className="flex mt-4">
-            <label className="input-group">
-              <span className="w-2/5">width</span>
-              <input
-                type="range"
-                min="0"
-                max="100"
-                value={sharedSettings.indicateAllDayEvents_maxWidth}
-                className="range range-lg rounded-none"
-                step="5"
-                onChange={(e) => {
-                  updateSharedSettings({
-                    indicateAllDayEvents_maxWidth: e.target.value,
-                  });
-                }}
-              />
-            </label>
-            <span className="w-1/10 rounded text-center font-bold ml-2 w-14">{sharedSettings.indicateAllDayEvents_maxWidth + '%'}</span>
+          <div className="flex items-center gap-4 mt-4">
+            <span className="w-48 px-3 py-2 text-center font-medium">width</span>
+            <input
+              type="range"
+              min="0"
+              max="100"
+              value={sharedSettings.indicateAllDayEvents_maxWidth}
+              className="range range-lg flex-1"
+              step="5"
+              onChange={(e) => {
+                updateSharedSettings({
+                  indicateAllDayEvents_maxWidth: e.target.value,
+                });
+              }}
+            />
+            <span className="w-12 rounded text-right font-bold">{sharedSettings.indicateAllDayEvents_maxWidth + '%'}</span>
           </div>
         </div>
       ),

@@ -4,18 +4,21 @@ import { logging } from '../lib/miscellaneous';
 function injectDuration(calEvent: CalEvent) {
   if (calEvent.durationFormated) {
     try {
-      let eventTimeElement = calEvent.timeElement!;
+      const eventTimeElement = calEvent.timeElement!;
+      const parentElement = eventTimeElement.parentElement!;
+      const isMultiDayEvent = calEvent.type === 'allDay' || calEvent.type === 'nonAllDayMultiDay';
+      const sourceDurationElement = isMultiDayEvent ? eventTimeElement.querySelector('.nHqeVd') : eventTimeElement;
       let durationElement: HTMLElement;
-      if (calEvent.type === 'allDay' || calEvent.type === 'nonAllDayMultiDay') {
-        durationElement = eventTimeElement.querySelector('.nHqeVd')!.cloneNode(true) as HTMLElement;
+      if (isMultiDayEvent) {
+        durationElement = sourceDurationElement!.cloneNode(true) as HTMLElement;
       } else {
         durationElement = eventTimeElement.cloneNode(true) as HTMLElement;
         durationElement.classList.remove('gVNoLb');
       }
       durationElement.classList.add('event-duration');
 
-      let oldDurationElement = eventTimeElement.parentElement!.querySelector('.event-duration');
-      let position = getPosition(eventTimeElement, oldDurationElement as HTMLElement, calEvent);
+      let oldDurationElement = parentElement.querySelector('.event-duration') as HTMLElement | null;
+      let position = getPosition(parentElement, oldDurationElement, calEvent);
 
       // if new position does not match old position, remove old duration element
       if (oldDurationElement && oldDurationElement.getAttribute('position') !== position) {
@@ -28,7 +31,7 @@ function injectDuration(calEvent: CalEvent) {
         const durationText = `(${calEvent.durationFormated})`;
         if (!oldDurationElement) {
           logging('info', 'injectDuration-T1: adding duration: ', calEvent.id, calEvent.name, ' duration: ', calEvent.durationFormated);
-          if (calEvent.type !== 'allDay' && calEvent.type !== 'nonAllDayMultiDay') {
+          if (!isMultiDayEvent) {
             eventTimeElement.style.display = 'inline-block';
           }
           durationElement.style.display = 'inline-block';
@@ -66,15 +69,15 @@ function injectDuration(calEvent: CalEvent) {
         // save new position of duration element
         durationElement.setAttribute('position', position);
         // insert durationElement after eventTimeElement
-        if (calEvent.type == 'allDay' || calEvent.type == 'nonAllDayMultiDay') {
-          eventTimeElement.querySelector('.nHqeVd')!.parentElement!.append(durationElement);
+        if (isMultiDayEvent) {
+          sourceDurationElement!.parentElement!.append(durationElement);
         } else {
           eventTimeElement.after(durationElement);
         }
       }
 
       // adjust styling
-      if (calEvent.parentElement!.style.whiteSpace !== 'nowrap') calEvent.parentElement!.style.whiteSpace = 'nowrap';
+      if (parentElement.style.whiteSpace !== 'nowrap') parentElement.style.whiteSpace = 'nowrap';
     } catch (error) {
       logging('error', 'injectDurration: ', error);
       return;
@@ -85,21 +88,21 @@ function injectDuration(calEvent: CalEvent) {
 /* sum up height of eventTimeElement and all siblings of  eventTimeElement */
 function getHeight(element: HTMLElement) {
   let height = 0;
-  const siblings = element.parentElement!.querySelectorAll(':scope > *');
+  const siblings = element.children;
   for (let i = 0; i < siblings.length; i++) {
-    height += siblings[i].clientHeight;
+    height += (siblings[i] as HTMLElement).clientHeight;
   }
   return height;
 }
 
-function getPosition(eventTimeElement: HTMLElement, oldDurationElement: HTMLElement, eventObject: CalEvent) {
+function getPosition(eventContainer: HTMLElement, oldDurationElement: HTMLElement | null, eventObject: CalEvent) {
   if (eventObject.type == 'allDay' || eventObject.type == 'nonAllDayMultiDay') {
     return 'inline-block';
   }
 
   let position = 'block';
   /* height that the  Calendar Event element needs to have to  not be Inline*/
-  let maxHeightForInlineBlock = getHeight(eventTimeElement) + 15; //15px is the height of the duration element
+  let maxHeightForInlineBlock = getHeight(eventContainer) + 15; //15px is the height of the duration element
 
   if (oldDurationElement) {
     maxHeightForInlineBlock -= 15; /// remvoe old duration element height, because it is already in the eventTimeElement

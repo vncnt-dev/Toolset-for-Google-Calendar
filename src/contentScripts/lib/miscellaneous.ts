@@ -8,6 +8,7 @@ import { getSettingsSnapshot } from './SettingsHandler';
 
 /* based on https://stackoverflow.com/a/46428456 */
 function decodeDataEventId(dataEventId: string): string {
+  if (dataEventId.includes('_')) dataEventId = dataEventId.split('_')[1]; // f.e. birthdays have an id like: bday_<encodedId></encodedId>, while normal events have just <encodedId>
   let decoded = atob(dataEventId); // n17t3dbrekq5om2hj91t4pjefk_20221013T210000Z mail@...  -->  >id_date e-mail<
   return decoded.slice(0, decoded.indexOf(' '));
 }

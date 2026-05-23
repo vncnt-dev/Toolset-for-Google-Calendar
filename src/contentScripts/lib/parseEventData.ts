@@ -34,11 +34,11 @@ function startXhrListener(onEventDataUpdated: () => void = () => {}) {
           try {
             data = responseAsJson[0][2][3][0][1][0][3] || responseAsJson[0][2][3][1][1][0][3]; // at least on Workplace accounts the second structure is used (not sure if allways or only in certain cases)
           } catch (error) {
-            logging('error', 'XMLHttpRequest - sync.sync', JSON.stringify(responseAsJson), error);
+            logging('warn', 'XMLHttpRequest - sync.sync', JSON.stringify(responseAsJson), error);
             return;
           }
           if (!data) {
-            logging('error', 'no data found in xhr event - sync.sync', JSON.stringify(responseAsJson));
+            logging('warn', 'no data found in xhr event - sync.sync', JSON.stringify(responseAsJson));
             return;
           }
           let initDataStrcucture = [['', [data]]]; // mock structure to match the structure of the initial data

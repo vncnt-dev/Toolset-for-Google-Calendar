@@ -1,5 +1,5 @@
 import { CalEvent, EventDates } from '../../interfaces/eventInterface';
-import { loadSettings } from './settingsHandler';
+import { loadSettings } from './SettingsHandler';
 import { observerCalendarViewFunction } from '../tools/MutationObserverHandler';
 import { CustomDateHandler } from './customDateHandler';
 import * as xhrEventDataCache from './xhrEventDataCache';

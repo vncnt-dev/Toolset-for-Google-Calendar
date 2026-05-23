@@ -1,7 +1,7 @@
 import { get } from 'http';
 import { CalEvent, EventDates } from '../../interfaces/eventInterface';
 import { isSameDay } from '../lib/miscellaneous';
-import { loadSettings } from '../lib/settingsHandler';
+import { loadSettings } from '../lib/SettingsHandler';
 import { getItemFromCache } from '../lib/sessionCache';
 
 function addHoverOverInformation(event: CalEvent) {

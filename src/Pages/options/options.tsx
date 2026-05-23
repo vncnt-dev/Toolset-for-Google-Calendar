@@ -7,8 +7,12 @@ import { getAllOptionGroupSettings } from './lib/allOptionGroupSettings';
 import { OptionGroup } from './optionGroup';
 import { OptionsFormActions } from './optionsFormActions';
 import { ToastContainer } from 'react-toastify';
+import { ShareableStateProvider, useShareableStateContext } from './lib/reactSettingsHandler';
 
 const Options = () => {
+  const { sharedSettings, updateSharedSettings } = useShareableStateContext();
+  const allOptionGroupSettings = getAllOptionGroupSettings(sharedSettings, updateSharedSettings);
+
   return (
     <div>
       <h1 className="font-medium text-4xl ml-4 mb-4 mt-2">
@@ -26,12 +30,12 @@ const Options = () => {
       <div className="divider"></div>
       <div className="flex flex-wrap ">
         <div className="w-1/5">
-          <Sidebar />
+          <Sidebar allOptionGroupSettings={allOptionGroupSettings} />
         </div>
         <div className="w-4/5 pr-5">
           <div>
             <div id="optionForm" className="overflow-y-scroll" style={{ height: 'calc(100vh - 171px)' }}>
-              {getAllOptionGroupSettings().map((optionGroupSettings: OptionGroupSettings, index: number) => {
+              {allOptionGroupSettings.map((optionGroupSettings: OptionGroupSettings, index: number) => {
                 return <OptionGroup key={index} {...optionGroupSettings}></OptionGroup>;
               })}
               <OptionsFormActions/>
@@ -47,6 +51,8 @@ const Options = () => {
 const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement);
 root.render(
   <React.StrictMode>
-    <Options />
+    <ShareableStateProvider>
+      <Options />
+    </ShareableStateProvider>
   </React.StrictMode>,
 );

@@ -1,9 +1,30 @@
-import { useEffect, useState } from 'react';
-import { loadSettings, saveSettings, defaultSettings } from '../../../contentScripts/lib/settingsHandler';
+import React from 'react';
+import { createContext, useContext, useEffect, useState } from 'react';
+import { loadSettings, saveSettings, defaultSettings } from '../../../contentScripts/lib/SettingsHandler';
 import { Id as ToastId, ToastOptions, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { log } from 'console';
 import { logging } from '../../../contentScripts/lib/miscellaneous';
+import type { ReactNode } from 'react';
+
+type ShareableStateValue = ReturnType<typeof useShareableState>;
+
+const ShareableStateContext = createContext<ShareableStateValue | null>(null);
+
+export const ShareableStateProvider = ({ children }: { children: ReactNode }) => {
+  const shareableState = useShareableState();
+
+  return <ShareableStateContext.Provider value={shareableState}>{children}</ShareableStateContext.Provider>;
+};
+
+export const useShareableStateContext = () => {
+  const shareableState = useContext(ShareableStateContext);
+
+  if (!shareableState) {
+    throw new Error('useShareableStateContext must be used within a ShareableStateProvider');
+  }
+
+  return shareableState;
+};
 
 export const useShareableState = () => {
   const toastConfig: ToastOptions<{}> = {
@@ -95,7 +116,7 @@ export const useShareableState = () => {
     logging('info', 'restoreDefaultSharedSettings');
     setSharedSettings(defaultSettings);
     saveSettings(defaultSettings);
-    
+
     setLastSavedIdSuccess(toast.success('Restored Default', toastConfig));
   };
 

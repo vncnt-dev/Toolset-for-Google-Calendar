@@ -1,5 +1,5 @@
 import { CalEvent } from '../../interfaces/eventInterface';
-import { loadSettings } from '../lib/settingsHandler';
+import { loadSettings } from '../lib/SettingsHandler';
 import * as Tools from './tools';
 
 import { getEventXhrDataById } from '../lib/parseEventData';

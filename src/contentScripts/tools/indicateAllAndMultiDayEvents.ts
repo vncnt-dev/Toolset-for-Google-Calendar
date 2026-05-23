@@ -1,7 +1,7 @@
 import { calculateHashSha256, getDateFromDateKey, isBetweenDateTimes, isBetweenDays, isSameDay, logging } from '../lib/miscellaneous';
 import { CalEvent } from '../../interfaces/eventInterface';
 import { Settings } from '../../interfaces/SettingsInterface';
-import { loadSettings } from '../lib/settingsHandler';
+import { loadSettings } from '../lib/SettingsHandler';
 import { getItemFromCache, setItemInCache } from '../lib/sessionCache';
 
 import './indicateAllAndMultiDayEvents.css';
@@ -28,7 +28,7 @@ var indicateAllDayEvents = async (eventStorageMultiDay: CalEvent[]) => {
       for (const DateColumnElement of dateColumnElements) {
         const DateOfDateColumnElement = getDateFromDateKey(parseInt(DateColumnElement.getAttribute('data-datekey')!));
         // if event is on current calDate, proceed
-        if (isBetweenDays(changedEvent.dates.start, changedEvent.dates.end, DateOfDateColumnElement)) {
+        if (isBetweenDays(changedEvent, DateOfDateColumnElement)) {
           const indicatorElement = document.createElement('div');
           indicatorElement.setAttribute('gcaltoolsid', id);
           indicatorElement.classList.add('allDayEventIndicator', 'EfQccc');
@@ -108,7 +108,7 @@ var calculateWidthAndPos = function (
   // get count of parrallel multi-day/all-day events
   let parrallelEvents = eventStorageMultiDay.filter((eventInStorage) => {
     if (
-      isBetweenDays(eventInStorage.dates.start, eventInStorage.dates.end, DateOfDateColumnElement) && // event is on current Date
+      isBetweenDays(eventInStorage, DateOfDateColumnElement) && // event is on current Date
       (isBetweenDateTimes(eventInStorage.dates.start, eventInStorage.dates.end, event.dates.start) || // current event starts during eventInStorage
         isBetweenDateTimes(event.dates.start, event.dates.end, eventInStorage.dates.start)) // eventInStorage starts during current event
     )

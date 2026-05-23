@@ -1,9 +1,8 @@
 import React from 'react';
-import { useBetween } from 'use-between';
-import { useShareableState } from './lib/reactSettingsHandler';
+import { useShareableStateContext } from './lib/reactSettingsHandler';
 
 export const OptionsFormActions = () => {
-  const { restoreDefaultSharedSettings } = useBetween(useShareableState);
+  const { restoreDefaultSharedSettings } = useShareableStateContext();
 
   return (
     <div id="actions" style={{ height: '75px' }}>

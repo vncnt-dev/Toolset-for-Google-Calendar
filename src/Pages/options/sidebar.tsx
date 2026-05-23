@@ -1,12 +1,13 @@
 import React from 'react';
 import { OptionGroupSettings } from '../../interfaces/optionGroupSettingsInterface';
-import { getAllOptionGroupSettings } from './lib/allOptionGroupSettings';
+type SidebarProps = {
+  allOptionGroupSettings: OptionGroupSettings[];
+};
 
-export const Sidebar = () => {
-  let allOptionGroupSettings = getAllOptionGroupSettings();
+export const Sidebar = ({ allOptionGroupSettings }: SidebarProps) => {
   return (
     <ul className="steps steps-vertical">
-      {getAllOptionGroupSettings().map((optionGroupSettings: OptionGroupSettings, index: number) => {
+      {allOptionGroupSettings.map((optionGroupSettings: OptionGroupSettings, index: number) => {
         return (
           <li data-content="" className="step" id={'nav_' + optionGroupSettings.id} key={index}>
             <a

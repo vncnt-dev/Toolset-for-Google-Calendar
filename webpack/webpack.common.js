@@ -3,7 +3,7 @@ const CopyPlugin = require('copy-webpack-plugin');
 const srcDir = path.join(__dirname, "..", "src");
 const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin') // extract css to files
-const tailwindcss = require('tailwindcss')
+const tailwindcss = require('@tailwindcss/postcss')
 const autoprefixer = require('autoprefixer') // help tailwindcss to work
 
 module.exports = {

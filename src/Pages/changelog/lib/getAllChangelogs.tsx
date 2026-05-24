@@ -92,6 +92,21 @@ export const getAllChangelogs = (): Changelog[] => {
         </div>
       ),
     },
+    {
+      version: '1.6.6',
+      titel: 'v1.6.6 - Improve multi-day event indicator, fix export to iCal, performance improvements and more',
+      text: (
+        <div>
+          This update
+          <ul className="list-disc list-inside">
+            <li>Improves the multi-day event indicator for recurring events</li>
+            <li>Allows you to disable the event duration for all-day events</li>
+            <li>Fixes the export to iCal functionality</li>
+            <li>Includes some performance improvements</li>
+          </ul>
+        </div>
+      ),
+    },
   ];
 
   return allChangelogs;

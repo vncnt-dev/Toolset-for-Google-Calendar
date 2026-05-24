@@ -13,6 +13,7 @@ export interface SettingsIsActive {
 export interface Settings extends SettingsIsActive {
   calcDuration_minimumDurationMinutes: number;
   calcDuration_durationFormat: 'hourMinutes' | 'decimalHours';
+  calcDuration_disableForAllDayEvents: boolean;
   indicateAllDayEvents_minTransparency: number;
   indicateAllDayEvents_maxTransparency: number;
   indicateAllDayEvents_maxWidth: number;

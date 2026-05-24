@@ -181,6 +181,10 @@ function logging(Level: 'debug' | 'info' | 'warn' | 'error' | 'log', ...args: an
   console.debug(fullStack);
 }
 
+async function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 export {
   decodeDataEventId,
   calculateHashSha256,
@@ -195,4 +199,5 @@ export {
   JsxElementToHtmlElement,
   trimArray,
   logging,
+  sleep,
 };

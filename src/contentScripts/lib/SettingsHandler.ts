@@ -6,6 +6,7 @@ var defaultSettings: Settings = {
   calcDuration_isActive: true,
   calcDuration_minimumDurationMinutes: 30,
   calcDuration_durationFormat: 'hourMinutes',
+  calcDuration_disableForAllDayEvents: false,
   hoverInformation_isActive: true,
   removeGMeets_isActive: true,
   indicateAllDayEvents_isActive: true,
@@ -53,6 +54,12 @@ function normalizeSettings(rawSettings: Partial<Settings> | undefined): Settings
   // add isLoggingEnabled setting
   if (normalizedSettings.isLoggingEnabled === undefined) {
     normalizedSettings.isLoggingEnabled = false;
+  }
+
+  // v1.6.5 -> v1.6.6
+  // add calcDuration_disableForAllDayEvents setting
+  if (normalizedSettings.calcDuration_disableForAllDayEvents === undefined) {
+    normalizedSettings.calcDuration_disableForAllDayEvents = false;
   }
 
   return normalizedSettings;

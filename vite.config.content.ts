@@ -1,12 +1,12 @@
 import path from 'path';
 import { defineConfig } from 'vite';
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   publicDir: false, // Don't overwrite the public directory files
   build: {
     outDir: 'dist',
     emptyOutDir: false, // Don't clear what the main build generated
-    sourcemap: true,
+    sourcemap: mode === 'production' ? true : 'inline',
     rollupOptions: {
       input: {
         content_script: path.resolve(__dirname, 'src/contentScripts/content_script.ts'),
@@ -23,4 +23,4 @@ export default defineConfig({
       },
     },
   },
-});
+}));

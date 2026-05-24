@@ -58,6 +58,19 @@ export const getAllOptionGroupSettings = (sharedSettings: SharedSettings, update
                 <option value="decimalHours">2.5 hours</option>
               </select>
             </label>
+            <label className="flex items-center gap-4 mt-4">
+              <span className="w-40 font-medium">Disable for all-day events</span>
+              <input
+                type="checkbox"
+                className="toggle toggle-primary"
+                checked={sharedSettings.calcDuration_disableForAllDayEvents}
+                onChange={(e) => {
+                  updateSharedSettings({
+                    calcDuration_disableForAllDayEvents: e.target.checked,
+                  });
+                }}
+              />
+            </label>
           </div>
         </div>
       ),

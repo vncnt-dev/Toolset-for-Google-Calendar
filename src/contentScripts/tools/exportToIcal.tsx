@@ -6,7 +6,6 @@ import { logging } from '../lib/logger';
 
 const exportToIcalPrepare = async () => {
   await sleep(1000); // wait a bit to make sure the popup is  loaded
-  logging('info', `Preparing export to iCal-pre check`);
   const popupView = document.getElementById('xDetDlg');
   if (!popupView) return;
   logging('info', 'Preparing export to iCal menu item');

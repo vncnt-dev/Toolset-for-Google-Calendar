@@ -18,4 +18,5 @@ export interface Settings extends SettingsIsActive {
   indicateAllDayEvents_maxTransparency: number;
   indicateAllDayEvents_maxWidth: number;
   isLoggingEnabled: boolean;
+  isReportGenerationEnabled: boolean;
 }

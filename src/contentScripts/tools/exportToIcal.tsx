@@ -1,7 +1,8 @@
 import React from 'react';
 import { getItemFromCache } from '../lib/sessionCache';
 import { CalEvent } from '../../interfaces/eventInterface';
-import { JsxElementToHtmlElement, downloadStringAsFile, logging, sleep } from '../lib/miscellaneous';
+import { JsxElementToHtmlElement, downloadStringAsFile, sleep } from '../lib/miscellaneous';
+import { logging } from '../lib/logger';
 
 const exportToIcalPrepare = async () => {
   await sleep(1000); // wait a bit to make sure the popup is  loaded

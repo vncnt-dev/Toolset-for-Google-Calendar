@@ -1,6 +1,6 @@
 import { Settings } from '../../interfaces/SettingsInterface';
 import { storage } from '@extend-chrome/storage';
-import { logging } from './miscellaneous';
+import { logging, clearAllReports } from './logger';
 
 var defaultSettings: Settings = {
   calcDuration_isActive: true,
@@ -16,6 +16,7 @@ var defaultSettings: Settings = {
   exportAsIcs_isActive: true,
   showChangeLog_isActive: true,
   isLoggingEnabled: false,
+  isReportGenerationEnabled: false,
 };
 
 let settings: Settings | undefined;
@@ -56,6 +57,11 @@ function normalizeSettings(rawSettings: Partial<Settings> | undefined): Settings
     normalizedSettings.isLoggingEnabled = false;
   }
 
+  // add isReportGenerationEnabled setting
+  if (normalizedSettings.isReportGenerationEnabled === undefined) {
+    normalizedSettings.isReportGenerationEnabled = false;
+  }
+
   // v1.6.5 -> v1.6.6
   // add calcDuration_disableForAllDayEvents setting
   if (normalizedSettings.calcDuration_disableForAllDayEvents === undefined) {
@@ -70,9 +76,17 @@ function areSettingsEqual(left: Settings, right: Settings): boolean {
 }
 
 if (typeof chrome !== 'undefined' && chrome.storage?.onChanged) {
-  chrome.storage.onChanged.addListener((changes, areaName) => {
+  chrome.storage.onChanged.addListener(async (changes, areaName) => {
     if (areaName !== 'sync' || !changes.settings) return;
-    settings = normalizeSettings(changes.settings.newValue as Partial<Settings> | undefined);
+    const oldSettings = normalizeSettings(changes.settings.oldValue as Partial<Settings> | undefined);
+    const newSettings = normalizeSettings(changes.settings.newValue as Partial<Settings> | undefined);
+    settings = newSettings;
+
+    const wasLoggingDisabled = (oldSettings.isLoggingEnabled && !newSettings.isLoggingEnabled);
+    const wasReportDisabled = (oldSettings.isReportGenerationEnabled && !newSettings.isReportGenerationEnabled);
+    if (wasLoggingDisabled || wasReportDisabled) {
+      await clearAllReports();
+    }
   });
 }
 
@@ -107,6 +121,12 @@ async function saveSettings(newSettings: Partial<Settings>): Promise<boolean> {
   if (areSettingsEqual(currentSettings, nextSettings)) return true;
 
   settings = nextSettings;
+
+  const wasLoggingDisabled = (currentSettings.isLoggingEnabled && !nextSettings.isLoggingEnabled);
+  const wasReportDisabled = (currentSettings.isReportGenerationEnabled && !nextSettings.isReportGenerationEnabled);
+  if (wasLoggingDisabled || wasReportDisabled) {
+    await clearAllReports();
+  }
 
   try {
     await storage.sync.set({ settings: nextSettings });

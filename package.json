@@ -1,13 +1,14 @@
 {
   "name": "gcalendar-tools",
-  "version": "1.6.6",
+  "version": "1.6.7",
   "description": "",
   "main": "index.js",
   "scripts": {
     "watch": "npm run clean && concurrently \"vite build --mode development --watch\" \"vite build -c vite.config.content.ts --mode development --watch\"",
     "build": "npm run clean && vite build && vite build -c vite.config.content.ts",
     "pack": "node setVersion.js && npm run build && npm-build-zip --src dist --name gcalendar-tools",
-    "clean": "rimraf dist"
+    "clean": "rimraf dist",
+    "check-ts": "tsc --noEmit"
   },
   "author": "",
   "license": "ISC",
@@ -29,6 +30,7 @@
   "dependencies": {
     "@extend-chrome/storage": "^1.5.0",
     "daisyui": "^5.5.20",
+    "fflate": "^0.8.3",
     "ical.js": "^2.2.1",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",

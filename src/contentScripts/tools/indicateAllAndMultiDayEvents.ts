@@ -1,4 +1,5 @@
-import { calculateHashSha256, getDateFromDateKey, isBetweenDateTimes, isBetweenDays, isSameDay, logging } from '../lib/miscellaneous';
+import { calculateHashSha256, getDateFromDateKey, isBetweenDateTimes, isBetweenDays, isSameDay } from '../lib/miscellaneous';
+import { logging } from '../lib/logger';
 import { CalEvent } from '../../interfaces/eventInterface';
 import { Settings } from '../../interfaces/SettingsInterface';
 import { getSettingsSnapshot } from '../lib/SettingsHandler';

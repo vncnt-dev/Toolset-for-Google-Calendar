@@ -1,7 +1,8 @@
 import React, { useEffect } from 'react';
 import { Settings, SettingsIsActive } from '../../interfaces/SettingsInterface';
 import { loadSettings, saveSettings } from '../lib/SettingsHandler';
-import { downloadStringAsFile, logging } from '../lib/miscellaneous';
+import { downloadStringAsFile } from '../lib/miscellaneous';
+import { logging } from '../lib/logger';
 
 export const FastActionsModal = () => {
   const closeModal = () => {

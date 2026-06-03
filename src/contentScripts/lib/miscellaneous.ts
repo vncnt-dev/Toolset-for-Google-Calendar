@@ -5,6 +5,7 @@ import type { CalEvent } from '../../interfaces/eventInterface';
 import { UserInfo } from '../../interfaces/userInfo';
 import { CustomDateHandler } from './customDateHandler';
 import { getSettingsSnapshot } from './SettingsHandler';
+import { logging } from './logger';
 
 /* based on https://stackoverflow.com/a/46428456 */
 function decodeDataEventId(dataEventId: string): string {
@@ -165,20 +166,6 @@ function htmlStringToHtmlElement(html: string): HTMLElement {
   html = html.trim();
   template.innerHTML = html;
   return (template.content.firstChild as HTMLElement) ?? document.createElement('div');
-}
-
-function logging(Level: 'debug' | 'info' | 'warn' | 'error' | 'log', ...args: any[]) {
-  if (!getSettingsSnapshot().isLoggingEnabled) return;
-
-  const fullStack = new Error().stack;
-  if (Level === 'warn') console.log('%cGC Tools - Warning:', 'color: orange; font-weight: bold;', ...args);
-  else if (Level === 'error') console.error('%cGC Tools - Error:', 'color: #ff416d; font-weight: bold;', ...args);
-  else if (Level === 'info') console.info('%cGC Tools - Info:', 'color: #4b99d2; font-weight: bold;', ...args);
-  else if (Level === 'debug') console.debug('%cGC Tools - Debug:', 'color: #55b080; font-weight: bold;', ...args);
-  else {
-    console.log('%cGC Tools - Log:', 'color: black;', ...args);
-  }
-  console.debug(fullStack);
 }
 
 async function sleep(ms: number): Promise<void> {

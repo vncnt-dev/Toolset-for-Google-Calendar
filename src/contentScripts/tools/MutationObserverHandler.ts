@@ -4,7 +4,8 @@ import { loadSettings } from '../lib/SettingsHandler';
 import * as Tools from './tools';
 
 import { getEventXhrDataById } from '../lib/parseEventData';
-import { decodeDataEventId, getUserInfo, logging } from '../lib/miscellaneous';
+import { decodeDataEventId, getUserInfo } from '../lib/miscellaneous';
+import { logging } from '../lib/logger';
 import { CustomDateHandler } from '../lib/customDateHandler';
 import { resetCache, setItemInCache } from '../lib/sessionCache';
 

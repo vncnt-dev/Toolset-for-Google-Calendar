@@ -107,6 +107,19 @@ export const getAllChangelogs = (): Changelog[] => {
         </div>
       ),
     },
+    {
+      version: '1.6.7',
+      titel: 'v1.6.7 - Improves log reporting and cache calendar event-metadata',
+      text: (
+        <div>
+          This update
+          <ul className="list-disc list-inside">
+            <li>Improves the log reporting functionality for better debugging</li>
+            <li>Adds caching for calendar event-metadata to improve reliability</li>
+          </ul>
+        </div>
+      ),
+    },
   ];
 
   return allChangelogs;

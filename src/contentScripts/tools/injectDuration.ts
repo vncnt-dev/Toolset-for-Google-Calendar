@@ -1,6 +1,6 @@
 import { CalEvent } from '../../interfaces/eventInterface';
 import { Settings } from '../../interfaces/SettingsInterface';
-import { logging } from '../lib/miscellaneous';
+import { logging } from '../lib/logger';
 
 function injectDuration(calEvent: CalEvent, settings: Settings) {
   if (calEvent.type === 'allDay' && settings.calcDuration_disableForAllDayEvents) {

@@ -4,7 +4,8 @@ import { loadSettings } from '../lib/SettingsHandler';
 import * as Tools from './tools';
 
 import { getEventXhrDataById } from '../lib/parseEventData';
-import { decodeDataEventId, getUserInfo, logging } from '../lib/miscellaneous';
+import { decodeDataEventId, getUserInfo } from '../lib/miscellaneous';
+import { logging } from '../lib/logger';
 import { CustomDateHandler } from '../lib/customDateHandler';
 import { resetCache, setItemInCache } from '../lib/sessionCache';
 
@@ -90,8 +91,12 @@ async function startWorkerCalendarView(settingsOverride?: Settings) {
         const thisEvent: CalEvent = { ...originalEvent };
         if (originalEvent.dates) {
           thisEvent.dates = {
-            start: originalEvent.dates.start ? new CustomDateHandler(new Date(originalEvent.dates.start.getOriginalJsDateObject().getTime())) : originalEvent.dates.start,
-            end: originalEvent.dates.end ? new CustomDateHandler(new Date(originalEvent.dates.end.getOriginalJsDateObject().getTime())) : originalEvent.dates.end,
+            start: originalEvent.dates.start
+              ? new CustomDateHandler(new Date(originalEvent.dates.start.getOriginalJsDateObject().getTime()))
+              : originalEvent.dates.start,
+            end: originalEvent.dates.end
+              ? new CustomDateHandler(new Date(originalEvent.dates.end.getOriginalJsDateObject().getTime()))
+              : originalEvent.dates.end,
           };
         }
 
@@ -138,8 +143,12 @@ async function startWorkerCalendarView(settingsOverride?: Settings) {
         let thisEvent: CalEvent = { ...originalEvent };
         if (originalEvent.dates) {
           thisEvent.dates = {
-            start: originalEvent.dates.start ? new CustomDateHandler(new Date(originalEvent.dates.start.getOriginalJsDateObject().getTime())) : originalEvent.dates.start,
-            end: originalEvent.dates.end ? new CustomDateHandler(new Date(originalEvent.dates.end.getOriginalJsDateObject().getTime())) : originalEvent.dates.end,
+            start: originalEvent.dates.start
+              ? new CustomDateHandler(new Date(originalEvent.dates.start.getOriginalJsDateObject().getTime()))
+              : originalEvent.dates.start,
+            end: originalEvent.dates.end
+              ? new CustomDateHandler(new Date(originalEvent.dates.end.getOriginalJsDateObject().getTime()))
+              : originalEvent.dates.end,
           };
         }
 
@@ -162,11 +171,10 @@ async function startWorkerCalendarView(settingsOverride?: Settings) {
     for (let thisEvent of eventStorage) {
       if (!thisEvent.parentElement || !thisEvent.timeElement) continue;
       Tools.addHoverOverInformation(thisEvent);
-      if (settings.calcDuration_isActive) Tools.injectDuration(thisEvent);
+      if (settings.calcDuration_isActive) Tools.injectDuration(thisEvent, settings);
     }
 
     if (settings.indicateAllDayEvents_isActive) Tools.indicateAllDayEvents(allOrMultiDayEventStorage, settings);
-    if (settings.exportAsIcs_isActive) Tools.exportToIcalPrepare();
 
     logging('info', 'events number: ', eventStorage.length, ' storage: ', eventStorage);
     logging('info', 'allOrMultiDayEvents number: ', allOrMultiDayEventStorage.length, ' storage: ', allOrMultiDayEventStorage);
@@ -183,7 +191,7 @@ async function startWorkerCompleteHTMLBody(mutationsList: MutationRecord[] = [],
   const settings = settingsOverride ?? (await loadSettings());
   disconnectObserver();
   if (settings.removeGMeets_isActive) Tools.removeGMeets();
-
+  if (settings.exportAsIcs_isActive) Tools.exportToIcalPrepare();
   createObserver();
 }
 

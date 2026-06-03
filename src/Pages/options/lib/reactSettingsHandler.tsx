@@ -3,7 +3,7 @@ import { createContext, useContext, useEffect, useState } from 'react';
 import { loadSettings, saveSettings, defaultSettings } from '../../../contentScripts/lib/SettingsHandler';
 import { Id as ToastId, ToastOptions, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { logging } from '../../../contentScripts/lib/miscellaneous';
+import { logging } from '../../../contentScripts/lib/logger';
 import type { ReactNode } from 'react';
 
 type ShareableStateValue = ReturnType<typeof useShareableState>;

@@ -2,7 +2,7 @@ import { CalEvent, EventDates } from '../../interfaces/eventInterface';
 import { loadSettings } from './SettingsHandler';
 import { CustomDateHandler } from './customDateHandler';
 import * as xhrEventDataCache from './xhrEventDataCache';
-import { logging } from './miscellaneous';
+import { logging } from './logger';
 
 function startXhrListener(onEventDataUpdated: () => void = () => {}) {
   insertScriptToPage('XHRInterceptor', true); // intercepts all XHR requests and dispatches them as a custom event

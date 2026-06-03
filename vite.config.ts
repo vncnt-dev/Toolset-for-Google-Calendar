@@ -7,7 +7,7 @@ export default defineConfig(({ mode }) => ({
   build: {
     outDir: 'dist',
     emptyOutDir: true,
-    sourcemap: true,
+    sourcemap: mode === 'production' ? true : 'inline',
     minify: mode === 'production' ? 'terser' : false,
     rollupOptions: {
       input: {

@@ -1,5 +1,6 @@
 import { loadSettings, saveSettings } from '../lib/SettingsHandler';
-import { downloadStringAsFile, logging } from '../lib/miscellaneous';
+import { downloadStringAsFile } from '../lib/miscellaneous';
+import { logging } from '../lib/logger';
 
 function createButton() {
   const btn = document.createElement('button');

@@ -1,11 +1,11 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import ReactDOMServer from 'react-dom/server';
-import { BtnGCToolsModalOpen } from './btnModalOpen';
 import { FastActionsModal } from './fastActionsModal';
 import './fastActionsModal.css';
-import { JsxElementToHtmlElement, logging } from '../lib/miscellaneous';
-import { log } from 'console';
+import { JsxElementToHtmlElement } from '../lib/miscellaneous';
+import { logging } from '../lib/logger';
+import { TopBarControls } from './topBarControls';
 
 export function fastActionsModalInit() {
   logging('info', 'fastActionsModalInit');
@@ -34,7 +34,7 @@ export function fastActionsModalInit() {
     const btnGCToolsModalOpen = ReactDOM.createRoot(document.getElementById('btnGCToolsModalOpen') as HTMLElement);
     btnGCToolsModalOpen.render(
       <React.StrictMode>
-        <BtnGCToolsModalOpen />
+        <TopBarControls />
       </React.StrictMode>,
     );
 

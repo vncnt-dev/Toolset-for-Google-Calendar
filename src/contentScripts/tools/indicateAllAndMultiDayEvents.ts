@@ -1,4 +1,5 @@
-import { calculateHashSha256, getDateFromDateKey, isBetweenDateTimes, isBetweenDays, isSameDay, logging } from '../lib/miscellaneous';
+import { calculateHashSha256, getDateFromDateKey, isBetweenDays, isSameDay } from '../lib/miscellaneous';
+import { logging } from '../lib/logger';
 import { CalEvent } from '../../interfaces/eventInterface';
 import { Settings } from '../../interfaces/SettingsInterface';
 import { getSettingsSnapshot } from '../lib/SettingsHandler';
@@ -109,13 +110,10 @@ var calculateWidthAndPos = function (
   indicatorElement: HTMLDivElement,
   settings: Settings,
 ): HTMLDivElement {
-  // get count of parrallel multi-day/all-day events
-  const parrallelEvents = eventStorageMultiDay.filter((eventInStorage) => {
-    return (
-      isBetweenDateTimes(eventInStorage.dates.start, eventInStorage.dates.end, event.dates.start) || // current event starts during eventInStorage
-      isBetweenDateTimes(event.dates.start, event.dates.end, eventInStorage.dates.start) // eventInStorage starts during current event
-    );
-  });
+  // All events in eventStorageMultiDay are already filtered to this column day,
+  // so they are all parallel on this day. Using the raw event date ranges here
+  // would fail for recurring events whose stored dates refer to the original occurrence.
+  const parrallelEvents = eventStorageMultiDay;
 
   let indexOfCurrentEvent = parrallelEvents.findIndex((eventInStorage) => {
     return eventInStorage.id === event.id;

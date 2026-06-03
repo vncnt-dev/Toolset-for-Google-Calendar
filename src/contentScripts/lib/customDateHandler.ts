@@ -51,6 +51,13 @@ export class CustomDateHandler {
     this.parts = dateParts;
   }
 
+  toJSON() {
+    return {
+      date: this.date.toISOString(),
+      disableTzCorrection: this.disableTzCorrection,
+    };
+  }
+
   getOriginalJsDateObject() {
     return this.date;
   }

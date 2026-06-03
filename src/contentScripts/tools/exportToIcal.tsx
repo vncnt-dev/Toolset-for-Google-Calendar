@@ -1,33 +1,47 @@
 import React from 'react';
 import { getItemFromCache } from '../lib/sessionCache';
 import { CalEvent } from '../../interfaces/eventInterface';
-import { JsxElementToHtmlElement, downloadStringAsFile } from '../lib/miscellaneous';
+import { JsxElementToHtmlElement, downloadStringAsFile, sleep } from '../lib/miscellaneous';
+import { logging } from '../lib/logger';
 
-const popupView = document.getElementById('xDetDlg');
-
-const exportToIcalPrepare = () => {
+const exportToIcalPrepare = async () => {
+  await sleep(1000); // wait a bit to make sure the popup is  loaded
+  const popupView = document.getElementById('xDetDlg');
   if (!popupView) return;
-  const menuItem = Array.from(document.querySelectorAll('ul.VfPpkd-StrnGf-rymPhb.DMZ54e')).filter((ulElement) => {
-    return (ulElement.parentNode as HTMLElement).hasAttribute('data-eventid');
-  })[0];
+  logging('info', 'Preparing export to iCal menu item');
+
+  const menuItem = document.querySelector('div > div > ul[data-list-type][aria-label]');
 
   let exportToIcalMenuItem = document.querySelector('#exportToIcalMenuItem');
-  if (exportToIcalMenuItem || !menuItem) {
+  if (exportToIcalMenuItem) return;
+  if (!menuItem) {
+    logging('warn', 'Could not find menu item container for export to iCal');
     return;
   }
+
   exportToIcalMenuItem = JsxElementToHtmlElement(
-    <li id="exportToIcalMenuItem" className="OwNvm taKRZe VfPpkd-StrnGf-rymPhb-ibnC6b" role="menuitem" tabIndex={-1}>
-      <span className="VfPpkd-StrnGf-rymPhb-pZXsl"></span>
-      <span className="VfPpkd-StrnGf-rymPhb-b9t22c">Export to iCal</span>
+    <li
+      id="exportToIcalMenuItem"
+      role="menuitem"
+      className="aqdrmf-rymPhb-ibnC6b aqdrmf-rymPhb-ibnC6b-OWXEXe-hXIJHe aqdrmf-rymPhb-ibnC6b-OWXEXe-SfQLQb-Woal0c-RWgCYc O68mGe-OQAXze-OWXEXe-SfQLQb-Woal0c-RWgCYc"
+    >
+      <span className="UTNHae"></span>
+      <span className="dNKuRb aqdrmf-rymPhb-sNKcce"></span>
+      <span className="aqdrmf-rymPhb-KkROqb"></span>
+      <span className="aqdrmf-rymPhb-Gtdoyb">
+        <span className="aqdrmf-rymPhb-fpDzbe-fmcmS">Export to iCal</span>
+      </span>
+      <span className="aqdrmf-rymPhb-JMEf7e"></span>
+      <span className="O68mGe-xl07Ob-mQXhdd"></span>
     </li>,
   );
   exportToIcalMenuItem.addEventListener('click', () => {
-    exportToIcal();
+    exportToIcal(popupView);
   });
   menuItem.appendChild(exportToIcalMenuItem);
 };
 
-const exportToIcal = () => {
+const exportToIcal = (popupView: HTMLElement | null) => {
   if (!popupView) return;
   const activeEventId = popupView.getAttribute('data-eventid');
   if (!activeEventId) return;

@@ -1,7 +1,20 @@
 import { CalEvent } from '../../interfaces/eventInterface';
-import { logging } from '../lib/miscellaneous';
+import { Settings } from '../../interfaces/SettingsInterface';
+import { logging } from '../lib/logger';
 
-function injectDuration(calEvent: CalEvent) {
+function injectDuration(calEvent: CalEvent, settings: Settings) {
+  if (calEvent.type === 'allDay' && settings.calcDuration_disableForAllDayEvents) {
+    const eventTimeElement = calEvent.timeElement!;
+    if (!eventTimeElement) return;
+    const parentElement = eventTimeElement.parentElement!;
+    if (!parentElement) return;
+    let oldDurationElement = parentElement.querySelector('.event-duration') as HTMLElement | null;
+    if (oldDurationElement) {
+      oldDurationElement.remove();
+    }
+    return;
+  }
+
   if (calEvent.durationFormated) {
     try {
       const eventTimeElement = calEvent.timeElement!;

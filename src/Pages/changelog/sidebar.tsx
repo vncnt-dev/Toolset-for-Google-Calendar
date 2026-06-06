@@ -3,10 +3,10 @@ import { Changelog } from '../../interfaces/changelogInterface';
 import { getAllChangelogs } from './lib/getAllChangelogs';
 
 export const Sidebar = () => {
-  let allChangelogGroupSettings = getAllChangelogs();
+  let allChangelogGroupSettings = getAllChangelogs().filter((c) => c.text);
   return (
     <ul className="steps steps-vertical">
-      {getAllChangelogs().reverse().map((changelog: Changelog, index: number) => {
+      {allChangelogGroupSettings.reverse().map((changelog: Changelog, index: number) => {
         return (
           <li data-content="" className="step" id={'nav_v' + changelog.version} key={index}>
             <a

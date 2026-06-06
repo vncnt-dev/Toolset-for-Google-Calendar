@@ -28,6 +28,7 @@ const Changelog = () => {
           <div>
             <div id="changelogForm" className="overflow-y-scroll" style={{ height: 'calc(100vh - 171px)' }}>
               {getAllChangelogs()
+                .filter((c) => c.text)
                 .reverse()
                 .map((changelogs: Changelog, index: number) => {
                   return <ChangelogGroup key={index} {...changelogs}></ChangelogGroup>;

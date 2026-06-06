@@ -120,7 +120,18 @@ export const getAllChangelogs = (): Changelog[] => {
         </div>
       ),
     },
+    {
+      version: '1.6.8',
+      titel: 'v1.6.8 - Improve interceptor and event-cache',
+      silentUpdate: true,
+    },
   ];
 
   return allChangelogs;
+};
+
+/** Returns true if the given version is marked as a silent update (changelog should not auto-open).
+ *  A version is silent if it has `silentUpdate: true` or if it has no `text`. */
+export const isVersionSilent = (version: string): boolean => {
+  return getAllChangelogs().some((changelog) => changelog.version === version && (changelog.silentUpdate === true || !changelog.text));
 };

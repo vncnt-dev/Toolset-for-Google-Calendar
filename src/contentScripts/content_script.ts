@@ -3,6 +3,7 @@ import { fastActionsModalInit } from './fastActionsModal/fastActionsModalInit';
 import { startXhrListener } from './lib/parseEventData';
 import { loadSettings } from './lib/SettingsHandler';
 import { loadEventCacheFromLocalStorage, resetCache } from './lib/xhrEventDataCache';
+import { logging } from './lib/logger';
 
 let rerunTimer: NodeJS.Timeout | null = null;
 let lastRerunTime = 0;
@@ -43,15 +44,15 @@ async function run() {
   if (typeof chrome !== 'undefined' && chrome.storage?.onChanged) {
     chrome.storage.onChanged.addListener(async (changes, areaName) => {
       if (areaName === 'sync' && changes.settings) {
-        console.log('Settings changed');
+        logging('info', 'Settings changed');
         const nextSettings = await loadSettings(true);
         startWorkerCompleteHTMLBody([], nextSettings);
         startWorkerCalendarView(nextSettings);
       }
       if (areaName === 'local') {
-        const hasCacheCleared = Object.keys(changes).some(key => key.startsWith('gct_event_') && !changes[key].newValue);
+        const hasCacheCleared = Object.keys(changes).some((key) => key.startsWith('gct_event_') && !changes[key].newValue);
         if (hasCacheCleared) {
-          console.log('Event cache cleared in storage, resetting in-memory cache');
+          logging('info', 'Event cache cleared in storage, resetting in-memory cache');
           resetCache();
         }
       }

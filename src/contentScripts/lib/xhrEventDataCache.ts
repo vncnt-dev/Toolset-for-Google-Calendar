@@ -106,19 +106,17 @@ const loadEventCacheFromLocalStorage = async () => {
     const keysToRemove: string[] = [];
     const MAX_TIME_MS = 30 * 24 * 60 * 60 * 1000; // 30 days in ms
 
-    console.log('loading event cache from local storage', allData);
-
     for (const [key, value] of Object.entries(allData)) {
       if (key.startsWith(STORAGE_PREFIX)) {
         const entry = value as CacheEntry;
         if (now - entry.lastUpdated > MAX_TIME_MS) {
           keysToRemove.push(key);
-          console.log('removing expired event from cache: ', key);
+          logging('info', 'removing expired event from cache: ', key);
         } else {
           const eventId = key.slice(STORAGE_PREFIX.length);
           try {
             const event = deserializeEvent(entry.event);
-            console.log('loading event from cache: ', eventId);
+            logging('info', 'loading event from cache: ', eventId);
             xhrEventDataCache.set(eventId, event);
           } catch (e) {
             logging('error', `Failed to deserialize event ${eventId}, removing from cache:`, e);

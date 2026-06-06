@@ -2,7 +2,7 @@ import { startWorkerCalendarView, startWorkerCompleteHTMLBody } from './tools/Mu
 import { fastActionsModalInit } from './fastActionsModal/fastActionsModalInit';
 import { startXhrListener } from './lib/parseEventData';
 import { loadSettings } from './lib/SettingsHandler';
-import { loadEventCacheFromLocalStorage } from './lib/xhrEventDataCache';
+import { loadEventCacheFromLocalStorage, resetCache } from './lib/xhrEventDataCache';
 
 let rerunTimer: NodeJS.Timeout | null = null;
 let lastRerunTime = 0;
@@ -27,6 +27,8 @@ function handleEventDataUpdated() {
 }
 
 async function run() {
+  const settings = await loadSettings();
+
   // Load cache on startup as base-cache
   await loadEventCacheFromLocalStorage();
 
@@ -34,7 +36,6 @@ async function run() {
   startXhrListener(handleEventDataUpdated);
   fastActionsModalInit();
 
-  const settings = await loadSettings();
   startWorkerCompleteHTMLBody([], settings);
   startWorkerCalendarView(settings);
 
@@ -46,6 +47,13 @@ async function run() {
         const nextSettings = await loadSettings(true);
         startWorkerCompleteHTMLBody([], nextSettings);
         startWorkerCalendarView(nextSettings);
+      }
+      if (areaName === 'local') {
+        const hasCacheCleared = Object.keys(changes).some(key => key.startsWith('gct_event_') && !changes[key].newValue);
+        if (hasCacheCleared) {
+          console.log('Event cache cleared in storage, resetting in-memory cache');
+          resetCache();
+        }
       }
     });
   }

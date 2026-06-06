@@ -24,25 +24,46 @@ function startXhrListener(onEventDataUpdated: () => void = () => {}) {
         }
         updateXhrEventData(data, onEventDataUpdated);
       } else if (url.includes('/sync.sync')) {
-        // this is called when an event is added or edited
+        // this is called when an event is added or edited, or as a metadata-only sync
         try {
           logging('info', 'xhr event - sync.sync', req);
           const escapedJsonString = escapeJsonString(req.responseText);
           const responseAsJson = JSON.parse(escapedJsonString);
-          // if no events are in the response, return (this is the case when an event is deleted
-          let data;
-          try {
-            data = responseAsJson[0][2][3][0][1][0][3] || responseAsJson[0][2][3][1][1][0][3]; // at least on Workplace accounts the second structure is used (not sure if allways or only in certain cases)
-          } catch (error) {
-            logging('warn', 'XMLHttpRequest - sync.sync', JSON.stringify(responseAsJson), error);
+
+          const calendarBlocks = responseAsJson?.[0]?.[2]?.[3];
+
+          // If calendarBlocks is not an array, this is a metadata-only sync response (no event data)
+          if (!Array.isArray(calendarBlocks)) {
             return;
           }
-          if (!data) {
-            logging('warn', 'no data found in xhr event - sync.sync', JSON.stringify(responseAsJson));
+
+          // Iterate over all calendar blocks and extract all events
+          let initDataStructure: Array<any> = [];
+
+          for (const block of calendarBlocks) {
+            if (!Array.isArray(block)) continue;
+            const calendarId = typeof block[0] === 'string' ? block[0] : '';
+            const eventEntries = block[1];
+            if (!Array.isArray(eventEntries)) continue;
+
+            const events: Array<any> = [];
+            for (const entry of eventEntries) {
+              const eventData = entry?.[3];
+              if (Array.isArray(eventData) && eventData.length > 0) {
+                events.push(eventData);
+              }
+            }
+
+            if (events.length > 0) {
+              initDataStructure.push([calendarId, events]);
+            }
+          }
+
+          if (initDataStructure.length === 0) {
             return;
           }
-          let initDataStrcucture = [['', [data]]]; // mock structure to match the structure of the initial data
-          updateXhrEventData(initDataStrcucture, onEventDataUpdated);
+
+          updateXhrEventData(initDataStructure, onEventDataUpdated);
         } catch (error) {
           logging('error', 'GCT_XMLHttpRequest-update', error);
         }

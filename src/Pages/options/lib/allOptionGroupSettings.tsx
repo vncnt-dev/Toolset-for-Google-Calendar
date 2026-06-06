@@ -2,6 +2,7 @@ import React from 'react';
 import { OptionGroupSettings } from '../../../interfaces/optionGroupSettingsInterface';
 import type { useShareableState } from './reactSettingsHandler';
 import { zipSync } from 'fflate';
+import { toast } from 'react-toastify';
 
 type SharedSettings = ReturnType<typeof useShareableState>['sharedSettings'];
 type UpdateSharedSettings = ReturnType<typeof useShareableState>['updateSharedSettings'];
@@ -128,6 +129,104 @@ const LoggingSettingsControls = ({
     </div>
   );
 };
+
+const CacheSettingsControls = () => {
+  const [eventCount, setEventCount] = React.useState(0);
+  const [logCount, setLogCount] = React.useState(0);
+  const [clearing, setClearing] = React.useState(false);
+
+  const fetchStats = async () => {
+    try {
+      if (typeof chrome !== 'undefined' && chrome.storage?.local) {
+        const allData = await chrome.storage.local.get(null);
+        const keys = Object.keys(allData);
+        let events = 0;
+        let logs = 0;
+        for (const key of keys) {
+          if (key.includes('gct_event_')) {
+            events++;
+          } else if (key.includes('gct_log_report_')) {
+            logs++;
+          }
+        }
+        setEventCount(events);
+        setLogCount(logs);
+      }
+    } catch (err) {
+      console.error('Failed to fetch cache stats:', err);
+    }
+  };
+
+  React.useEffect(() => {
+    fetchStats();
+    if (typeof chrome !== 'undefined' && chrome.storage?.onChanged) {
+      const listener = (changes: { [key: string]: chrome.storage.StorageChange }, areaName: string) => {
+        if (areaName === 'local') {
+          fetchStats();
+        }
+      };
+      chrome.storage.onChanged.addListener(listener);
+      return () => chrome.storage.onChanged.removeListener(listener);
+    }
+  }, []);
+
+  const handleClearCache = async () => {
+    setClearing(true);
+    try {
+      if (typeof chrome !== 'undefined' && chrome.storage?.local) {
+        await chrome.storage.local.clear();
+        await fetchStats();
+        toast.success('All cached data deleted successfully', {
+          position: 'bottom-right',
+          autoClose: 3000,
+        });
+      }
+    } catch (err) {
+      console.error('Failed to clear cache:', err);
+      toast.error('Failed to clear cached data.', {
+        position: 'bottom-right',
+        autoClose: 3000,
+      });
+    } finally {
+      setClearing(false);
+    }
+  };
+
+  return (
+    <div className="flex flex-col gap-4 mt-2">
+      <p className="text-base text-gray-600">
+        The extension caches Google Calendar™ event metadata and temporary logs locally in your browser's storage to enhance rendering performance and assist with troubleshooting.
+      </p>
+      
+      <div className="grid grid-cols-2 gap-4 my-2">
+        <div className="bg-gray-100 p-4 rounded-xl border border-gray-200 shadow-sm flex flex-col justify-between">
+          <span className="text-sm font-semibold text-gray-500 uppercase tracking-wider">Cached Events</span>
+          <span className="text-3xl font-extrabold text-blue-600 mt-2">{eventCount}</span>
+          <span className="text-xs text-gray-400 mt-1">Improves hover and calculation speed</span>
+        </div>
+        <div className="bg-gray-100 p-4 rounded-xl border border-gray-200 shadow-sm flex flex-col justify-between">
+          <span className="text-sm font-semibold text-gray-500 uppercase tracking-wider">Stored Log Reports</span>
+          <span className="text-3xl font-extrabold text-blue-600 mt-2">{logCount}</span>
+          <span className="text-xs text-gray-400 mt-1">Saved debugging sessions</span>
+        </div>
+      </div>
+
+      <div className="border-t border-gray-200 pt-4 mt-2">
+        <p className="text-sm text-gray-500 mb-4">
+          Clearing this data will remove all stored event metadata and debug log reports. Your settings will remain unaffected.
+        </p>
+        <button
+          onClick={handleClearCache}
+          disabled={clearing || (eventCount === 0 && logCount === 0)}
+          className="btn btn-error text-white font-medium px-6 shadow-md hover:shadow-lg transition-all"
+        >
+          {clearing ? 'Clearing Cache...' : 'Delete All Cached Data'}
+        </button>
+      </div>
+    </div>
+  );
+};
+
 
 export const getAllOptionGroupSettings = (sharedSettings: SharedSettings, updateSharedSettings: UpdateSharedSettings): OptionGroupSettings[] => {
   let allOptionGroupSettings: OptionGroupSettings[] = [
@@ -333,6 +432,11 @@ export const getAllOptionGroupSettings = (sharedSettings: SharedSettings, update
       titel: 'Enable Logging',
       text: <LoggingSettingsControls sharedSettings={sharedSettings} updateSharedSettings={updateSharedSettings} />,
       toggleSettings: 'isLoggingEnabled',
+    },
+    {
+      id: 'cache',
+      titel: 'Cache & Local Storage',
+      text: <CacheSettingsControls />,
     },
   ];
 

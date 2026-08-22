@@ -14,7 +14,7 @@
   "license": "ISC",
   "devDependencies": {
     "@tailwindcss/postcss": "^4.3.3",
-    "@types/chrome": "^0.1.42",
+    "@types/chrome": "^0.2.6",
     "@types/node": "^25.9.1",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.4",

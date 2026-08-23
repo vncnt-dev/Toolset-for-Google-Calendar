@@ -9,9 +9,20 @@ import { logging } from './logger';
 
 /* based on https://stackoverflow.com/a/46428456 */
 function decodeDataEventId(dataEventId: string): string {
+  return decodeDataEventIdFull(dataEventId).id;
+}
+
+/**
+ * like decodeDataEventId, but also returns the occurrence date of recurring event occurrences.
+ * f.e. "<seriesId>_20221013T210000Z" -> { id: "<seriesId>", occurrenceDate: "20221013T210000Z" }
+ */
+function decodeDataEventIdFull(dataEventId: string): { id: string; occurrenceDate?: string } {
   if (dataEventId.includes('_')) dataEventId = dataEventId.split('_')[1]; // f.e. birthdays have an id like: bday_<encodedId></encodedId>, while normal events have just <encodedId>
   let decoded = atob(dataEventId); // n17t3dbrekq5om2hj91t4pjefk_20221013T210000Z mail@...  -->  >id_date e-mail<
-  return decoded.slice(0, decoded.indexOf(' '));
+  const token = decoded.slice(0, decoded.indexOf(' '));
+  const underscoreIndex = token.indexOf('_');
+  if (underscoreIndex === -1) return { id: token };
+  return { id: token.slice(0, underscoreIndex), occurrenceDate: token.slice(underscoreIndex + 1) };
 }
 
 async function calculateHashSha256(text: string): Promise<string> {
@@ -132,6 +143,71 @@ function isWithinRecurringRange(startDate: Date, endDate: Date, testDate: Date, 
 /**
  * is testDateDate in [startDate, endDate)
  */
+/**
+ * parses google compact date tokens f.e. "20250106", "20250106T210000Z".
+ * date-only tokens (all-day events) are interpreted as LOCAL midnight,
+ * timed tokens as absolute UTC times.
+ */
+function parseCompactDateToken(token?: string): number | undefined {
+  if (!token) return undefined;
+  const match = /^([0-9]{4})([0-9]{2})([0-9]{2})(?:T([0-9]{2})([0-9]{2}))?[0-9]{0,2}Z?$/.exec(token);
+  if (!match) return undefined;
+  const [, year, month, day, hours, minutes] = match;
+  if (hours !== undefined) return Date.UTC(parseInt(year), parseInt(month) - 1, parseInt(day), parseInt(hours), parseInt(minutes));
+  return new Date(parseInt(year), parseInt(month) - 1, parseInt(day)).getTime();
+}
+
+/**
+ * end of an occurrence = its start + event duration.
+ * all-day occurrences span whole LOCAL days and end at 23:59 of their last day
+ * (google convention f.e. "...T21:59Z"), so date displays stay on the actual last day.
+ */
+function getOccurrenceEndDate(event: CalEvent, occurrenceStartMs?: number): number | undefined {
+  const start = occurrenceStartMs ?? (event.dates?.start ? event.dates.start.getJsDateObject().getTime() : undefined);
+  if (start === undefined) return undefined;
+
+  if (event.type === 'allDay') {
+    const days = Math.max(1, Math.round(event.durationInMinutes / 1440));
+    const startDay = new Date(start);
+    return new Date(startDay.getFullYear(), startDay.getMonth(), startDay.getDate() + days - 1, 23, 59).getTime();
+  }
+  return start + event.durationInMinutes * 60 * 1000;
+}
+
+/**
+ * extracts the end of a recurring series:
+ * - "UNTIL=" in the rule -> that date
+ * - no UNTIL but "COUNT=n" -> expand the recurrence and use end of the n-th occurrence
+ * - neither (infinite series) -> undefined, such entries should never be pruned/displayed as ended
+ */
+function getRecurrenceEndDate(event: CalEvent): number | undefined {
+  const recurrenceRule = event.recurrenceRule;
+  if (!recurrenceRule || !event.dates?.start) return undefined;
+
+  const untilMatch = /UNTIL=([0-9]{8}(?:T[0-9]{6}Z)?)/.exec(recurrenceRule);
+  if (untilMatch) return parseCompactDateToken(untilMatch[1]);
+
+  const countMatch = /COUNT=([0-9]+)/.exec(recurrenceRule);
+  if (!countMatch) return undefined;
+
+  try {
+    const recur = ICAL.Recur.fromString(recurrenceRule.startsWith('RRULE:') ? recurrenceRule.slice(6) : recurrenceRule);
+    const iterator = recur.iterator(ICAL.Time.fromJSDate(event.dates.start.getOriginalJsDateObject()));
+    const count = parseInt(countMatch[1]);
+    let lastOccurrence: ICAL.Time | undefined;
+    for (let i = 0; i < count; i++) {
+      const next = iterator.next();
+      if (!next) break;
+      lastOccurrence = next;
+    }
+    if (!lastOccurrence) return undefined;
+    return getOccurrenceEndDate(event, lastOccurrence.toJSDate().getTime());
+  } catch (error) {
+    logging('warn', 'getRecurrenceEndDate: failed to expand COUNT rule', recurrenceRule, error);
+    return undefined;
+  }
+}
+
 function isBetweenDateTimes(startDate: Date | CustomDateHandler, endDate: Date | CustomDateHandler, date: Date | CustomDateHandler): boolean {
   if (startDate instanceof CustomDateHandler) startDate = startDate.getJsDateObject();
   if (endDate instanceof CustomDateHandler) endDate = endDate.getJsDateObject();
@@ -174,6 +250,7 @@ async function sleep(ms: number): Promise<void> {
 
 export {
   decodeDataEventId,
+  decodeDataEventIdFull,
   calculateHashSha256,
   downloadStringAsFile,
   escapeHtml,
@@ -187,4 +264,7 @@ export {
   trimArray,
   logging,
   sleep,
+  parseCompactDateToken,
+  getOccurrenceEndDate,
+  getRecurrenceEndDate,
 };

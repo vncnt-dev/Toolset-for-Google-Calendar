@@ -4,7 +4,9 @@ import { loadSettings } from '../lib/SettingsHandler';
 import * as Tools from './tools';
 
 import { getEventXhrDataById } from '../lib/parseEventData';
-import { decodeDataEventId, getUserInfo } from '../lib/miscellaneous';
+import { getUserInfo } from '../lib/miscellaneous';
+import { decodeDataEventIdFull } from '../lib/miscellaneous';
+import { loadIndicatorExclusions, isIndicatorExcluded } from '../lib/indicatorExclusionStore';
 import { logging } from '../lib/logger';
 import { CustomDateHandler } from '../lib/customDateHandler';
 import { resetCache, setItemInCache } from '../lib/sessionCache';
@@ -60,6 +62,7 @@ function observerCalendarViewFunction(mutationsList: MutationRecord[] = []) {
 async function startWorkerCalendarView(settingsOverride?: Settings) {
   logging('info', 'startWorkerCalendarView');
   let settings = settingsOverride ?? (await loadSettings());
+  await loadIndicatorExclusions();
   resetCache();
   setItemInCache('userInfo', getUserInfo());
   /**
@@ -78,13 +81,14 @@ async function startWorkerCalendarView(settingsOverride?: Settings) {
 
     for (let calEventHtmlElement of calEventList) {
       let eventId = '';
+      let occurrenceDate: string | undefined;
       try {
         const dataEventId = calEventHtmlElement.getAttribute('data-eventid')!;
         if (dataEventId.startsWith('tasks_')) {
           logging('debug', 'skipping tasks event: ', dataEventId);
           continue;
         }
-        eventId = decodeDataEventId(dataEventId);
+        ({ id: eventId, occurrenceDate } = decodeDataEventIdFull(dataEventId));
         const originalEvent: CalEvent = getEventXhrDataById(eventId)!;
         if (!originalEvent) continue;
 
@@ -113,6 +117,7 @@ async function startWorkerCalendarView(settingsOverride?: Settings) {
 
         if (!thisEvent.dates.start || !thisEvent.dates.end) continue;
 
+        thisEvent.occurrenceToken = occurrenceDate;
         eventStorage.push({ ...thisEvent });
       } catch (error) {
         let errorMessage = '';
@@ -125,6 +130,7 @@ async function startWorkerCalendarView(settingsOverride?: Settings) {
 
     for (let calEventHtmlElement of allOrMultiDayCalEventList) {
       let eventId = '';
+      let allOrMultiDayOccurrenceDate: string | undefined;
       try {
         const dataEventId = calEventHtmlElement.parentElement!.getAttribute('data-eventid');
         if (!dataEventId) {
@@ -135,7 +141,7 @@ async function startWorkerCalendarView(settingsOverride?: Settings) {
           logging('debug', 'skipping tasks event: ', dataEventId);
           continue;
         }
-        eventId = decodeDataEventId(dataEventId);
+        ({ id: eventId, occurrenceDate: allOrMultiDayOccurrenceDate } = decodeDataEventIdFull(dataEventId));
 
         let originalEvent: CalEvent = getEventXhrDataById(eventId)!;
         if (!originalEvent) continue;
@@ -155,6 +161,7 @@ async function startWorkerCalendarView(settingsOverride?: Settings) {
         thisEvent.parentElement = calEventHtmlElement.parentElement!;
         thisEvent.timeElement = calEventHtmlElement;
         if (!thisEvent.dates.start || !thisEvent.dates.end) continue;
+        thisEvent.occurrenceToken = allOrMultiDayOccurrenceDate;
         if (thisEvent.type === 'allDay') {
           const startDate = thisEvent.dates.start.getOriginalJsDateObject().setHours(0, 0, 0, 0);
           const endDate = new Date(startDate + (thisEvent.durationInMinutes - 1) * 60 * 1000);
@@ -174,7 +181,15 @@ async function startWorkerCalendarView(settingsOverride?: Settings) {
       if (settings.calcDuration_isActive) Tools.injectDuration(thisEvent, settings);
     }
 
-    if (settings.indicateAllDayEvents_isActive) Tools.indicateAllDayEvents(allOrMultiDayEventStorage, settings);
+    if (settings.indicateAllDayEvents_isActive) {
+      // drop excluded events before rendering, so the width distribution of remaining indicators stays correct
+      const totalBeforeFilter = allOrMultiDayEventStorage.length;
+      allOrMultiDayEventStorage = allOrMultiDayEventStorage.filter((event) => !isIndicatorExcluded(event.id, event.occurrenceToken));
+      if (totalBeforeFilter !== allOrMultiDayEventStorage.length) {
+        logging('info', `indicateAllDayEvents: ${totalBeforeFilter - allOrMultiDayEventStorage.length} event(s) excluded by user`);
+      }
+      Tools.indicateAllDayEvents(allOrMultiDayEventStorage, settings);
+    }
 
     logging('info', 'events number: ', eventStorage.length, ' storage: ', eventStorage);
     logging('info', 'allOrMultiDayEvents number: ', allOrMultiDayEventStorage.length, ' storage: ', allOrMultiDayEventStorage);
@@ -192,6 +207,7 @@ async function startWorkerCompleteHTMLBody(mutationsList: MutationRecord[] = [],
   disconnectObserver();
   if (settings.removeGMeets_isActive) Tools.removeGMeets();
   if (settings.exportAsIcs_isActive) Tools.exportToIcalPrepare();
+  if (settings.indicateAllDayEvents_isActive) void Tools.hideIndicatorPrepare();
   createObserver();
 }
 

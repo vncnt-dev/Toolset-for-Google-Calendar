@@ -3,6 +3,7 @@ import { OptionGroupSettings } from '../../../interfaces/optionGroupSettingsInte
 import type { useShareableState } from './reactSettingsHandler';
 import { zipSync } from 'fflate';
 import { toast } from 'react-toastify';
+import { getAllIndicatorExclusions, removeIndicatorExclusion, INDICATOR_EXCLUSIONS_STORAGE_KEY, IndicatorExclusionEntry } from '../../../contentScripts/lib/indicatorExclusionStore';
 
 type SharedSettings = ReturnType<typeof useShareableState>['sharedSettings'];
 type UpdateSharedSettings = ReturnType<typeof useShareableState>['updateSharedSettings'];
@@ -130,6 +131,114 @@ const LoggingSettingsControls = ({
   );
 };
 
+const formatDate = (ms?: number) => (ms === undefined ? '' : new Date(ms).toLocaleDateString());
+
+/** "21.8.2026 – 21.8.2026" -> "21.8.2026" */
+const formatDateRange = (startMs?: number, endMs?: number): string => {
+  const start = startMs !== undefined ? formatDate(startMs) : null;
+  const end = endMs !== undefined ? formatDate(endMs) : null;
+  if (!start && !end) return '';
+  if (!end || !start) return start ?? end!;
+  const isSameCalendarDay =
+    new Date(startMs!).getFullYear() === new Date(endMs!).getFullYear() &&
+    new Date(startMs!).getMonth() === new Date(endMs!).getMonth() &&
+    new Date(startMs!).getDate() === new Date(endMs!).getDate();
+  return isSameCalendarDay ? start : `${start} – ${end}`;
+};
+
+/** second line per entry: date range; series show "from <date>; RULE, until <date>" */
+const entryMeta = (entry: IndicatorExclusionEntry): string => {
+  if (entry.scope === 'series') {
+    const parts = [`from ${entry.s !== undefined ? formatDate(entry.s) : '?'}`];
+    if (entry.r) parts.push(entry.r);
+    parts.push(entry.end !== undefined ? `until ${formatDate(entry.end)}` : 'no end date');
+    return parts.join(', ');
+  }
+
+  return formatDateRange(entry.s, entry.end) || entry.id;
+};
+
+const IndicatorExclusionListControls = () => {
+  const [entries, setEntries] = React.useState<IndicatorExclusionEntry[]>([]);
+  const [open, setOpen] = React.useState(false);
+
+  const refresh = React.useCallback(async () => {
+    try {
+      setEntries(await getAllIndicatorExclusions());
+    } catch (error) {
+      console.error('Failed to load indicator exclusions:', error);
+    }
+  }, []);
+
+  React.useEffect(() => {
+    refresh();
+    if (typeof chrome !== 'undefined' && chrome.storage?.onChanged) {
+      const listener = (changes: { [key: string]: chrome.storage.StorageChange }, areaName: string) => {
+        if (areaName === 'sync' && changes[INDICATOR_EXCLUSIONS_STORAGE_KEY]) {
+          refresh();
+        }
+      };
+      chrome.storage.onChanged.addListener(listener);
+      return () => chrome.storage.onChanged.removeListener(listener);
+    }
+  }, [refresh]);
+
+  const handleRemove = async (id: string) => {
+    await removeIndicatorExclusion(id);
+    await refresh();
+  };
+
+  return (
+    <div className="border-t border-gray-200 pt-4 mt-4">
+      <p className="font-medium mb-2">Hidden background indicators</p>
+      <p className="text-sm text-gray-500 mb-3">
+        Events whose background indicator was hidden. Entries whose last occurrence lies more than 6 months in the past
+        are removed automatically.
+        <br />
+        <b>How to add events:</b> Open an all-day or multi-day event in Google Calendar™, click the three-dot menu and
+        select "Hide background indicator".
+      </p>
+      <button onClick={() => setOpen(true)} disabled={entries.length === 0} className="btn btn-outline btn-sm">
+        Open Blacklist ({entries.length})
+      </button>
+
+      {open && (
+        <div
+          className="modal modal-open"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setOpen(false);
+          }}
+        >
+          <div className="modal-box max-w-lg">
+            <h5 className="text-xl font-bold mb-1">Hidden background indicators</h5>
+            <p className="text-sm text-gray-500 mb-4">
+              Click "Remove" to show the background indicator of an event again.
+            </p>
+            <ul className="divide-y divide-gray-200 border border-gray-200 rounded-xl overflow-hidden max-h-[60vh] overflow-y-auto">
+              {entries.map((entry) => (
+                <li key={entry.id} className="flex items-center justify-between gap-4 px-4 py-2 bg-white">
+                  <div className="min-w-0">
+                    <span className="block truncate font-medium">{entry.n || entry.id}</span>
+                    <span className="text-xs text-gray-400">{entryMeta(entry)}</span>
+                  </div>
+                  <button onClick={() => void handleRemove(entry.id)} className="btn btn-outline btn-error btn-xs shrink-0">
+                    Remove
+                  </button>
+                </li>
+              ))}
+            </ul>
+            <div className="modal-action">
+              <button className="btn" onClick={() => setOpen(false)}>
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 const CacheSettingsControls = () => {
   const [eventCount, setEventCount] = React.useState(0);
   const [logCount, setLogCount] = React.useState(0);
@@ -237,7 +346,8 @@ export const getAllOptionGroupSettings = (sharedSettings: SharedSettings, update
         <div>
           <b>Welcome</b> <br />
           This extension provides multiple small tools for the Google Calendar™. <br />
-          You can click on the preview images to see a larger version.
+          You can click on the preview images to see a larger version. <br /><br />
+          <b>Currently installed version:</b> {chrome.runtime.getManifest().version}
         </div>
       ),
     },
@@ -394,6 +504,7 @@ export const getAllOptionGroupSettings = (sharedSettings: SharedSettings, update
             />
             <span className="w-12 rounded text-right font-bold">{sharedSettings.indicateAllDayEvents_maxWidth + '%'}</span>
           </div>
+          <IndicatorExclusionListControls />
         </div>
       ),
       toggleSettings: 'indicateAllDayEvents_isActive',

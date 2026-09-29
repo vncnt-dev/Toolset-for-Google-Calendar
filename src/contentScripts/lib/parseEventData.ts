@@ -1,3 +1,4 @@
+import { formatDuration } from './formatDuration';
 import { CalEvent, EventDates } from '../../interfaces/eventInterface';
 import { loadSettings } from './SettingsHandler';
 import { CustomDateHandler } from './customDateHandler';
@@ -24,25 +25,46 @@ function startXhrListener(onEventDataUpdated: () => void = () => {}) {
         }
         updateXhrEventData(data, onEventDataUpdated);
       } else if (url.includes('/sync.sync')) {
-        // this is called when an event is added or edited
+        // this is called when an event is added or edited, or as a metadata-only sync
         try {
           logging('info', 'xhr event - sync.sync', req);
           const escapedJsonString = escapeJsonString(req.responseText);
           const responseAsJson = JSON.parse(escapedJsonString);
-          // if no events are in the response, return (this is the case when an event is deleted
-          let data;
-          try {
-            data = responseAsJson[0][2][3][0][1][0][3] || responseAsJson[0][2][3][1][1][0][3]; // at least on Workplace accounts the second structure is used (not sure if allways or only in certain cases)
-          } catch (error) {
-            logging('warn', 'XMLHttpRequest - sync.sync', JSON.stringify(responseAsJson), error);
+
+          const calendarBlocks = responseAsJson?.[0]?.[2]?.[3];
+
+          // If calendarBlocks is not an array, this is a metadata-only sync response (no event data)
+          if (!Array.isArray(calendarBlocks)) {
             return;
           }
-          if (!data) {
-            logging('warn', 'no data found in xhr event - sync.sync', JSON.stringify(responseAsJson));
+
+          // Iterate over all calendar blocks and extract all events
+          let initDataStructure: Array<any> = [];
+
+          for (const block of calendarBlocks) {
+            if (!Array.isArray(block)) continue;
+            const calendarId = typeof block[0] === 'string' ? block[0] : '';
+            const eventEntries = block[1];
+            if (!Array.isArray(eventEntries)) continue;
+
+            const events: Array<any> = [];
+            for (const entry of eventEntries) {
+              const eventData = entry?.[3];
+              if (Array.isArray(eventData) && eventData.length > 0) {
+                events.push(eventData);
+              }
+            }
+
+            if (events.length > 0) {
+              initDataStructure.push([calendarId, events]);
+            }
+          }
+
+          if (initDataStructure.length === 0) {
             return;
           }
-          let initDataStrcucture = [['', [data]]]; // mock structure to match the structure of the initial data
-          updateXhrEventData(initDataStrcucture, onEventDataUpdated);
+
+          updateXhrEventData(initDataStructure, onEventDataUpdated);
         } catch (error) {
           logging('error', 'GCT_XMLHttpRequest-update', error);
         }
@@ -154,44 +176,6 @@ function calculateDurationInMinutes(startEndDateTime: Date[]): number {
   }
 }
 
-/* Format Date */
-function formatDuration(diff: number, format: string, minDurationMinutes: number): string | null {
-  // if diff is less than minDurationMinutes, return nothing
-  if (minDurationMinutes && diff < minDurationMinutes) return null;
-  switch (format) {
-    case 'decimalHours':
-      var durationInHours = diff / 60;
-      if (durationInHours % 24 > 23.99) durationInHours = Math.ceil(durationInHours);
-      if (durationInHours < 24) return durationInHours.toFixed(2) + ' ' + (durationInHours <= 1 ? 'hour' : 'hours');
-      // duration of full and multi-day events in days rather than hours
-      let durationInDays = durationInHours / 24;
-      return durationInDays.toFixed(2) + ' ' + (durationInDays > 1 ? 'days' : 'day');
-    case 'hourMinutes': // is default case
-    default:
-      var durationInHours = diff / 60;
-
-      if (durationInHours % 24 > 23.99)
-        // if 23:59, round up to 24 hours
-        durationInHours = Math.ceil(durationInHours);
-
-      let hours = Math.floor(durationInHours);
-      let minutes = Math.floor((durationInHours - hours) * 60);
-
-      // also display days if duration is greater than 24 hours
-      let days: number = 0;
-      if (durationInHours >= 24) {
-        days = Math.floor(durationInHours / 24);
-        hours = hours - days * 24;
-      }
-
-      let returnString = '';
-      if (days > 0) returnString += days + 'd ';
-      if (hours > 0) returnString += hours + 'h ';
-      if (minutes > 0) returnString += minutes + 'm';
-
-      return returnString.trim();
-  }
-}
 
 function isAllDayEvent(eventTime: EventDates): boolean {
   let startDate = eventTime.start.getOriginalJsDateObject();

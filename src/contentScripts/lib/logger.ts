@@ -30,10 +30,7 @@ async function flushPendingLogs() {
   const sessionKey = `gct_log_report_${sessionId}`;
 
   try {
-    const storageData = await chrome.storage.local.get(['gct_log_sessions', sessionKey]) as {
-      gct_log_sessions?: string[];
-      [key: string]: any;
-    };
+    const storageData = (await chrome.storage.local.get(['gct_log_sessions', sessionKey])) as Record<string, any>;
     let sessions: string[] = storageData.gct_log_sessions || [];
     let currentLogs: string[] = storageData[sessionKey] || [];
 
@@ -78,10 +75,7 @@ export async function renameSession(oldId: string, newId: string): Promise<void>
     const oldKey = `gct_log_report_${oldId}`;
     const newKey = `gct_log_report_${newId}`;
 
-    const data = await chrome.storage.local.get(['gct_log_sessions', oldKey]) as {
-      gct_log_sessions?: string[];
-      [key: string]: any;
-    };
+    const data = (await chrome.storage.local.get(['gct_log_sessions', oldKey])) as Record<string, any>;
     let sessions: string[] = data.gct_log_sessions || [];
     const logs: string[] = data[oldKey] || [];
 

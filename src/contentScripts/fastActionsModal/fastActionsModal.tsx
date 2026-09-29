@@ -121,6 +121,7 @@ export const FastActionsModal = () => {
         <div className="GCToolsMenueItem">
           <p>Get more information about the features and additional customization options on the option page.</p>
           <div className="grid grid-cols-2">
+            <p className="text-sm">Duration and hover apply in the views selected on the Options Page.</p>
             <FastSettingsToggle feature="calcDuration_isActive" name="Display Event-Duration" />
             <FastSettingsToggle feature="hoverInformation_isActive" name="Information On Hover" />
             <FastSettingsToggle feature="removeGMeets_isActive" name="Remove GMeeting Buttons" />

@@ -1,3 +1,9 @@
+export interface ViewSelection {
+  day: boolean;
+  multiDay: boolean;
+  monthGrid: boolean;
+}
+
 
 export interface SettingsIsActive {
   calcDuration_isActive: boolean;
@@ -11,6 +17,8 @@ export interface SettingsIsActive {
 
 // extend SettingsIsActive
 export interface Settings extends SettingsIsActive {
+  calcDuration_views: ViewSelection;
+  hoverInformation_views: ViewSelection;
   calcDuration_minimumDurationMinutes: number;
   calcDuration_durationFormat: 'hourMinutes' | 'decimalHours';
   calcDuration_disableForAllDayEvents: boolean;

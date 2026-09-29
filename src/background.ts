@@ -1,4 +1,5 @@
 import { defaultSettings, loadSettings, saveSettings } from './contentScripts/lib/SettingsHandler';
+import { isVersionSilent } from './Pages/changelog/lib/getAllChangelogs';
 
 function openSettings() {
   chrome.runtime.openOptionsPage();
@@ -16,8 +17,11 @@ chrome.runtime.onInstalled.addListener(async function (details) {
   if (details.reason == 'update') {
     let settings = await loadSettings();
     saveSettings({ ...defaultSettings, ...settings });
+    const currentVersion = chrome.runtime.getManifest().version;
     loadSettings().then((settings) => {
-      if (settings.showChangeLog_isActive) chrome.tabs.create({ url: 'changelog/changelog.html' });
+      if (settings.showChangeLog_isActive && !isVersionSilent(currentVersion)) {
+        chrome.tabs.create({ url: 'changelog/changelog.html' });
+      }
     });
   }
 });

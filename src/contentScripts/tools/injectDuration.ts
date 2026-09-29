@@ -1,130 +1,118 @@
-import { CalEvent } from '../../interfaces/eventInterface';
-import { Settings } from '../../interfaces/SettingsInterface';
-import { logging } from '../lib/logger';
+import type { CalEvent } from '../../interfaces/eventInterface';
+import type { Settings } from '../../interfaces/SettingsInterface';
+import { type CalendarView, isFeatureActive } from '../lib/calendarView';
+import { formatDuration } from '../lib/formatDuration';
 
-function injectDuration(calEvent: CalEvent, settings: Settings) {
-  if (calEvent.type === 'allDay' && settings.calcDuration_disableForAllDayEvents) {
-    const eventTimeElement = calEvent.timeElement!;
-    if (!eventTimeElement) return;
-    const parentElement = eventTimeElement.parentElement!;
-    if (!parentElement) return;
-    let oldDurationElement = parentElement.querySelector('.event-duration') as HTMLElement | null;
-    if (oldDurationElement) {
-      oldDurationElement.remove();
-    }
+type StyleChange = { element: HTMLElement; property: string; original: string; priority: string; applied: string };
+type DurationRecord = { node: HTMLElement; changes: StyleChange[] };
+const records = new Map<HTMLElement, DurationRecord>();
+
+function setStyle(record: DurationRecord, element: HTMLElement, property: string, value: string) {
+  record.changes.push({ element, property, original: element.style.getPropertyValue(property),
+    priority: element.style.getPropertyPriority(property), applied: value });
+  element.style.setProperty(property, value);
+}
+
+const inheritedTextProperties = [
+  'color',
+  'font-family',
+  'font-size',
+  'font-style',
+  'font-weight',
+  'letter-spacing',
+  'line-height',
+  'text-decoration',
+] as const;
+
+/** Match Google's rendered time label without copying its layout classes. */
+function copyTextStyle(source: HTMLElement, target: HTMLElement) {
+  const sourceStyle = getComputedStyle(source);
+  for (const property of inheritedTextProperties) {
+    target.style.setProperty(property, sourceStyle.getPropertyValue(property));
+  }
+}
+
+function removeDuration(element: HTMLElement) {
+  const record = records.get(element);
+  if (!record) return;
+  record.node.remove();
+  for (const change of record.changes) {
+    // Google may have updated the same element since we rendered it.
+    if (change.element.style.getPropertyValue(change.property) !== change.applied ||
+        change.element.style.getPropertyPriority(change.property) !== '') continue;
+    if (change.original) change.element.style.setProperty(change.property, change.original, change.priority);
+    else change.element.style.removeProperty(change.property);
+  }
+  records.delete(element);
+}
+
+/** Also removes decorations for events no longer available in the metadata cache. */
+export function reconcileDurations(activeElements: Set<HTMLElement>) {
+  for (const element of records.keys()) {
+    if (!element.isConnected || !activeElements.has(element)) removeDuration(element);
+  }
+}
+
+export function injectDuration(event: CalEvent, settings: Settings, view: CalendarView) {
+  const element = event.parentElement;
+  const time = event.timeElement;
+  if (!element) return;
+  const text = formatDuration(event.durationInMinutes, settings.calcDuration_durationFormat, settings.calcDuration_minimumDurationMinutes);
+  if (!time || !text || !isFeatureActive(settings, 'calcDuration', view) ||
+      (event.type === 'allDay' && settings.calcDuration_disableForAllDayEvents)) {
+    removeDuration(element);
     return;
   }
 
-  if (calEvent.durationFormated) {
-    try {
-      const eventTimeElement = calEvent.timeElement!;
-      const parentElement = eventTimeElement.parentElement!;
-      const isMultiDayEvent = calEvent.type === 'allDay' || calEvent.type === 'nonAllDayMultiDay';
-      const sourceDurationElement = isMultiDayEvent ? eventTimeElement.querySelector('.nHqeVd') : eventTimeElement;
-      let durationElement: HTMLElement;
-      if (isMultiDayEvent) {
-        durationElement = sourceDurationElement!.cloneNode(true) as HTMLElement;
-      } else {
-        durationElement = eventTimeElement.cloneNode(true) as HTMLElement;
-        durationElement.classList.remove('gVNoLb');
-      }
-      durationElement.classList.add('event-duration');
+  // Restore native layout before measuring. Workers disconnect their MutationObserver while rendering.
+  removeDuration(element);
+  const stackedLabel = time.querySelector<HTMLElement>('.nHqeVd');
+  const target = stackedLabel ?? time;
+  const nativeText = stackedLabel?.querySelector<HTMLElement>('.DvyQhe, .WBi6vc') ?? time;
+  const node = document.createElement('span');
+  node.className = 'event-duration';
+  node.style.cssText = 'white-space:nowrap;pointer-events:none;';
+  copyTextStyle(nativeText, node);
+  const record: DurationRecord = { node, changes: [] };
+  records.set(element, record);
 
-      let oldDurationElement = parentElement.querySelector('.event-duration') as HTMLElement | null;
-      let position = getPosition(parentElement, oldDurationElement, calEvent);
-
-      // if new position does not match old position, remove old duration element
-      if (oldDurationElement && oldDurationElement.getAttribute('position') !== position) {
-        oldDurationElement.remove();
-        oldDurationElement = null;
-      }
-
-      if (position === 'inline-block') {
-        // durationelement next to time
-        const durationText = `(${calEvent.durationFormated})`;
-        if (!oldDurationElement) {
-          logging('info', 'injectDuration-T1: adding duration: ', calEvent.id, calEvent.name, ' duration: ', calEvent.durationFormated);
-          if (!isMultiDayEvent) {
-            eventTimeElement.style.display = 'inline-block';
-          }
-          durationElement.style.display = 'inline-block';
-          durationElement.style.paddingLeft = '5px';
-          durationElement.innerText = durationText;
-        } else {
-          if ((oldDurationElement as HTMLElement).innerText !== durationText) {
-            // update duration
-            logging(
-              'info',
-              ' injectDuration-T1: updating duration: ',
-              calEvent.id,
-              calEvent.name,
-              ' duration: ',
-              calEvent.durationFormated,
-            );
-            (oldDurationElement as HTMLElement).innerText = durationText;
-          }
-        }
-        // else nothing to do, because the duration element is already in the right position
-      } else {
-        // durationelement below time
-        if (!oldDurationElement) {
-          logging('info', 'injectDuration-T2: adding duration: ', calEvent.id, calEvent.name, ' duration: ', calEvent.durationFormated);
-          eventTimeElement.style.display = 'block';
-          durationElement.innerText = calEvent.durationFormated;
-        } else if ((oldDurationElement as HTMLElement).innerText != calEvent.durationFormated) {
-          // update duration
-          logging('info', 'injectDuration-T2: updating duration: ', calEvent.id, calEvent.name, ' duration: ', calEvent.durationFormated);
-          (oldDurationElement as HTMLElement).innerText = calEvent.durationFormated;
-        }
-      }
-
-      if (!oldDurationElement) {
-        // save new position of duration element
-        durationElement.setAttribute('position', position);
-        // insert durationElement after eventTimeElement
-        if (isMultiDayEvent) {
-          sourceDurationElement!.parentElement!.append(durationElement);
-        } else {
-          eventTimeElement.after(durationElement);
-        }
-      }
-
-      // adjust styling
-      if (parentElement.style.whiteSpace !== 'nowrap') parentElement.style.whiteSpace = 'nowrap';
-    } catch (error) {
-      logging('error', 'injectDurration: ', error);
-      return;
-    }
+  if (view === 'monthGrid') {
+    // Append to the existing single-line label. Never clone a Google layout element.
+    if (!stackedLabel) { removeDuration(element); return; }
+    const nativeChildren = Array.from(target.children) as HTMLElement[];
+    const widths = nativeChildren.map(child => child.getBoundingClientRect().width);
+    const nativeHeight = element.getBoundingClientRect().height;
+    node.textContent = `(${text})`;
+    node.style.cssText += 'display:inline;flex:0 0 auto;margin-inline-start:4px;padding:0;';
+    target.append(node);
+    const clipped = target.scrollWidth > target.clientWidth + 1 ||
+      element.scrollWidth > element.clientWidth + 1 ||
+      element.getBoundingClientRect().height > nativeHeight + 0.5 ||
+      nativeChildren.some((child, index) => child.getBoundingClientRect().width < widths[index] - 0.5 ||
+        child.scrollWidth > child.clientWidth + 1);
+    if (clipped) node.style.display = 'none';
+    return;
   }
+
+  const container = time.parentElement;
+  if (!container) { removeDuration(element); return; }
+  const height = Array.from(container.children).reduce((sum, child) => sum + (child as HTMLElement).clientHeight, 0);
+  const inline = !!stackedLabel || event.type === 'short' || element.clientHeight < height + 15;
+  node.textContent = inline ? `(${text})` : text;
+  node.style.display = inline ? 'inline' : 'block';
+  if (inline) node.style.marginInlineStart = '5px';
+  if (stackedLabel) target.append(node);
+  else if (inline) {
+    // Share the time label's line box and opacity. Adjacent inline-blocks can
+    // use different baselines when Google's label has overflow clipping.
+    for (const property of inheritedTextProperties) node.style.setProperty(property, 'inherit');
+    time.append(node);
+  }
+  else {
+    // A separate duration line must also match dimmed native time labels.
+    node.style.opacity = getComputedStyle(time).opacity;
+    setStyle(record, time, 'display', 'block');
+    time.after(node);
+  }
+  setStyle(record, container, 'white-space', 'nowrap');
 }
-
-/* sum up height of eventTimeElement and all siblings of  eventTimeElement */
-function getHeight(element: HTMLElement) {
-  let height = 0;
-  const siblings = element.children;
-  for (let i = 0; i < siblings.length; i++) {
-    height += (siblings[i] as HTMLElement).clientHeight;
-  }
-  return height;
-}
-
-function getPosition(eventContainer: HTMLElement, oldDurationElement: HTMLElement | null, eventObject: CalEvent) {
-  if (eventObject.type == 'allDay' || eventObject.type == 'nonAllDayMultiDay') {
-    return 'inline-block';
-  }
-
-  let position = 'block';
-  /* height that the  Calendar Event element needs to have to  not be Inline*/
-  let maxHeightForInlineBlock = getHeight(eventContainer) + 15; //15px is the height of the duration element
-
-  if (oldDurationElement) {
-    maxHeightForInlineBlock -= 15; /// remvoe old duration element height, because it is already in the eventTimeElement
-    if (oldDurationElement.getAttribute('position') == 'inline-block') maxHeightForInlineBlock += 10; // add 10 to reduce amount of position changes
-  }
-
-  // if the heigt of the Calendar Event element is smaller than the maxHeightForInlineBlock or type is small
-  if (eventObject.parentElement!.clientHeight < maxHeightForInlineBlock || eventObject.type == 'short') position = 'inline-block';
-  return position;
-}
-
-export { injectDuration };

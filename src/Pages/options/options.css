@@ -15,6 +15,27 @@
   --color-error: #dc3545;
 }
 
+.event-options-icon {
+  display: inline-block;
+  position: relative;
+  width: 0.75em;
+  height: 1em;
+  vertical-align: -0.1em;
+}
+
+.event-options-icon::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0.18em;
+  height: 0.18em;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow: 0 -0.32em 0 currentColor, 0 0.32em 0 currentColor;
+  transform: translate(-50%, -50%);
+}
+
 /* style scrollbar */
 ::-webkit-scrollbar {
   width: 10px;

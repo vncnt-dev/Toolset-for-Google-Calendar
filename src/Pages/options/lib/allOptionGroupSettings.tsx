@@ -2,9 +2,51 @@ import React from 'react';
 import { OptionGroupSettings } from '../../../interfaces/optionGroupSettingsInterface';
 import type { useShareableState } from './reactSettingsHandler';
 import { zipSync } from 'fflate';
+import { toast } from 'react-toastify';
+import {
+  getAllIndicatorExclusions,
+  removeIndicatorExclusion,
+  INDICATOR_EXCLUSIONS_STORAGE_KEY,
+  IndicatorExclusionEntry,
+} from '../../../contentScripts/lib/indicatorExclusionStore';
 
 type SharedSettings = ReturnType<typeof useShareableState>['sharedSettings'];
 type UpdateSharedSettings = ReturnType<typeof useShareableState>['updateSharedSettings'];
+
+const ViewSelectionControls = ({
+  feature,
+  sharedSettings,
+  updateSharedSettings,
+}: {
+  feature: 'calcDuration' | 'hoverInformation';
+  sharedSettings: SharedSettings;
+  updateSharedSettings: UpdateSharedSettings;
+}) => {
+  const key = `${feature}_views` as const;
+  return (
+    <fieldset className="mt-4 space-y-2 disabled:opacity-50" disabled={!sharedSettings[`${feature}_isActive`]}>
+      <legend className="font-medium mb-2">Active in</legend>
+      {(
+        [
+          ['day', 'Day'],
+          ['multiDay', 'Week / multiple days'],
+          ['monthGrid', 'Month / multiple weeks'],
+        ] as const
+      ).map(([view, label]) => (
+        <label key={view} className="flex items-center gap-3">
+          <input
+            type="checkbox"
+            className="checkbox checkbox-primary checkbox-sm"
+            checked={sharedSettings[key][view]}
+            onChange={(e) => updateSharedSettings({ [key]: { ...sharedSettings[key], [view]: e.target.checked } })}
+          />
+          <span>{label}</span>
+        </label>
+      ))}
+      <p className="text-sm text-gray-500">Custom views follow their layout. Select no views to hide this feature everywhere.</p>
+    </fieldset>
+  );
+};
 
 const LoggingSettingsControls = ({
   sharedSettings,
@@ -129,6 +171,215 @@ const LoggingSettingsControls = ({
   );
 };
 
+const formatDate = (ms?: number) => (ms === undefined ? '' : new Date(ms).toLocaleDateString());
+
+/** "21.8.2026 – 21.8.2026" -> "21.8.2026" */
+const formatDateRange = (startMs?: number, endMs?: number): string => {
+  const start = startMs !== undefined ? formatDate(startMs) : null;
+  const end = endMs !== undefined ? formatDate(endMs) : null;
+  if (!start && !end) return '';
+  if (!end || !start) return start ?? end!;
+  const isSameCalendarDay =
+    new Date(startMs!).getFullYear() === new Date(endMs!).getFullYear() &&
+    new Date(startMs!).getMonth() === new Date(endMs!).getMonth() &&
+    new Date(startMs!).getDate() === new Date(endMs!).getDate();
+  return isSameCalendarDay ? start : `${start} – ${end}`;
+};
+
+/** second line per entry: date range; series show "from <date>; RULE, until <date>" */
+const entryMeta = (entry: IndicatorExclusionEntry): string => {
+  if (entry.scope === 'series') {
+    const parts = [`from ${entry.s !== undefined ? formatDate(entry.s) : '?'}`];
+    if (entry.r) parts.push(entry.r);
+    parts.push(entry.end !== undefined ? `until ${formatDate(entry.end)}` : 'no end date');
+    return parts.join(', ');
+  }
+
+  return formatDateRange(entry.s, entry.end) || entry.id;
+};
+
+const IndicatorExclusionListControls = () => {
+  const [entries, setEntries] = React.useState<IndicatorExclusionEntry[]>([]);
+  const [open, setOpen] = React.useState(false);
+
+  const refresh = React.useCallback(async () => {
+    try {
+      setEntries(await getAllIndicatorExclusions());
+    } catch (error) {
+      console.error('Failed to load indicator exclusions:', error);
+    }
+  }, []);
+
+  React.useEffect(() => {
+    refresh();
+    if (typeof chrome !== 'undefined' && chrome.storage?.onChanged) {
+      const listener = (changes: { [key: string]: chrome.storage.StorageChange }, areaName: string) => {
+        if (areaName === 'sync' && changes[INDICATOR_EXCLUSIONS_STORAGE_KEY]) {
+          refresh();
+        }
+      };
+      chrome.storage.onChanged.addListener(listener);
+      return () => chrome.storage.onChanged.removeListener(listener);
+    }
+  }, [refresh]);
+
+  const handleRemove = async (id: string) => {
+    await removeIndicatorExclusion(id);
+    await refresh();
+  };
+
+  return (
+    <div className="border-t border-gray-200 pt-4 mt-4">
+      <p className="font-medium mb-2">Hidden background indicators</p>
+      <p className="font-small mb-2">
+        <b>How to hide an indicator:</b> Open an all-day or multi-day event in Google Calendar™, click the{' '}
+        <span className="whitespace-nowrap">
+          vertical three-dot options menu (
+          <span className="event-options-icon" aria-hidden="true" />)
+        </span>{' '}
+        in the event details, and select "Hide background indicator". To show it again, open the same menu and select "Show background indicator".
+      </p>
+
+      <p className="text-sm text-gray-500 mb-3">
+        <button onClick={() => setOpen(true)} disabled={entries.length === 0} className="btn btn-outline btn-sm mr-2">
+          Open Blacklist ({entries.length})
+        </button>
+        Events whose background indicator was hidden. Entries whose last occurrence lies more than 6 months in the past are removed automatically.
+      </p>
+
+      {open && (
+        <div
+          className="modal modal-open"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setOpen(false);
+          }}
+        >
+          <div className="modal-box max-w-lg">
+            <h5 className="text-xl font-bold mb-1">Hidden background indicators</h5>
+            <p className="text-sm text-gray-500 mb-4">Click "Remove" to show the background indicator of an event again.</p>
+            <ul className="divide-y divide-gray-200 border border-gray-200 rounded-xl overflow-hidden max-h-[60vh] overflow-y-auto">
+              {entries.map((entry) => (
+                <li key={entry.id} className="flex items-center justify-between gap-4 px-4 py-2 bg-white">
+                  <div className="min-w-0">
+                    <span className="block truncate font-medium">{entry.n || entry.id}</span>
+                    <span className="text-xs text-gray-400">{entryMeta(entry)}</span>
+                  </div>
+                  <button onClick={() => void handleRemove(entry.id)} className="btn btn-outline btn-error btn-xs shrink-0">
+                    Remove
+                  </button>
+                </li>
+              ))}
+            </ul>
+            <div className="modal-action">
+              <button className="btn" onClick={() => setOpen(false)}>
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+const CacheSettingsControls = () => {
+  const [eventCount, setEventCount] = React.useState(0);
+  const [logCount, setLogCount] = React.useState(0);
+  const [clearing, setClearing] = React.useState(false);
+
+  const fetchStats = async () => {
+    try {
+      if (typeof chrome !== 'undefined' && chrome.storage?.local) {
+        const allData = await chrome.storage.local.get(null);
+        const keys = Object.keys(allData);
+        let events = 0;
+        let logs = 0;
+        for (const key of keys) {
+          if (key.includes('gct_event_')) {
+            events++;
+          } else if (key.includes('gct_log_report_')) {
+            logs++;
+          }
+        }
+        setEventCount(events);
+        setLogCount(logs);
+      }
+    } catch (err) {
+      console.error('Failed to fetch cache stats:', err);
+    }
+  };
+
+  React.useEffect(() => {
+    fetchStats();
+    if (typeof chrome !== 'undefined' && chrome.storage?.onChanged) {
+      const listener = (changes: { [key: string]: chrome.storage.StorageChange }, areaName: string) => {
+        if (areaName === 'local') {
+          fetchStats();
+        }
+      };
+      chrome.storage.onChanged.addListener(listener);
+      return () => chrome.storage.onChanged.removeListener(listener);
+    }
+  }, []);
+
+  const handleClearCache = async () => {
+    setClearing(true);
+    try {
+      if (typeof chrome !== 'undefined' && chrome.storage?.local) {
+        await chrome.storage.local.clear();
+        await fetchStats();
+        toast.success('All cached data deleted successfully', {
+          position: 'bottom-right',
+          autoClose: 3000,
+        });
+      }
+    } catch (err) {
+      console.error('Failed to clear cache:', err);
+      toast.error('Failed to clear cached data.', {
+        position: 'bottom-right',
+        autoClose: 3000,
+      });
+    } finally {
+      setClearing(false);
+    }
+  };
+
+  return (
+    <div className="flex flex-col gap-4 mt-2">
+      <p className="text-base text-gray-600">
+        The extension caches Google Calendar™ event metadata and temporary logs (if enabled) locally in your browser's storage to enhance rendering
+        performance and assist with troubleshooting.
+      </p>
+
+      <div className="grid grid-cols-2 gap-4 my-2">
+        <div className="bg-gray-100 p-4 rounded-xl border border-gray-200 shadow-sm flex flex-col justify-between">
+          <span className="text-sm font-semibold text-gray-500 uppercase tracking-wider">Cached Events</span>
+          <span className="text-3xl font-extrabold text-blue-600 mt-2">{eventCount}</span>
+          <span className="text-xs text-gray-400 mt-1">Improves hover and calculation speed</span>
+        </div>
+        <div className="bg-gray-100 p-4 rounded-xl border border-gray-200 shadow-sm flex flex-col justify-between">
+          <span className="text-sm font-semibold text-gray-500 uppercase tracking-wider">Stored Log Reports</span>
+          <span className="text-3xl font-extrabold text-blue-600 mt-2">{logCount}</span>
+          <span className="text-xs text-gray-400 mt-1">Saved debugging sessions</span>
+        </div>
+      </div>
+
+      <div className="border-t border-gray-200 pt-4 mt-2">
+        <p className="text-sm text-gray-500 mb-4">
+          Clearing this data will remove all stored event metadata and debug log reports. Your settings will remain unaffected.
+        </p>
+        <button
+          onClick={handleClearCache}
+          disabled={clearing || (eventCount === 0 && logCount === 0)}
+          className="btn btn-error text-white font-medium px-6 shadow-md hover:shadow-lg transition-all"
+        >
+          {clearing ? 'Clearing Cache...' : 'Delete All Cached Data'}
+        </button>
+      </div>
+    </div>
+  );
+};
+
 export const getAllOptionGroupSettings = (sharedSettings: SharedSettings, updateSharedSettings: UpdateSharedSettings): OptionGroupSettings[] => {
   let allOptionGroupSettings: OptionGroupSettings[] = [
     {
@@ -138,7 +389,9 @@ export const getAllOptionGroupSettings = (sharedSettings: SharedSettings, update
         <div>
           <b>Welcome</b> <br />
           This extension provides multiple small tools for the Google Calendar™. <br />
-          You can click on the preview images to see a larger version.
+          You can click on the preview images to see a larger version. <br />
+          <br />
+          <b>Currently installed version:</b> {chrome.runtime.getManifest().version}
         </div>
       ),
     },
@@ -147,7 +400,8 @@ export const getAllOptionGroupSettings = (sharedSettings: SharedSettings, update
       titel: 'Display Event-Duration',
       text: (
         <div>
-          Calculates and displays the event durations on the "by day", "by week" and "by month" view.
+          Calculates and displays event durations in the selected calendar views.
+          <ViewSelectionControls feature="calcDuration" sharedSettings={sharedSettings} updateSharedSettings={updateSharedSettings} />
           <div className="form-control gap-4 mt-4">
             <label className="flex items-center gap-4">
               <span className="w-40 font-medium">Minimum duration</span>
@@ -203,7 +457,12 @@ export const getAllOptionGroupSettings = (sharedSettings: SharedSettings, update
     {
       id: 'hoverInformation',
       titel: 'Information On Hover',
-      text: <div>Show information on hover "by day", "by week" and "by month" view.</div>,
+      text: (
+        <div>
+          Show event information on hover in the selected calendar views.
+          <ViewSelectionControls feature="hoverInformation" sharedSettings={sharedSettings} updateSharedSettings={updateSharedSettings} />
+        </div>
+      ),
       toggleSettings: 'hoverInformation_isActive',
       pictureURLs: ['./images/hoverOverInformation_1.jpg', './images/hoverOverInformation_2.jpg'],
     },
@@ -295,6 +554,7 @@ export const getAllOptionGroupSettings = (sharedSettings: SharedSettings, update
             />
             <span className="w-12 rounded text-right font-bold">{sharedSettings.indicateAllDayEvents_maxWidth + '%'}</span>
           </div>
+          <IndicatorExclusionListControls />
         </div>
       ),
       toggleSettings: 'indicateAllDayEvents_isActive',
@@ -315,6 +575,17 @@ export const getAllOptionGroupSettings = (sharedSettings: SharedSettings, update
       pictureURLs: ['./images/exportAsIcs_1.jpg'],
     },
     {
+      id: 'logging',
+      titel: 'Enable Logging',
+      text: <LoggingSettingsControls sharedSettings={sharedSettings} updateSharedSettings={updateSharedSettings} />,
+      toggleSettings: 'isLoggingEnabled',
+    },
+    {
+      id: 'cache',
+      titel: 'Cache & Local Storage',
+      text: <CacheSettingsControls />,
+    },
+    {
       id: 'changelog',
       titel: 'Open Changelog-Page After Update',
       text: (
@@ -327,12 +598,6 @@ export const getAllOptionGroupSettings = (sharedSettings: SharedSettings, update
         </div>
       ),
       toggleSettings: 'showChangeLog_isActive',
-    },
-    {
-      id: 'logging',
-      titel: 'Enable Logging',
-      text: <LoggingSettingsControls sharedSettings={sharedSettings} updateSharedSettings={updateSharedSettings} />,
-      toggleSettings: 'isLoggingEnabled',
     },
   ];
 

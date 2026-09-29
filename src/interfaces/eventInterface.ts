@@ -20,6 +20,11 @@ export interface CalEvent {
   durationFormated: string | null;
   description: string;
   recurrenceRule?: string; // https://icalendar.org/iCalendar-RFC-5545/3-8-5-3-recurrence-rule.html
+  /**
+   * date token of the rendered occurrence of a recurring event (from data-eventid), f.e. "20221013T210000Z".
+   * undefined for non-recurring events and series masters.
+   */
+  occurrenceToken?: string;
   location: string;
   calendar: {
     id: string;

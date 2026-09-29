@@ -14,7 +14,7 @@ export function fastActionsModalInit() {
     // this element is used to display the hover information
 
     const hoverElement = JsxElementToHtmlElement(
-      <span className="RM9ulf catR2e PgfOZ qs41qe" id="hoverInformationElement">
+      <span className="RM9ulf catR2e PgfOZ qs41qe" id="hoverInformationElement" style={{ visibility: 'hidden' }}>
         <span className="AZnilc R8qYlc" id="hoverInformationElementText">
           Text
         </span>

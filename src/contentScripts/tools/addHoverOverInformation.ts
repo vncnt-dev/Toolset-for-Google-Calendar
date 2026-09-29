@@ -1,47 +1,55 @@
-import { get } from 'http';
-import { CalEvent, EventDates } from '../../interfaces/eventInterface';
+import type { CalEvent } from '../../interfaces/eventInterface';
 import { isSameDay } from '../lib/miscellaneous';
 import { getSettingsSnapshot } from '../lib/SettingsHandler';
+import { detectCalendarView, isFeatureActive } from '../lib/calendarView';
+import { formatDuration } from '../lib/formatDuration';
 
-function addHoverOverInformation(event: CalEvent) {
-  if (!event.parentElement) return;
+const events = new WeakMap<HTMLElement, CalEvent>();
+let activeElements = new Set<HTMLElement>();
+let hoveredElement: HTMLElement | null = null;
 
-  if (event.parentElement.dataset.gctHoverBound === 'true') return;
-  event.parentElement.dataset.gctHoverBound = 'true';
+export function hideHoverInformation() {
+  const tooltip = document.getElementById('hoverInformationElement');
+  if (tooltip) tooltip.style.visibility = 'hidden';
+  hoveredElement = null;
+}
 
-  let innerText = formatTime(event);
-  if (event.durationFormated) innerText += ` (${event.durationFormated})`;
-  if (event.name) innerText += `\n${event.name}`;
-  if (event.location) innerText += `\n${event.location}`;
-  if (event.description) innerText += `\n\n${event.description}`;
+export function reconcileHoverInformation(elements: Set<HTMLElement>) {
+  activeElements = elements;
+  if (hoveredElement && (!elements.has(hoveredElement) || !hoveredElement.isConnected)) hideHoverInformation();
+}
 
-  const hoverInformationElement = document.getElementById('hoverInformationElement');
-  const hoverInformationElementText = document.getElementById('hoverInformationElementText');
-  if (!hoverInformationElement || !hoverInformationElementText) return;
+export function addHoverOverInformation(event: CalEvent) {
+  const element = event.parentElement;
+  if (!element) return;
+  const bound = events.has(element);
+  events.set(element, event);
+  if (bound) return;
 
-  // set position and content of hoverInformationElement
-  event.parentElement.addEventListener('mousemove', (mouseEvent) => {
-    if (!getSettingsSnapshot().hoverInformation_isActive) {
-      hoverInformationElement.style.visibility = 'hidden';
+  element.addEventListener('mousemove', (mouseEvent) => {
+    const settings = getSettingsSnapshot();
+    if (!activeElements.has(element) || !isFeatureActive(settings, 'hoverInformation', detectCalendarView())) {
+      hideHoverInformation();
       return;
     }
-
-    hoverInformationElementText.innerText = innerText;
-    hoverInformationElement.style.visibility = 'visible';
-    // position hoverInformationElement under mouse pointer
-    // if mouse in near the bottom of the screen, move it up
-    if (mouseEvent.clientY + hoverInformationElement.clientHeight > window.innerHeight) {
-      hoverInformationElement.style.top = `${mouseEvent.clientY - hoverInformationElement.clientHeight + 10}px`;
-    } else {
-      hoverInformationElement.style.top = `${mouseEvent.clientY - 10}px`;
-    }
-    hoverInformationElement.style.left = `${mouseEvent.clientX}px`;
+    const current = events.get(element)!;
+    const tooltip = document.getElementById('hoverInformationElement');
+    const content = document.getElementById('hoverInformationElementText');
+    if (!tooltip || !content) return;
+    let text = formatTime(current);
+    const duration = formatDuration(current.durationInMinutes, settings.calcDuration_durationFormat, settings.calcDuration_minimumDurationMinutes);
+    if (duration) text += ` (${duration})`;
+    if (current.name) text += `\n${current.name}`;
+    if (current.location) text += `\n${current.location}`;
+    if (current.description) text += `\n\n${current.description}`;
+    if (content.textContent !== text) content.textContent = text;
+    hoveredElement = element;
+    tooltip.style.visibility = 'visible';
+    tooltip.style.top = `${mouseEvent.clientY + tooltip.clientHeight > window.innerHeight
+      ? mouseEvent.clientY - tooltip.clientHeight + 10 : mouseEvent.clientY - 10}px`;
+    tooltip.style.left = `${mouseEvent.clientX}px`;
   });
-
-  // hoverout eventlistener
-  event.parentElement.addEventListener('mouseout', () => {
-    hoverInformationElement.style.visibility = 'hidden';
-  });
+  element.addEventListener('mouseleave', hideHoverInformation);
 }
 
 function formatTime(event: CalEvent): string {
@@ -73,5 +81,3 @@ function formatTime(event: CalEvent): string {
     );
   }
 }
-
-export { addHoverOverInformation };

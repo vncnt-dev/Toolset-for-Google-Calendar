@@ -3,10 +3,50 @@ import { OptionGroupSettings } from '../../../interfaces/optionGroupSettingsInte
 import type { useShareableState } from './reactSettingsHandler';
 import { zipSync } from 'fflate';
 import { toast } from 'react-toastify';
-import { getAllIndicatorExclusions, removeIndicatorExclusion, INDICATOR_EXCLUSIONS_STORAGE_KEY, IndicatorExclusionEntry } from '../../../contentScripts/lib/indicatorExclusionStore';
+import {
+  getAllIndicatorExclusions,
+  removeIndicatorExclusion,
+  INDICATOR_EXCLUSIONS_STORAGE_KEY,
+  IndicatorExclusionEntry,
+} from '../../../contentScripts/lib/indicatorExclusionStore';
 
 type SharedSettings = ReturnType<typeof useShareableState>['sharedSettings'];
 type UpdateSharedSettings = ReturnType<typeof useShareableState>['updateSharedSettings'];
+
+const ViewSelectionControls = ({
+  feature,
+  sharedSettings,
+  updateSharedSettings,
+}: {
+  feature: 'calcDuration' | 'hoverInformation';
+  sharedSettings: SharedSettings;
+  updateSharedSettings: UpdateSharedSettings;
+}) => {
+  const key = `${feature}_views` as const;
+  return (
+    <fieldset className="mt-4 space-y-2 disabled:opacity-50" disabled={!sharedSettings[`${feature}_isActive`]}>
+      <legend className="font-medium mb-2">Active in</legend>
+      {(
+        [
+          ['day', 'Day'],
+          ['multiDay', 'Week / multiple days'],
+          ['monthGrid', 'Month / multiple weeks'],
+        ] as const
+      ).map(([view, label]) => (
+        <label key={view} className="flex items-center gap-3">
+          <input
+            type="checkbox"
+            className="checkbox checkbox-primary checkbox-sm"
+            checked={sharedSettings[key][view]}
+            onChange={(e) => updateSharedSettings({ [key]: { ...sharedSettings[key], [view]: e.target.checked } })}
+          />
+          <span>{label}</span>
+        </label>
+      ))}
+      <p className="text-sm text-gray-500">Custom views follow their layout. Select no views to hide this feature everywhere.</p>
+    </fieldset>
+  );
+};
 
 const LoggingSettingsControls = ({
   sharedSettings,
@@ -191,16 +231,21 @@ const IndicatorExclusionListControls = () => {
   return (
     <div className="border-t border-gray-200 pt-4 mt-4">
       <p className="font-medium mb-2">Hidden background indicators</p>
-      <p className="text-sm text-gray-500 mb-3">
-        Events whose background indicator was hidden. Entries whose last occurrence lies more than 6 months in the past
-        are removed automatically.
-        <br />
-        <b>How to add events:</b> Open an all-day or multi-day event in Google Calendar™, click the three-dot menu and
-        select "Hide background indicator".
+      <p className="font-small mb-2">
+        <b>How to hide an indicator:</b> Open an all-day or multi-day event in Google Calendar™, click the{' '}
+        <span className="whitespace-nowrap">
+          vertical three-dot options menu (
+          <span className="event-options-icon" aria-hidden="true" />)
+        </span>{' '}
+        in the event details, and select "Hide background indicator". To show it again, open the same menu and select "Show background indicator".
       </p>
-      <button onClick={() => setOpen(true)} disabled={entries.length === 0} className="btn btn-outline btn-sm">
-        Open Blacklist ({entries.length})
-      </button>
+
+      <p className="text-sm text-gray-500 mb-3">
+        <button onClick={() => setOpen(true)} disabled={entries.length === 0} className="btn btn-outline btn-sm mr-2">
+          Open Blacklist ({entries.length})
+        </button>
+        Events whose background indicator was hidden. Entries whose last occurrence lies more than 6 months in the past are removed automatically.
+      </p>
 
       {open && (
         <div
@@ -211,9 +256,7 @@ const IndicatorExclusionListControls = () => {
         >
           <div className="modal-box max-w-lg">
             <h5 className="text-xl font-bold mb-1">Hidden background indicators</h5>
-            <p className="text-sm text-gray-500 mb-4">
-              Click "Remove" to show the background indicator of an event again.
-            </p>
+            <p className="text-sm text-gray-500 mb-4">Click "Remove" to show the background indicator of an event again.</p>
             <ul className="divide-y divide-gray-200 border border-gray-200 rounded-xl overflow-hidden max-h-[60vh] overflow-y-auto">
               {entries.map((entry) => (
                 <li key={entry.id} className="flex items-center justify-between gap-4 px-4 py-2 bg-white">
@@ -304,9 +347,10 @@ const CacheSettingsControls = () => {
   return (
     <div className="flex flex-col gap-4 mt-2">
       <p className="text-base text-gray-600">
-        The extension caches Google Calendar™ event metadata and temporary logs locally in your browser's storage to enhance rendering performance and assist with troubleshooting.
+        The extension caches Google Calendar™ event metadata and temporary logs (if enabled) locally in your browser's storage to enhance rendering
+        performance and assist with troubleshooting.
       </p>
-      
+
       <div className="grid grid-cols-2 gap-4 my-2">
         <div className="bg-gray-100 p-4 rounded-xl border border-gray-200 shadow-sm flex flex-col justify-between">
           <span className="text-sm font-semibold text-gray-500 uppercase tracking-wider">Cached Events</span>
@@ -336,7 +380,6 @@ const CacheSettingsControls = () => {
   );
 };
 
-
 export const getAllOptionGroupSettings = (sharedSettings: SharedSettings, updateSharedSettings: UpdateSharedSettings): OptionGroupSettings[] => {
   let allOptionGroupSettings: OptionGroupSettings[] = [
     {
@@ -346,7 +389,8 @@ export const getAllOptionGroupSettings = (sharedSettings: SharedSettings, update
         <div>
           <b>Welcome</b> <br />
           This extension provides multiple small tools for the Google Calendar™. <br />
-          You can click on the preview images to see a larger version. <br /><br />
+          You can click on the preview images to see a larger version. <br />
+          <br />
           <b>Currently installed version:</b> {chrome.runtime.getManifest().version}
         </div>
       ),
@@ -356,7 +400,8 @@ export const getAllOptionGroupSettings = (sharedSettings: SharedSettings, update
       titel: 'Display Event-Duration',
       text: (
         <div>
-          Calculates and displays the event durations on the "by day", "by week" and "by month" view.
+          Calculates and displays event durations in the selected calendar views.
+          <ViewSelectionControls feature="calcDuration" sharedSettings={sharedSettings} updateSharedSettings={updateSharedSettings} />
           <div className="form-control gap-4 mt-4">
             <label className="flex items-center gap-4">
               <span className="w-40 font-medium">Minimum duration</span>
@@ -412,7 +457,12 @@ export const getAllOptionGroupSettings = (sharedSettings: SharedSettings, update
     {
       id: 'hoverInformation',
       titel: 'Information On Hover',
-      text: <div>Show information on hover "by day", "by week" and "by month" view.</div>,
+      text: (
+        <div>
+          Show event information on hover in the selected calendar views.
+          <ViewSelectionControls feature="hoverInformation" sharedSettings={sharedSettings} updateSharedSettings={updateSharedSettings} />
+        </div>
+      ),
       toggleSettings: 'hoverInformation_isActive',
       pictureURLs: ['./images/hoverOverInformation_1.jpg', './images/hoverOverInformation_2.jpg'],
     },
@@ -525,6 +575,17 @@ export const getAllOptionGroupSettings = (sharedSettings: SharedSettings, update
       pictureURLs: ['./images/exportAsIcs_1.jpg'],
     },
     {
+      id: 'logging',
+      titel: 'Enable Logging',
+      text: <LoggingSettingsControls sharedSettings={sharedSettings} updateSharedSettings={updateSharedSettings} />,
+      toggleSettings: 'isLoggingEnabled',
+    },
+    {
+      id: 'cache',
+      titel: 'Cache & Local Storage',
+      text: <CacheSettingsControls />,
+    },
+    {
       id: 'changelog',
       titel: 'Open Changelog-Page After Update',
       text: (
@@ -537,17 +598,6 @@ export const getAllOptionGroupSettings = (sharedSettings: SharedSettings, update
         </div>
       ),
       toggleSettings: 'showChangeLog_isActive',
-    },
-    {
-      id: 'logging',
-      titel: 'Enable Logging',
-      text: <LoggingSettingsControls sharedSettings={sharedSettings} updateSharedSettings={updateSharedSettings} />,
-      toggleSettings: 'isLoggingEnabled',
-    },
-    {
-      id: 'cache',
-      titel: 'Cache & Local Storage',
-      text: <CacheSettingsControls />,
     },
   ];
 

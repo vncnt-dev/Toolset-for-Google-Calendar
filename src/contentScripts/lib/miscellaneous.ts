@@ -20,9 +20,11 @@ function decodeDataEventIdFull(dataEventId: string): { id: string; occurrenceDat
   if (dataEventId.includes('_')) dataEventId = dataEventId.split('_')[1]; // f.e. birthdays have an id like: bday_<encodedId></encodedId>, while normal events have just <encodedId>
   let decoded = atob(dataEventId); // n17t3dbrekq5om2hj91t4pjefk_20221013T210000Z mail@...  -->  >id_date e-mail<
   const token = decoded.slice(0, decoded.indexOf(' '));
-  const underscoreIndex = token.indexOf('_');
-  if (underscoreIndex === -1) return { id: token };
-  return { id: token.slice(0, underscoreIndex), occurrenceDate: token.slice(underscoreIndex + 1) };
+  // Imported event IDs can start with or contain underscores. Only a trailing
+  // occurrence date separates a series ID from an individual occurrence.
+  const occurrence = /^(.+)_([0-9]{8}(?:T[0-9]{6}Z)?)$/.exec(token);
+  if (!occurrence) return { id: token };
+  return { id: occurrence[1], occurrenceDate: occurrence[2] };
 }
 
 async function calculateHashSha256(text: string): Promise<string> {

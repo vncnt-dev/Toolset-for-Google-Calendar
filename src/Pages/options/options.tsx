@@ -18,10 +18,10 @@ const Options = () => {
       <h1 className="font-medium text-4xl ml-4 mb-4 mt-2">
         Options
         <a href="https://github.com/vncnt-dev/Google-Calendar-Tools" aria-label="Link to the Github-Repository">
-          <img className="w-10 h-10 float-right mr-4" src="../sharedImages/Github-Mark.png" alt="Github Logo" />
+          <img className="w-10 h-10 float-right mr-4" src="../sharedImages/GitHub-Mark.png" alt="GitHub Logo" />
         </a>
         <a href="mailto:contact@vncnt.dev?subject=GCT%20Feedback%20or%20Question" aria-label="E-mail to the developer">
-          <img className="w-10 h-10 float-right mr-4" src="../sharedImages/E-mail.svg" alt="Github Logo" />
+          <img className="w-10 h-10 float-right mr-4" src="../sharedImages/E-mail.svg" alt="E-mail icon" />
         </a>
         <a href="/changelog/changelog.html" aria-label="Changelog" className='w-10 h-10 float-right mr-8 text-base flex items-center justify-center'>
           <span>Changelog</span>

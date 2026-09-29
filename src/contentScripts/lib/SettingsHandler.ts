@@ -1,9 +1,12 @@
+import { normalizeViewSelection } from './calendarView';
 import { Settings } from '../../interfaces/SettingsInterface';
 import { storage } from '@extend-chrome/storage';
 import { logging, clearAllReports } from './logger';
 
 var defaultSettings: Settings = {
   calcDuration_isActive: true,
+  calcDuration_views: normalizeViewSelection(),
+  hoverInformation_views: normalizeViewSelection(),
   calcDuration_minimumDurationMinutes: 30,
   calcDuration_durationFormat: 'hourMinutes',
   calcDuration_disableForAllDayEvents: false,
@@ -68,11 +71,13 @@ function normalizeSettings(rawSettings: Partial<Settings> | undefined): Settings
     normalizedSettings.calcDuration_disableForAllDayEvents = false;
   }
 
+  normalizedSettings.calcDuration_views = normalizeViewSelection(rawSettings?.calcDuration_views);
+  normalizedSettings.hoverInformation_views = normalizeViewSelection(rawSettings?.hoverInformation_views);
   return normalizedSettings;
 }
 
 function areSettingsEqual(left: Settings, right: Settings): boolean {
-  return Object.keys(right).every((key) => left[key as keyof Settings] === right[key as keyof Settings]);
+  return Object.keys(right).every((key) => JSON.stringify(left[key as keyof Settings]) === JSON.stringify(right[key as keyof Settings]));
 }
 
 if (typeof chrome !== 'undefined' && chrome.storage?.onChanged) {

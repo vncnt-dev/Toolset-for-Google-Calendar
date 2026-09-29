@@ -125,6 +125,25 @@ export const getAllChangelogs = (): Changelog[] => {
       titel: 'v1.6.8 - Improve interceptor and event-cache',
       silentUpdate: true,
     },
+    {
+      version: '1.7.0',
+      titel: 'v1.7.0 - Adds view settings and individual background indicator controls',
+      text: (
+        <div>
+          This update
+          <ul className="list-disc list-inside">
+            <li>Allows you to en-/disable "Display Event-Duration" and "Information On Hover" per calendar views </li>
+            <li>
+              Allows you to hide individual all-day and multi-day background indicators from the event menu{' '}
+              <span className="whitespace-nowrap">
+                (
+                <span className="event-options-icon" aria-hidden="true" />)
+              </span>.
+            </li>
+          </ul>
+        </div>
+      ),
+    },
   ];
 
   return allChangelogs;

@@ -1,3 +1,7 @@
+import { detectCalendarView, isFeatureActive, isVisible, type CalendarView } from '../lib/calendarView';
+import { reconcileDurations } from './injectDuration';
+import { hideHoverInformation, reconcileHoverInformation } from './addHoverOverInformation';
+import { formatDuration } from '../lib/formatDuration';
 import { CalEvent } from '../../interfaces/eventInterface';
 import type { Settings } from '../../interfaces/SettingsInterface';
 import { loadSettings } from '../lib/SettingsHandler';
@@ -16,7 +20,9 @@ const observerCalendarView = new MutationObserver((mutationsList, observer) => {
   observerCalendarViewFunction(mutationsList);
 });
 const observerCompleteHTMLBody = new MutationObserver((mutationsList, observer) => {
-  startWorkerCompleteHTMLBody(mutationsList);
+  const root = document.querySelector('#YPCqFe');
+  if (root !== observedRoot) observerCalendarViewFunction();
+  void startWorkerCompleteHTMLBody(mutationsList);
 });
 
 function createObserver() {
@@ -29,12 +35,27 @@ function disconnectObserver() {
   observerCompleteHTMLBody.disconnect();
 }
 
+let observedRoot: Element | null = null;
+const resizeObserver = new ResizeObserver(() => observerCalendarViewFunction());
+let resizedRoot: Element | null = null;
 function createObserverCalendarView() {
-  observerCalendarView.observe(document.querySelector('#YPCqFe')!, {
+  observedRoot = document.querySelector('#YPCqFe');
+  if (resizedRoot !== observedRoot) {
+    resizeObserver.disconnect();
+    if (observedRoot) resizeObserver.observe(observedRoot);
+    resizedRoot = observedRoot;
+  }
+  if (!observedRoot) return;
+  observerCalendarView.observe(observedRoot, {
     subtree: true,
     childList: true,
+    attributes: true,
+    characterData: true,
+    attributeFilter: ['class', 'style', 'hidden', 'aria-hidden', 'data-datekey'],
   });
 }
+window.addEventListener('resize', () => observerCalendarViewFunction());
+window.addEventListener('popstate', () => { hideHoverInformation(); observerCalendarViewFunction(); });
 
 function createObserverCompleteHTMLBody() {
   observerCompleteHTMLBody.observe(document.querySelector('body')!, {
@@ -55,11 +76,34 @@ function observerCalendarViewFunction(mutationsList: MutationRecord[] = []) {
     timer = setTimeout(function () {
       lastTime = Date.now();
       startWorkerCalendarView();
-    }, Date.now() - lastTime);
+    }, Math.max(0, 100 - (Date.now() - lastTime)));
   }
 }
 
+let workerRunning = false;
+let workerPending = false;
+let bodyPending = false;
+let lastView: CalendarView = 'unknown';
+
 async function startWorkerCalendarView(settingsOverride?: Settings) {
+  if (workerRunning) { workerPending = true; return; }
+  workerRunning = true;
+  try {
+    await renderCalendarView(settingsOverride);
+  } finally {
+    workerRunning = false;
+    if (bodyPending) {
+      bodyPending = false;
+      void startWorkerCompleteHTMLBody();
+    }
+    if (workerPending) {
+      workerPending = false;
+      observerCalendarViewFunction();
+    }
+  }
+}
+
+async function renderCalendarView(settingsOverride?: Settings) {
   logging('info', 'startWorkerCalendarView');
   let settings = settingsOverride ?? (await loadSettings());
   await loadIndicatorExclusions();
@@ -75,9 +119,17 @@ async function startWorkerCalendarView(settingsOverride?: Settings) {
   var allOrMultiDayEventStorage: CalEvent[] = [];
   disconnectObserver();
   try {
-    let calEventList: NodeListOf<HTMLElement> = document.querySelectorAll('div[role="button"][data-eventid]');
-    // events that are >24h or "full day" have to be handled separately, because there HTML structure is different
-    let allOrMultiDayCalEventList: NodeListOf<HTMLElement> = document.querySelectorAll('.KF4T6b.jKgTF:not(.PU9jSd)');
+    const root = document.querySelector('#YPCqFe');
+    const view = detectCalendarView(root);
+    const durationActive = isFeatureActive(settings, 'calcDuration', view);
+    const hoverActive = isFeatureActive(settings, 'hoverInformation', view);
+    if (view !== lastView || !hoverActive) hideHoverInformation();
+    lastView = view;
+    if (!durationActive) reconcileDurations(new Set());
+    if (!hoverActive) reconcileHoverInformation(new Set());
+    let calEventList = Array.from(root?.querySelectorAll<HTMLElement>('div[role="button"][data-eventid]') ?? []).filter(isVisible);
+    // Stacked chips include all-day/multi-day events and every event in the month grid.
+    let allOrMultiDayCalEventList = Array.from(root?.querySelectorAll<HTMLElement>('.KF4T6b.jKgTF:not(.PU9jSd)') ?? []).filter(isVisible);
 
     for (let calEventHtmlElement of calEventList) {
       let eventId = '';
@@ -168,33 +220,46 @@ async function startWorkerCalendarView(settingsOverride?: Settings) {
           thisEvent.dates.start.setDisableTzCorrection(true).setDate(new Date(startDate));
           thisEvent.dates.end.setDisableTzCorrection(true).setDate(new Date(endDate));
         }
-        allOrMultiDayEventStorage.push(thisEvent);
+        if (thisEvent.type === 'allDay' || thisEvent.type === 'nonAllDayMultiDay') allOrMultiDayEventStorage.push(thisEvent);
         eventStorage.push({ ...thisEvent });
       } catch (error) {
         logging('error', 'error while parsing allOrMultiDay event: ', eventId, error, calEventHtmlElement);
       }
     }
 
+    const durationElements = new Set<HTMLElement>();
+    const hoverElements = new Set<HTMLElement>();
     for (let thisEvent of eventStorage) {
       if (!thisEvent.parentElement || !thisEvent.timeElement) continue;
-      Tools.addHoverOverInformation(thisEvent);
-      if (settings.calcDuration_isActive) Tools.injectDuration(thisEvent, settings);
+      thisEvent.durationFormated = formatDuration(thisEvent.durationInMinutes,
+        settings.calcDuration_durationFormat, settings.calcDuration_minimumDurationMinutes);
+      if (hoverActive) {
+        hoverElements.add(thisEvent.parentElement);
+        Tools.addHoverOverInformation(thisEvent);
+      }
+      if (durationActive) durationElements.add(thisEvent.parentElement);
+      Tools.injectDuration(thisEvent, settings, view);
     }
+    reconcileDurations(durationElements);
+    reconcileHoverInformation(hoverElements);
 
-    if (settings.indicateAllDayEvents_isActive) {
+    if (settings.indicateAllDayEvents_isActive && (view === 'day' || view === 'multiDay')) {
       // drop excluded events before rendering, so the width distribution of remaining indicators stays correct
       const totalBeforeFilter = allOrMultiDayEventStorage.length;
       allOrMultiDayEventStorage = allOrMultiDayEventStorage.filter((event) => !isIndicatorExcluded(event.id, event.occurrenceToken));
       if (totalBeforeFilter !== allOrMultiDayEventStorage.length) {
         logging('info', `indicateAllDayEvents: ${totalBeforeFilter - allOrMultiDayEventStorage.length} event(s) excluded by user`);
       }
-      Tools.indicateAllDayEvents(allOrMultiDayEventStorage, settings);
+      await Tools.indicateAllDayEvents(allOrMultiDayEventStorage, settings);
     }
 
     logging('info', 'events number: ', eventStorage.length, ' storage: ', eventStorage);
     logging('info', 'allOrMultiDayEvents number: ', allOrMultiDayEventStorage.length, ' storage: ', allOrMultiDayEventStorage);
     setItemInCache('eventStorage', eventStorage);
     setItemInCache('allOrMultiDayEvents', allOrMultiDayEventStorage);
+    // The indicator renderer awaits hashes. Google may navigate while our observers are paused.
+    if (document.querySelector('#YPCqFe') !== root || detectCalendarView() !== view ||
+        eventStorage.some(event => !event.parentElement?.isConnected)) workerPending = true;
   } catch (error) {
     logging('error', 'error: ', error);
   } finally {
@@ -203,7 +268,9 @@ async function startWorkerCalendarView(settingsOverride?: Settings) {
 }
 
 async function startWorkerCompleteHTMLBody(mutationsList: MutationRecord[] = [], settingsOverride?: Settings) {
+  if (workerRunning) { bodyPending = true; return; }
   const settings = settingsOverride ?? (await loadSettings());
+  if (workerRunning) { bodyPending = true; return; }
   disconnectObserver();
   if (settings.removeGMeets_isActive) Tools.removeGMeets();
   if (settings.exportAsIcs_isActive) Tools.exportToIcalPrepare();

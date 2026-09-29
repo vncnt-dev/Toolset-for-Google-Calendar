@@ -71,7 +71,7 @@ export const useShareableState = () => {
   }, [sharedSettings]);
 
   const updateSharedSettings = (newSettings: any) => {
-    setSharedSettings({ ...sharedSettings, ...newSettings });
+    setSharedSettings((current) => ({ ...current, ...newSettings }));
   };
 
   const saveSharedSettings = async () => {

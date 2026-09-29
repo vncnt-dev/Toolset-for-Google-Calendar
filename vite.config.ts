@@ -6,7 +6,9 @@ export default defineConfig(({ mode }) => ({
   publicDir: 'public',
   build: {
     outDir: 'dist',
-    emptyOutDir: true,
+    // `npm run watch` cleans once before starting two Vite watchers. Development
+    // rebuilds must keep the other watcher's files (especially content_script.js).
+    emptyOutDir: mode !== 'development',
     sourcemap: mode === 'production' ? true : 'inline',
     minify: mode === 'production' ? 'terser' : false,
     rollupOptions: {
